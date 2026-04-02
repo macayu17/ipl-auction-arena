@@ -1,0 +1,91 @@
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+import { getRoleHome, getUserRoleFromUser } from "@/lib/auth-roles";
+import { getSupabaseEnv, hasSupabaseEnv } from "@/lib/supabase/env";
+
+function matchesRoute(pathname: string, route: string) {
+  if (route === "/") {
+    return pathname === "/";
+  }
+
+  return pathname === route || pathname.startsWith(`${route}/`);
+}
+
+export async function updateSession(request: NextRequest) {
+  if (!hasSupabaseEnv()) {
+    return NextResponse.next({ request });
+  }
+
+  let supabaseResponse = NextResponse.next({ request });
+  const { url, anonKey } = getSupabaseEnv();
+
+  const supabase = createServerClient(url, anonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value)
+        );
+
+        supabaseResponse = NextResponse.next({ request });
+
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options)
+        );
+      },
+    },
+  });
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const pathname = request.nextUrl.pathname;
+  const publicRoutes = ["/", "/login"];
+  const isPublicRoute = publicRoutes.some((route) => matchesRoute(pathname, route));
+
+  if (!user && !isPublicRoute) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (!user) {
+    return supabaseResponse;
+  }
+
+  const role = getUserRoleFromUser(user);
+
+  if (isPublicRoute) {
+    if (!role) {
+      return supabaseResponse;
+    }
+
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = getRoleHome(role);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (!role) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (pathname.startsWith("/admin") && role !== "admin") {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = getRoleHome(role);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (pathname.startsWith("/team") && role !== "team") {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = getRoleHome(role);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  return supabaseResponse;
+}

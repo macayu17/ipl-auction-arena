@@ -1,0 +1,73 @@
+import "server-only";
+
+import type { User } from "@supabase/supabase-js";
+import { redirect } from "next/navigation";
+import { cache } from "react";
+
+import { getRoleHome, getUserRoleFromUser } from "@/lib/auth-roles";
+import { createClient } from "@/lib/supabase/server";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
+import type { Team, UserRole } from "@/types/app.types";
+
+export type SessionContext =
+  | { status: "missing_env"; user: null; role: null }
+  | { status: "anonymous"; user: null; role: null }
+  | { status: "authenticated"; user: User; role: UserRole | null };
+
+export const getSessionContext = cache(async (): Promise<SessionContext> => {
+  if (!hasSupabaseEnv()) {
+    return { status: "missing_env", user: null, role: null };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { status: "anonymous", user: null, role: null };
+  }
+
+  const role = getUserRoleFromUser(user);
+
+  return { status: "authenticated", user, role };
+});
+
+export async function requireRole(expectedRole: UserRole) {
+  const session = await getSessionContext();
+
+  if (session.status === "missing_env") {
+    return session;
+  }
+
+  if (session.status !== "authenticated") {
+    redirect("/login");
+  }
+
+  if (session.role !== expectedRole) {
+    redirect(session.role ? getRoleHome(session.role) : "/login");
+  }
+
+  return session;
+}
+
+export const getTeamForCurrentUser = cache(async (): Promise<Team | null> => {
+  const session = await getSessionContext();
+
+  if (
+    session.status !== "authenticated" ||
+    session.role !== "team" ||
+    !session.user
+  ) {
+    return null;
+  }
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("teams")
+    .select("*")
+    .eq("user_id", session.user.id)
+    .maybeSingle();
+
+  return data ?? null;
+});
