@@ -40,15 +40,15 @@ export function formatPurse(total: number, spent: number): string {
 export function getRoleBadgeColor(role: string): string {
   switch (role) {
     case "Batsman":
-      return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      return "bg-sky-500/18 text-sky-200 border-sky-400/25";
     case "Bowler":
-      return "bg-green-500/20 text-green-400 border-green-500/30";
+      return "bg-emerald-500/18 text-emerald-200 border-emerald-400/25";
     case "All-Rounder":
-      return "bg-purple-500/20 text-purple-400 border-purple-500/30";
+      return "bg-amber-500/18 text-amber-100 border-amber-400/25";
     case "Wicket-Keeper":
-      return "bg-orange-500/20 text-orange-400 border-orange-500/30";
+      return "bg-blue-500/18 text-blue-100 border-blue-400/25";
     default:
-      return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+      return "bg-white/8 text-slate-300 border-white/10";
   }
 }
 
@@ -58,17 +58,17 @@ export function getRoleBadgeColor(role: string): string {
 export function getStatusColor(status: string): string {
   switch (status) {
     case "pool":
-      return "bg-cyan-500/20 text-cyan-400 border-cyan-500/30";
+      return "bg-sky-500/18 text-sky-200 border-sky-400/25";
     case "active":
-      return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+      return "bg-amber-500/18 text-amber-100 border-amber-400/25";
     case "sold":
-      return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+      return "bg-emerald-500/18 text-emerald-200 border-emerald-400/25";
     case "unsold":
-      return "bg-red-500/20 text-red-400 border-red-500/30";
+      return "bg-rose-500/18 text-rose-200 border-rose-400/25";
     case "rtm":
-      return "bg-violet-500/20 text-violet-400 border-violet-500/30";
+      return "bg-blue-500/18 text-blue-100 border-blue-400/25";
     default:
-      return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+      return "bg-white/8 text-slate-300 border-white/10";
   }
 }
 

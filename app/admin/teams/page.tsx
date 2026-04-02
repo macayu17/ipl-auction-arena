@@ -16,45 +16,43 @@ export default async function AdminTeamsPage() {
     (sum, team) => sum + team.players_acquired,
     0
   );
+  const totalRating = teams.reduce(
+    (sum, team) => sum + team.squad_rating_total,
+    0
+  );
 
   return (
     <>
-      <div className="grid gap-4 xl:grid-cols-4">
+      <div className="grid gap-3 xl:grid-cols-4">
         <MetricCard
-          label="Teams seeded"
+          label="Teams"
           value={String(teams.length)}
-          hint="All ten IPL teams are now pulled from the live Supabase seed rather than static UI constants."
           icon={Wallet}
         />
         <MetricCard
-          label="Captain linkage"
+          label="Linked"
           value={`${linkedCaptains}/${teams.length}`}
-          hint="A team is considered linked once the auth user id has been attached to the team row."
           icon={KeyRound}
         />
         <MetricCard
           label="Purse left"
           value={formatPrice(totalPurseRemaining)}
-          hint="This total drops with every successful sale across the auction."
           icon={Wallet}
         />
         <MetricCard
-          label="Players sold"
-          value={String(totalPlayers)}
-          hint="Roster counts are derived directly from player ownership in the database."
+          label="Total rating"
+          value={String(totalRating)}
+          hint={`Sold players: ${totalPlayers}`}
           icon={KeyRound}
         />
       </div>
 
-      <SectionCard
-        title="Team grid"
-        description="Live purse, squad, captain linkage, and credential handoff are now all visible from one admin page."
-      >
+      <SectionCard title="Teams">
         <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
           {teams.map((team) => (
             <article
               key={team.id}
-              className="rounded-[26px] border border-white/8 bg-white/4 p-5"
+              className="rounded-[22px] border border-white/8 bg-white/4 p-4"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -67,7 +65,7 @@ export default async function AdminTeamsPage() {
                       {team.short_code}
                     </span>
                   </div>
-                  <h2 className="mt-3 text-xl font-semibold text-white">{team.name}</h2>
+                  <h2 className="mt-2 text-lg font-semibold text-white">{team.name}</h2>
                 </div>
                 <div
                   className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.22em] ${
@@ -80,8 +78,8 @@ export default async function AdminTeamsPage() {
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-[20px] border border-white/8 bg-slate-950/25 px-4 py-3">
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-[18px] border border-white/8 bg-slate-950/25 px-4 py-3">
                   <div className="text-xs uppercase tracking-[0.2em] text-slate-400">
                     Purse left
                   </div>
@@ -89,18 +87,26 @@ export default async function AdminTeamsPage() {
                     {formatPrice(team.purse_remaining)}
                   </div>
                 </div>
-                <div className="rounded-[20px] border border-white/8 bg-slate-950/25 px-4 py-3">
+                <div className="rounded-[18px] border border-white/8 bg-slate-950/25 px-4 py-3">
                   <div className="text-xs uppercase tracking-[0.2em] text-slate-400">
                     Players
                   </div>
                   <div className="mt-2 font-semibold text-white">
-                    {team.players_acquired} acquired
+                    {team.players_acquired}
+                  </div>
+                </div>
+                <div className="rounded-[18px] border border-white/8 bg-slate-950/25 px-4 py-3">
+                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                    Rating
+                  </div>
+                  <div className="mt-2 font-semibold text-white">
+                    {team.squad_rating_total}
                   </div>
                 </div>
               </div>
 
-              <div className="mt-5 grid gap-3">
-                <div className="rounded-[20px] border border-white/8 bg-slate-950/25 px-4 py-3">
+              <div className="mt-4 grid gap-3">
+                <div className="rounded-[18px] border border-white/8 bg-slate-950/25 px-4 py-3">
                   <div className="text-xs uppercase tracking-[0.2em] text-slate-400">
                     Captain login
                   </div>
@@ -108,7 +114,7 @@ export default async function AdminTeamsPage() {
                     {team.credentials?.login_email ?? "Not provisioned"}
                   </div>
                 </div>
-                <div className="rounded-[20px] border border-white/8 bg-slate-950/25 px-4 py-3">
+                <div className="rounded-[18px] border border-white/8 bg-slate-950/25 px-4 py-3">
                   <div className="text-xs uppercase tracking-[0.2em] text-slate-400">
                     Captain password
                   </div>
@@ -117,11 +123,6 @@ export default async function AdminTeamsPage() {
                   </div>
                 </div>
               </div>
-
-              <p className="mt-5 text-sm leading-6 text-slate-300">
-                Squad rating total: {team.squad_rating_total}. Captain mapping is{" "}
-                {team.user_id ? "ready for live bidding." : "still waiting to sync."}
-              </p>
             </article>
           ))}
         </div>

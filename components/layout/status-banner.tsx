@@ -22,12 +22,19 @@ export function StatusBanner({
   children,
 }: StatusBannerProps) {
   return (
-    <section className={cn("surface-panel p-5", toneClasses[tone])}>
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <p className="mt-2 max-w-3xl text-sm leading-6 text-current/90">
-        {description}
-      </p>
-      {children ? <div className="mt-4">{children}</div> : null}
+    <section className={cn("surface-panel overflow-hidden", toneClasses[tone])}>
+      <div className="border-b border-current/10 px-4 py-3 lg:px-5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-current/80">
+          System notice
+        </p>
+        <h2 className="mt-2 display-font text-2xl text-current">{title}</h2>
+      </div>
+      <div className="px-4 py-4 lg:px-5">
+        <p className="max-w-3xl text-sm leading-6 text-current/90">
+          {description}
+        </p>
+        {children ? <div className="mt-4">{children}</div> : null}
+      </div>
     </section>
   );
 }

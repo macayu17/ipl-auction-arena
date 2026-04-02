@@ -1,16 +1,15 @@
 import { Database, FileUp, Filter, Trophy } from "lucide-react";
 
-import { importBundledPlayersAction } from "@/app/actions/players";
+import {
+  importBundledPlayersAction,
+  importUploadedPlayersAction,
+} from "@/app/actions/players";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { MetricCard } from "@/components/layout/metric-card";
 import { SectionCard } from "@/components/layout/section-card";
 import { getPlayersPageData } from "@/lib/auction-data";
-import { hasBundledPlayerCsv, parseBundledPlayerCsv } from "@/lib/player-csv";
-import {
-  formatPrice,
-  getRoleBadgeColor,
-  getStatusColor,
-} from "@/lib/utils";
+import { hasBundledPlayerCsv } from "@/lib/player-csv";
+import { formatPrice, getRoleBadgeColor, getStatusColor } from "@/lib/utils";
 import type { PlayerRole } from "@/types/app.types";
 
 const roleOrder: PlayerRole[] = [
@@ -25,7 +24,7 @@ export default async function AdminPlayersPage() {
     getPlayersPageData(),
     hasBundledPlayerCsv(),
   ]);
-  const bundledPlayers = bundledCsvExists ? await parseBundledPlayerCsv() : [];
+
   const teamById = new Map(teamSummary.map((team) => [team.id, team]));
   const roleSummary = roleOrder.map((role) => ({
     role,
@@ -34,108 +33,95 @@ export default async function AdminPlayersPage() {
 
   return (
     <>
-      <div className="grid gap-4 xl:grid-cols-4">
+      <div className="grid gap-3 xl:grid-cols-4">
+        <MetricCard label="Total" value={String(summary.total)} icon={Database} />
+        <MetricCard label="Pool" value={String(summary.pool)} icon={Filter} />
+        <MetricCard label="Sold" value={String(summary.sold)} icon={Trophy} />
         <MetricCard
-          label="Total players"
-          value={String(summary.total)}
-          hint="The database now feeds the auction queue, teams, and dashboard from one shared player pool."
-          icon={Database}
-        />
-        <MetricCard
-          label="In pool"
-          value={String(summary.pool)}
-          hint="These players are ready to be nominated from the admin auction queue."
-          icon={Filter}
-        />
-        <MetricCard
-          label="Sold"
-          value={String(summary.sold)}
-          hint="Every successful hammer sale immediately moves a player into team squads and dashboard summaries."
-          icon={Trophy}
-        />
-        <MetricCard
-          label="Bundled CSV"
-          value={bundledCsvExists ? `${bundledPlayers.length} rows` : "Missing"}
-          hint="The bundled player sheet can be imported again at any time without duplicating existing names."
+          label="Unsold"
+          value={String(summary.unsold)}
           icon={FileUp}
         />
       </div>
 
-      <SectionCard
-        title="Bundled player import"
-        description="The repo CSV is now wired directly into the auction schema, so one click is enough to sync the player pool with Supabase."
-        action={
-          bundledCsvExists ? (
-            <form action={importBundledPlayersAction}>
-              <SubmitButton
-                pendingLabel="Importing..."
-                className="rounded-full border border-[var(--gold)]/30 bg-[rgba(240,165,0,0.12)] px-4 py-2 text-sm font-semibold text-[var(--gold-soft)] hover:border-[var(--gold)]/50 hover:bg-[rgba(240,165,0,0.18)]"
-              >
-                Import or sync CSV
-              </SubmitButton>
-            </form>
-          ) : null
-        }
-      >
-        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[24px] border border-white/8 bg-white/4 p-5">
-            <div className="text-xs uppercase tracking-[0.22em] text-slate-400">
-              Source file
+      <SectionCard title="Import players">
+        <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+          <form
+            action={importUploadedPlayersAction}
+            className="command-grid grid gap-3 rounded-[20px] border border-white/8 bg-[rgba(19,19,24,0.72)] p-4"
+          >
+            <div className="text-[11px] uppercase tracking-[0.22em] text-slate-400">
+              Upload CSV
             </div>
-            <div className="mt-3 text-lg font-semibold text-white">
-              IPL AUCTION DATA SHEET.csv
+            <input
+              name="csvFile"
+              type="file"
+              accept=".csv,text/csv"
+              required
+              className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white file:mr-4 file:rounded-full file:border-0 file:bg-[rgba(240,165,0,0.12)] file:px-3 file:py-2 file:text-sm file:font-medium file:text-[var(--gold-soft)]"
+            />
+            <div className="flex flex-wrap gap-2 text-xs text-slate-400">
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                Columns: Player&apos;s Name, Category, Rating
+              </span>
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                Duplicate names are skipped
+              </span>
             </div>
-            <p className="mt-3 text-sm leading-6 text-slate-300">
-              Ratings, categories, nationality inference, and base price bands are
-              normalized automatically during import. Existing player names are
-              skipped, so reruns stay safe.
-            </p>
-          </div>
+            <SubmitButton
+              pendingLabel="Uploading..."
+              className="rounded-2xl border border-[var(--gold)]/30 bg-[rgba(240,165,0,0.12)] px-4 py-3 text-sm font-semibold text-[var(--gold-soft)] hover:border-[var(--gold)]/50 hover:bg-[rgba(240,165,0,0.18)]"
+            >
+              Import uploaded CSV
+            </SubmitButton>
+          </form>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            {roleSummary.map((item) => (
-              <div
-                key={item.role}
-                className="rounded-[22px] border border-white/8 bg-slate-950/25 px-4 py-4"
-              >
-                <div className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                  {item.role}
-                </div>
-                <div className="mt-2 text-2xl font-semibold text-white">
-                  {item.count}
-                </div>
+          <div className="grid gap-3">
+            <div className="screen-frame rounded-[20px] p-4">
+              <div className="text-[11px] uppercase tracking-[0.22em] text-slate-400">
+                Bundled source
               </div>
-            ))}
+              <div className="mt-1.5 text-lg font-semibold text-white">
+                IPL AUCTION DATA SHEET.csv
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {roleSummary.map((item) => (
+                  <span
+                    key={item.role}
+                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.16em] text-slate-300"
+                  >
+                    {item.role} {item.count}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {bundledCsvExists ? (
+              <form action={importBundledPlayersAction}>
+                <SubmitButton
+                  pendingLabel="Syncing..."
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white hover:border-white/20 hover:bg-white/10"
+                >
+                  Sync bundled CSV
+                </SubmitButton>
+              </form>
+            ) : null}
           </div>
         </div>
       </SectionCard>
 
-      <SectionCard
-        title="Player database"
-        description="This table is now the live source of truth for nominations, bid history, dashboards, and team squads."
-      >
-        <div className="mb-5 flex flex-wrap gap-2">
-          {roleSummary.map((item) => (
-            <span
-              key={item.role}
-              className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.16em] text-slate-300"
-            >
-              {item.role}: {item.count}
-            </span>
-          ))}
-        </div>
-
-        <div className="overflow-hidden rounded-[24px] border border-white/8">
+      <SectionCard title="Player database">
+        <div className="overflow-hidden rounded-[20px] border border-white/8">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
-              <thead className="bg-white/6 text-xs uppercase tracking-[0.2em] text-slate-400">
+              <thead className="bg-[rgba(255,255,255,0.05)] text-[11px] uppercase tracking-[0.2em] text-slate-400">
                 <tr>
                   <th className="px-4 py-3">Player</th>
                   <th className="px-4 py-3">Role</th>
                   <th className="px-4 py-3">Nationality</th>
-                  <th className="px-4 py-3">Base price</th>
+                  <th className="px-4 py-3">Base</th>
                   <th className="px-4 py-3">Rating</th>
-                  <th className="px-4 py-3">IPL caps</th>
+                  <th className="px-4 py-3">Caps</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Team</th>
                 </tr>
@@ -145,9 +131,9 @@ export default async function AdminPlayersPage() {
                   <tr>
                     <td
                       colSpan={8}
-                      className="px-4 py-12 text-center text-sm text-slate-300"
+                      className="px-4 py-10 text-center text-sm text-slate-300"
                     >
-                      Import the bundled CSV to populate the auction pool.
+                      Upload a CSV or sync the bundled file to populate the pool.
                     </td>
                   </tr>
                 ) : (
@@ -159,42 +145,33 @@ export default async function AdminPlayersPage() {
                     return (
                       <tr
                         key={player.id}
-                        className="border-t border-white/6 text-sm text-slate-200"
+                        className="border-t border-white/6 bg-[rgba(14,14,19,0.32)] text-sm text-slate-200"
                       >
-                        <td className="px-4 py-4">
+                        <td className="px-4 py-3.5">
                           <div className="font-semibold text-white">{player.name}</div>
-                          <div className="mt-1 text-xs text-slate-400">
-                            Updated {new Date(player.updated_at).toLocaleString("en-IN")}
-                          </div>
                         </td>
-                        <td className="px-4 py-4">
+                        <td className="px-4 py-3.5">
                           <span
                             className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getRoleBadgeColor(player.role)}`}
                           >
                             {player.role}
                           </span>
                         </td>
-                        <td className="px-4 py-4">{player.nationality}</td>
-                        <td className="px-4 py-4 mono-font text-[var(--gold-soft)]">
+                        <td className="px-4 py-3.5">{player.nationality}</td>
+                        <td className="px-4 py-3.5 mono-font text-[var(--gold-soft)]">
                           {formatPrice(player.base_price)}
                         </td>
-                        <td className="px-4 py-4">{player.rating}</td>
-                        <td className="px-4 py-4">{player.ipl_caps}</td>
-                        <td className="px-4 py-4">
+                        <td className="px-4 py-3.5">{player.rating}</td>
+                        <td className="px-4 py-3.5">{player.ipl_caps}</td>
+                        <td className="px-4 py-3.5">
                           <span
                             className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-[0.14em] ${getStatusColor(player.status)}`}
                           >
                             {player.status}
                           </span>
                         </td>
-                        <td className="px-4 py-4">
-                          {soldTeam ? (
-                            <span className="font-medium text-white">
-                              {soldTeam.short_code}
-                            </span>
-                          ) : (
-                            <span className="text-slate-500">-</span>
-                          )}
+                        <td className="px-4 py-3.5">
+                          {soldTeam ? soldTeam.short_code : "-"}
                         </td>
                       </tr>
                     );

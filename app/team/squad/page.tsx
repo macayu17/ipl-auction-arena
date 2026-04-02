@@ -53,32 +53,33 @@ export default async function TeamSquadPage() {
   const overseasCount = squad.filter(
     (player) => player.nationality === "Overseas"
   ).length;
+  const totalRating = squad.reduce((sum, player) => sum + player.rating, 0);
 
   return (
     <>
-      <div className="grid gap-4 xl:grid-cols-4">
+      <div className="grid gap-3 xl:grid-cols-4">
         <MetricCard
           label="Team"
           value={myTeam.short_code}
-          hint={`${myTeam.name} can audit budget, balance, and roster shape from this page.`}
+          hint={`${myTeam.name} can audit balance and roster shape here.`}
           icon={ShieldCheck}
         />
         <MetricCard
           label="Purse spent"
           value={formatPrice(myTeam.purse_spent)}
-          hint="Every completed sale rolls into this number immediately."
+          hint="Every completed sale rolls into this immediately."
           icon={CircleDollarSign}
         />
         <MetricCard
           label="Purse left"
           value={formatPurse(myTeam.purse_total, myTeam.purse_spent)}
-          hint="This is your hard limit before the next aggressive bid."
+          hint="Your hard ceiling before the next aggressive bid."
           icon={Users}
         />
         <MetricCard
-          label="Overseas"
-          value={String(overseasCount)}
-          hint="Use this count to keep squad construction balanced as the auction progresses."
+          label="Total rating"
+          value={String(totalRating)}
+          hint={`${overseasCount} overseas players currently signed.`}
           icon={ShieldCheck}
         />
       </div>
@@ -94,7 +95,7 @@ export default async function TeamSquadPage() {
             return (
               <article
                 key={role}
-                className="rounded-[24px] border border-white/8 bg-white/4 p-5"
+                className="screen-frame rounded-[22px] p-5"
               >
                 <div className="flex items-center justify-between gap-4">
                   <h2 className="text-lg font-semibold text-white">{role}</h2>
@@ -115,10 +116,10 @@ export default async function TeamSquadPage() {
                     players.map((player) => (
                       <div
                         key={player.id}
-                        className="rounded-[20px] border border-white/8 bg-slate-950/25 px-4 py-4"
+                        className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-4"
                       >
                         <div className="font-medium text-white">{player.name}</div>
-                        <div className="mt-2 flex items-center justify-between gap-4 text-xs text-slate-400">
+                        <div className="mt-2 flex items-center justify-between gap-4 text-xs text-[var(--text-soft)]">
                           <span>{player.nationality}</span>
                           <span>Rating {player.rating}</span>
                         </div>

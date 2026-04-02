@@ -67,17 +67,17 @@ export default async function TeamAuctionPage() {
 
   return (
     <>
-      <div className="grid gap-4 xl:grid-cols-4">
+      <div className="grid gap-3 xl:grid-cols-4">
         <MetricCard
           label="Connection"
           value="Ready"
-          hint="This console is subscribed to the same auction state and bid stream as the admin room."
+          hint="Subscribed to the same live room state."
           icon={RadioTower}
         />
         <MetricCard
           label="Purse left"
           value={formatPurse(myTeam.purse_total, myTeam.purse_spent)}
-          hint={`${myTeam.name} can safely bid up to the remaining purse shown here.`}
+          hint={`${myTeam.short_code} can bid up to this ceiling.`}
           icon={Shield}
         />
         <MetricCard
@@ -87,186 +87,193 @@ export default async function TeamAuctionPage() {
               ? formatPrice(auctionState.current_bid_amount || currentPlayer.base_price)
               : "Waiting"
           }
-          hint="The current live amount refreshes automatically whenever a bid lands."
+          hint="Live amount refreshes the moment a bid lands."
           icon={Trophy}
         />
         <MetricCard
           label="Squad size"
           value={String(mySquad.length)}
-          hint="Every sold player assigned to your team appears here and on the squad page."
+          hint="Purchased players mirror instantly on the squad page."
           icon={TimerReset}
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <SectionCard
-          title="Live stage"
-          description="This is the captain's decision screen: player context, live amount, and auction temperature."
-        >
-          {currentPlayer ? (
-            <div className="grid gap-5 rounded-[24px] border border-white/8 bg-white/4 p-6">
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getRoleBadgeColor(currentPlayer.role)}`}
-                >
-                  {currentPlayer.role}
-                </span>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.16em] text-slate-300">
-                  {currentPlayer.nationality}
-                </span>
-              </div>
-
-              <div>
-                <p className="display-font text-5xl text-[var(--gold-soft)]">
-                  {currentPlayer.name}
-                </p>
-                <p className="mt-3 text-sm leading-6 text-slate-300">
-                  Rating {currentPlayer.rating}. Base price {formatPrice(currentPlayer.base_price)}.
-                  Current leader: {leadingTeam?.name ?? "No bids yet"}.
-                </p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-[22px] border border-white/8 bg-slate-950/30 px-4 py-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    Current price
-                  </div>
-                  <div className="mt-2 text-xl font-semibold text-white">
-                    {formatPrice(auctionState.current_bid_amount || currentPlayer.base_price)}
-                  </div>
-                </div>
-                <div className="rounded-[22px] border border-white/8 bg-slate-950/30 px-4 py-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    Next valid bid
-                  </div>
-                  <div className="mt-2 text-xl font-semibold text-white">
-                    {formatPrice(nextBidAmount)}
-                  </div>
-                </div>
-                <div className="rounded-[22px] border border-white/8 bg-slate-950/30 px-4 py-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    Timer
-                  </div>
-                  <div className="mt-2 text-xl font-semibold text-white">
-                    <TimerDisplay
-                      seconds={auctionState.timer_seconds}
-                      timerActive={auctionState.timer_active}
-                      updatedAt={auctionState.updated_at}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="grid min-h-[420px] place-items-center rounded-[24px] border border-dashed border-white/15 bg-white/4 p-8 text-center">
-              <div className="max-w-lg space-y-4">
-                <p className="display-font text-5xl text-[var(--gold-soft)]">LIVE VIEW</p>
-                <h2 className="text-3xl font-semibold text-white">
-                  No player has been nominated yet
-                </h2>
-                <p className="text-sm leading-6 text-slate-300">
-                  Stay ready. As soon as the auctioneer puts a player on the block,
-                  this panel updates automatically.
-                </p>
-              </div>
-            </div>
-          )}
-        </SectionCard>
-
-        <div className="space-y-6">
+      <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="space-y-4">
           <SectionCard
-            title="Captain actions"
-            description="Bid fast, keep an eye on the timer, and watch recent momentum."
+            title="Captain Board"
+            description="Player focus, live amount, and the one action that matters most."
           >
-            <div className="space-y-4">
-              <div className="rounded-[24px] border border-white/8 bg-white/4 p-5">
-                <div className="text-xs uppercase tracking-[0.22em] text-slate-400">
-                  Leading team
-                </div>
-                <div className="mt-3 text-2xl font-semibold text-white">
-                  {leadingTeam?.name ?? "No active bidder"}
-                </div>
-                <p className="mt-2 text-sm leading-6 text-slate-300">{bidMessage}</p>
-              </div>
-
-              <form action={placeBidAction}>
-                <SubmitButton
-                  pendingLabel="Sending bid..."
-                  className="w-full rounded-[26px] border border-[var(--gold)]/25 bg-[rgba(240,165,0,0.12)] px-5 py-5 text-lg font-semibold text-[var(--gold-soft)] hover:border-[var(--gold)]/45 hover:bg-[rgba(240,165,0,0.18)]"
-                  disabled={!canBid}
-                >
-                  {currentPlayer
-                    ? `Bid ${formatPrice(nextBidAmount)}`
-                    : "Waiting for player"}
-                </SubmitButton>
-              </form>
-
-              <div className="rounded-[24px] border border-white/8 bg-white/4 p-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="text-xs uppercase tracking-[0.22em] text-slate-400">
-                    Recent bids
+            {currentPlayer ? (
+              <div className="space-y-4">
+                <div className="relative overflow-hidden rounded-[24px] border border-white/8 bg-[radial-gradient(circle_at_top_right,rgba(245,166,35,0.18),transparent_35%),linear-gradient(180deg,rgba(31,31,37,0.96),rgba(14,14,19,0.98))] p-5 lg:p-6">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getRoleBadgeColor(currentPlayer.role)}`}
+                    >
+                      {currentPlayer.role}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.16em] text-slate-300">
+                      {currentPlayer.nationality}
+                    </span>
                   </div>
-                  <div className="mono-font text-sm text-white">
-                    <TimerDisplay
-                      seconds={auctionState.timer_seconds}
-                      timerActive={auctionState.timer_active}
-                      updatedAt={auctionState.updated_at}
-                    />
+
+                  <div className="mt-10">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--gold-soft)]">
+                      Live nomination
+                    </p>
+                    <h2 className="mt-2 display-font text-5xl text-white lg:text-6xl">
+                      {currentPlayer.name}
+                    </h2>
+                    <p className="mt-3 text-sm leading-6 text-[var(--text-soft)]">
+                      Rating {currentPlayer.rating}. Base {formatPrice(currentPlayer.base_price)}.
+                      Current leader {leadingTeam?.name ?? "not set yet"}.
+                    </p>
                   </div>
-                </div>
-                <div className="mt-4 grid gap-3">
-                  {bidHistory.length === 0 ? (
-                    <div className="rounded-2xl border border-white/8 bg-slate-950/25 px-4 py-3 text-sm leading-6 text-slate-300">
-                      No bids yet for this player.
+
+                  <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                    <div className="screen-frame rounded-[18px] p-4">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-soft)]">
+                        Current
+                      </div>
+                      <div className="mt-2 text-xl font-semibold text-white">
+                        {formatPrice(
+                          auctionState.current_bid_amount || currentPlayer.base_price
+                        )}
+                      </div>
                     </div>
-                  ) : (
-                    bidHistory.map((bid) => (
-                      <div
-                        key={bid.id}
-                        className="rounded-2xl border border-white/8 bg-slate-950/25 px-4 py-3 text-sm leading-6 text-slate-300"
-                      >
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="font-medium text-white">
-                            {bid.team?.short_code ?? "Unknown team"}
-                          </span>
-                          <span className="mono-font text-[var(--gold-soft)]">
-                            {formatPrice(bid.amount)}
-                          </span>
+                    <div className="screen-frame rounded-[18px] p-4">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-soft)]">
+                        Next bid
+                      </div>
+                      <div className="mt-2 text-xl font-semibold text-white">
+                        {formatPrice(nextBidAmount)}
+                      </div>
+                    </div>
+                    <div className="screen-frame rounded-[18px] p-4">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-soft)]">
+                        Timer
+                      </div>
+                      <div className="mt-2 text-xl font-semibold text-white">
+                        <TimerDisplay
+                          seconds={auctionState.timer_seconds}
+                          timerActive={auctionState.timer_active}
+                          updatedAt={auctionState.updated_at}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-[24px] border border-white/8 bg-[rgba(31,31,37,0.85)] p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-soft)]">
+                        Leading team
+                      </div>
+                      <div className="mt-2 text-2xl font-semibold text-white">
+                        {leadingTeam?.name ?? "No active bidder"}
+                      </div>
+                    </div>
+                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--gold-soft)]">
+                      {auctionState.phase}
+                    </div>
+                  </div>
+
+                  <p className="mt-3 text-sm leading-6 text-[var(--text-soft)]">
+                    {bidMessage}
+                  </p>
+
+                  <form action={placeBidAction} className="mt-5">
+                    <SubmitButton
+                      pendingLabel="Sending bid..."
+                      className="w-full rounded-[22px] border border-[var(--gold)]/25 bg-[rgba(245,166,35,0.12)] px-5 py-5 text-lg font-semibold text-[var(--gold-soft)] hover:border-[var(--gold)]/45 hover:bg-[rgba(245,166,35,0.18)]"
+                      disabled={!canBid}
+                    >
+                      {currentPlayer
+                        ? `Bid ${formatPrice(nextBidAmount)}`
+                        : "Waiting for player"}
+                    </SubmitButton>
+                  </form>
+                </div>
+              </div>
+            ) : (
+              <div className="grid min-h-[420px] place-items-center rounded-[24px] border border-dashed border-white/15 bg-white/4 p-8 text-center">
+                <div className="max-w-lg space-y-4">
+                  <p className="display-font text-5xl text-[var(--gold-soft)]">LIVE VIEW</p>
+                  <h2 className="text-3xl font-semibold text-white">
+                    No player has been nominated yet
+                  </h2>
+                  <p className="text-sm leading-6 text-[var(--text-soft)]">
+                    Stay ready. As soon as the auctioneer puts a player on the block,
+                    this panel updates automatically.
+                  </p>
+                </div>
+              </div>
+            )}
+          </SectionCard>
+        </div>
+
+        <div className="space-y-4">
+          <SectionCard
+            title="Bid History"
+            description="Momentum on the current player, newest call first."
+          >
+            <div className="space-y-3">
+              {bidHistory.length === 0 ? (
+                <div className="rounded-[20px] border border-dashed border-white/12 bg-white/4 px-4 py-4 text-sm text-slate-300">
+                  No bids yet for this player.
+                </div>
+              ) : (
+                bidHistory.map((bid) => (
+                  <div
+                    key={bid.id}
+                    className="screen-frame rounded-[18px] px-4 py-3"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <div className="font-medium text-white">
+                          {bid.team?.short_code ?? "Unknown team"}
                         </div>
-                        <div className="mt-1 text-xs text-slate-500">
+                        <div className="mt-1 text-xs text-[var(--text-soft)]">
                           {new Date(bid.timestamp).toLocaleString("en-IN")}
                         </div>
                       </div>
-                    ))
-                  )}
-                </div>
-              </div>
+                      <div className="mono-font text-[var(--gold-soft)]">
+                        {formatPrice(bid.amount)}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </SectionCard>
 
           <SectionCard
-            title="Squad snapshot"
-            description="Your latest buys stay visible even while you are still bidding."
+            title="Squad Snapshot"
+            description="Your latest additions stay visible while the bidding room keeps moving."
           >
             <div className="space-y-3">
               {mySquad.length === 0 ? (
-                <div className="rounded-[22px] border border-dashed border-white/12 bg-white/4 px-4 py-5 text-sm text-slate-300">
+                <div className="rounded-[20px] border border-dashed border-white/12 bg-white/4 px-4 py-5 text-sm text-slate-300">
                   No players purchased yet.
                 </div>
               ) : (
                 mySquad.slice(0, 6).map((player) => (
                   <div
                     key={player.id}
-                    className="flex items-center justify-between rounded-[22px] border border-white/8 bg-white/4 px-4 py-4"
+                    className="screen-frame rounded-[18px] px-4 py-4"
                   >
-                    <div>
-                      <div className="font-medium text-white">{player.name}</div>
-                      <div className="mt-1 text-xs text-slate-400">
-                        {player.role} • Rating {player.rating}
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <div className="font-medium text-white">{player.name}</div>
+                        <div className="mt-1 text-xs text-[var(--text-soft)]">
+                          {player.role} • Rating {player.rating}
+                        </div>
                       </div>
-                    </div>
-                    <div className="mono-font text-[var(--gold-soft)]">
-                      {formatPrice(player.sold_price ?? player.base_price)}
+                      <div className="mono-font text-[var(--gold-soft)]">
+                        {formatPrice(player.sold_price ?? player.base_price)}
+                      </div>
                     </div>
                   </div>
                 ))

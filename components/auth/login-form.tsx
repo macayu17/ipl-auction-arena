@@ -17,7 +17,7 @@ function SubmitButton({ configured }: { configured: boolean }) {
     <button
       type="submit"
       disabled={pending || !configured}
-      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--gold)] px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-[var(--gold-soft)] disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--gold)] px-5 py-3.5 text-sm font-semibold uppercase tracking-[0.18em] text-[#291800] transition hover:bg-[var(--gold-soft)] disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending ? (
         <>
@@ -40,7 +40,10 @@ export function LoginForm({ configured }: { configured: boolean }) {
   return (
     <form action={formAction} className="space-y-5">
       <div className="space-y-2">
-        <label htmlFor="email" className="text-sm font-medium text-white">
+        <label
+          htmlFor="email"
+          className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--gold-soft)]"
+        >
           Login Email
         </label>
         <input
@@ -49,12 +52,15 @@ export function LoginForm({ configured }: { configured: boolean }) {
           type="email"
           autoComplete="email"
           placeholder="auction@collegefest.in"
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[var(--gold)] focus:bg-white/8"
+          className="w-full rounded-xl border border-white/10 bg-[rgba(14,14,19,0.9)] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-[var(--gold)] focus:bg-black/50"
         />
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="password" className="text-sm font-medium text-white">
+        <label
+          htmlFor="password"
+          className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--gold-soft)]"
+        >
           Password
         </label>
         <input
@@ -63,12 +69,12 @@ export function LoginForm({ configured }: { configured: boolean }) {
           type="password"
           autoComplete="current-password"
           placeholder="••••••••"
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-[var(--gold)] focus:bg-white/8"
+          className="w-full rounded-xl border border-white/10 bg-[rgba(14,14,19,0.9)] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-[var(--gold)] focus:bg-black/50"
         />
       </div>
 
       {state.status === "error" ? (
-        <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+        <div className="rounded-xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
           {state.message}
         </div>
       ) : null}

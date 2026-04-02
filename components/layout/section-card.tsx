@@ -18,20 +18,25 @@ export function SectionCard({
   children,
 }: SectionCardProps) {
   return (
-    <section className={cn("surface-panel p-5 lg:p-6", className)}>
-      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-white">{title}</h2>
+    <section className={cn("surface-panel overflow-hidden", className)}>
+      <div className="flex flex-col gap-3 border-b border-white/6 px-4 py-4 lg:flex-row lg:items-start lg:justify-between lg:px-5">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--gold-soft)]">
+            Command module
+          </p>
+          <h2 className="mt-2 display-font text-2xl text-white lg:text-[2rem]">
+            {title}
+          </h2>
           {description ? (
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+            <p className="mt-1.5 max-w-2xl text-sm leading-5 text-[var(--text-soft)]">
               {description}
             </p>
           ) : null}
         </div>
-        {action}
+        <div className="shrink-0">{action}</div>
       </div>
 
-      {children}
+      <div className="px-4 py-4 lg:px-5 lg:py-5">{children}</div>
     </section>
   );
 }

@@ -13,11 +13,13 @@ const navItems = [
   {
     href: "/team/auction",
     label: "Live Auction",
+    shortLabel: "Bid",
     caption: "Watch the block, current bid, and the team bid button.",
   },
   {
     href: "/team/squad",
     label: "My Squad",
+    shortLabel: "Squad",
     caption: "Track purse, roster balance, and purchased players.",
   },
 ] as const;

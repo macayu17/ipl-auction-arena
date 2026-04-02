@@ -189,24 +189,11 @@ export async function hasBundledPlayerCsv() {
   }
 }
 
-export async function parseBundledPlayerCsv() {
-  const csv = await fs.readFile(bundledCsvPath, "utf8");
-  const parsed = Papa.parse<RawPlayerRow>(csv, {
-    header: true,
-    skipEmptyLines: true,
-    transformHeader(header) {
-      return header.trim();
-    },
-  });
-
-  if (parsed.errors.length > 0) {
-    throw new Error(parsed.errors[0]?.message ?? "Failed to parse player CSV.");
-  }
-
+function parsePlayerRows(rows: RawPlayerRow[]) {
   const seen = new Set<string>();
   const players: ImportedPlayerRecord[] = [];
 
-  for (const row of parsed.data) {
+  for (const row of rows) {
     const rawName = row["Player's Name"]?.trim();
     const rawCategory = row.Category?.trim();
     const rawRating = Number(row.Rating);
@@ -241,4 +228,25 @@ export async function parseBundledPlayerCsv() {
   }
 
   return players;
+}
+
+export function parsePlayerCsvText(csv: string) {
+  const parsed = Papa.parse<RawPlayerRow>(csv, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader(header) {
+      return header.trim();
+    },
+  });
+
+  if (parsed.errors.length > 0) {
+    throw new Error(parsed.errors[0]?.message ?? "Failed to parse player CSV.");
+  }
+
+  return parsePlayerRows(parsed.data);
+}
+
+export async function parseBundledPlayerCsv() {
+  const csv = await fs.readFile(bundledCsvPath, "utf8");
+  return parsePlayerCsvText(csv);
 }

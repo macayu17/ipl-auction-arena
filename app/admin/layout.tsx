@@ -9,34 +9,28 @@ const navItems = [
   {
     href: "/admin/auction",
     label: "Auction",
-    caption: "Run bidding, timers, and player sales.",
+    shortLabel: "Bid",
   },
   {
     href: "/admin/dashboard",
     label: "Dashboard",
-    caption: "Monitor purse health and recent transactions.",
+    shortLabel: "Dash",
   },
   {
     href: "/admin/players",
     label: "Players",
-    caption: "Build the pool and manage imports.",
+    shortLabel: "Pool",
   },
   {
     href: "/admin/teams",
     label: "Teams",
-    caption: "Track captains, purse, and credentials.",
+    shortLabel: "Teams",
   },
   {
     href: "/admin/slides",
     label: "Slides",
-    caption: "Queue pre-auction announcements and overlays.",
+    shortLabel: "Slides",
   },
-] as const;
-
-const stats = [
-  { label: "Default phase", value: "Setup" },
-  { label: "Realtime target", value: "<100 ms" },
-  { label: "Connected roles", value: "1 admin + 10 teams" },
 ] as const;
 
 export default async function AdminLayout({
@@ -63,9 +57,9 @@ export default async function AdminLayout({
     <AppShell
       badge="Auctioneer"
       title="Admin control room"
-      description="Coordinate nominations, accept bids, monitor purses, and push the entire auction forward from one command center."
+      description="Run the live room, manage players, and keep every team view in sync."
       navItems={[...navItems]}
-      stats={[...stats]}
+      stats={[]}
       userLabel={userLabel}
       banner={banner}
       actions={

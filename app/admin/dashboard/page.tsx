@@ -11,6 +11,17 @@ export default async function AdminDashboardPage() {
   const richestTeam = [...teamSummary].sort(
     (left, right) => right.purse_remaining - left.purse_remaining
   )[0];
+  const orderedTeams = [...teamSummary].sort(
+    (left, right) =>
+      right.squad_rating_total - left.squad_rating_total ||
+      right.purse_remaining - left.purse_remaining
+  );
+  const averageSale =
+    summary.soldPlayers > 0 ? summary.totalMoneySpent / summary.soldPlayers : 0;
+  const ratingMax = Math.max(
+    1,
+    ...orderedTeams.map((team) => team.squad_rating_total || 0)
+  );
 
   return (
     <>
@@ -41,45 +52,85 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
         <SectionCard
-          title="Purse board"
-          description="A live snapshot of remaining budget and squad buildup for every team."
+          title="Leaderboard and Budgets"
+          description="Squad index, purse remaining, and roster depth across the room."
         >
-          <div className="space-y-4">
-            {teamSummary.map((team) => {
+          <div className="grid gap-3 lg:grid-cols-2">
+            {orderedTeams.map((team, index) => {
               const pursePercent =
                 team.purse_total > 0
                   ? (team.purse_remaining / team.purse_total) * 100
                   : 0;
+              const ratingPercent = Math.max(
+                14,
+                Math.round((team.squad_rating_total / ratingMax) * 100)
+              );
 
               return (
-                <div key={team.id} className="space-y-2">
-                  <div className="flex items-center justify-between gap-4 text-sm">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="size-3 rounded-full"
-                        style={{ backgroundColor: team.color_primary ?? "#ffffff" }}
-                      />
-                      <span className="font-medium text-white">{team.name}</span>
+                <div key={team.id} className="screen-frame rounded-[22px] p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--gold-soft)]">
+                          #{index + 1}
+                        </span>
+                        <span
+                          className="size-2.5 rounded-full"
+                          style={{ backgroundColor: team.color_primary ?? "#ffffff" }}
+                        />
+                        <span className="text-lg font-semibold text-white">
+                          {team.name}
+                        </span>
+                      </div>
+                      <div className="mt-2 text-sm text-[var(--text-soft)]">
+                        {team.players_acquired} players acquired
+                      </div>
                     </div>
                     <div className="text-right">
                       <div className="mono-font text-[var(--gold-soft)]">
                         {formatPrice(team.purse_remaining)}
                       </div>
-                      <div className="text-xs text-slate-500">
-                        {team.players_acquired} players • rating {team.squad_rating_total}
+                      <div className="text-xs text-[var(--text-soft)]">
+                        purse left
                       </div>
                     </div>
                   </div>
-                  <div className="h-3 rounded-full bg-white/8">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${Math.max(pursePercent, 4)}%`,
-                        backgroundColor: team.color_primary ?? "#ffffff",
-                      }}
-                    />
+
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div className="rounded-[16px] border border-white/8 bg-white/4 px-3 py-3">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-soft)]">
+                        Squad rating
+                      </div>
+                      <div className="mt-1.5 text-xl font-semibold text-white">
+                        {team.squad_rating_total}
+                      </div>
+                      <div className="mt-3 h-1.5 rounded-full bg-[rgba(255,255,255,0.08)]">
+                        <div
+                          className="h-full rounded-full bg-[var(--gold)]"
+                          style={{ width: `${ratingPercent}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="rounded-[16px] border border-white/8 bg-white/4 px-3 py-3">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-soft)]">
+                        Budget health
+                      </div>
+                      <div className="mt-1.5 text-xl font-semibold text-white">
+                        {Math.round(pursePercent)}%
+                      </div>
+                      <div className="mt-3 h-1.5 rounded-full bg-[rgba(255,255,255,0.08)]">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${Math.max(pursePercent, 6)}%`,
+                            backgroundColor: team.color_primary ?? "var(--gold)",
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
@@ -88,8 +139,8 @@ export default async function AdminDashboardPage() {
         </SectionCard>
 
         <SectionCard
-          title="Recent sales"
-          description="The last ten completed hammer results, including buyer and price."
+          title="Hammer Log"
+          description="The last completed sales, with buyer and timestamp."
         >
           <div className="space-y-3">
             {recentSales.length === 0 ? (
@@ -111,11 +162,11 @@ export default async function AdminDashboardPage() {
                 return (
                   <div
                     key={player.id}
-                    className="flex items-center justify-between rounded-[22px] border border-white/8 bg-white/4 px-4 py-4"
+                    className="screen-frame rounded-[20px] px-4 py-4"
                   >
                     <div>
                       <div className="font-medium text-white">{player.name}</div>
-                      <div className="mt-1 text-xs text-slate-400">
+                      <div className="mt-1 text-xs text-[var(--text-soft)]">
                         {team?.short_code ?? "Unknown team"} • {player.role} •{" "}
                         {new Date(player.updated_at).toLocaleString("en-IN")}
                       </div>
@@ -130,6 +181,38 @@ export default async function AdminDashboardPage() {
           </div>
         </SectionCard>
       </div>
+
+      <SectionCard
+        title="Market Pulse"
+        description="A quick read on spend velocity and room pressure."
+      >
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="screen-frame rounded-[20px] p-4">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-soft)]">
+              Total spent
+            </div>
+            <div className="mt-2 text-3xl font-semibold text-white">
+              {formatPrice(summary.totalMoneySpent)}
+            </div>
+          </div>
+          <div className="screen-frame rounded-[20px] p-4">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-soft)]">
+              Average sale
+            </div>
+            <div className="mt-2 text-3xl font-semibold text-white">
+              {formatPrice(averageSale)}
+            </div>
+          </div>
+          <div className="screen-frame rounded-[20px] p-4">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-soft)]">
+              Most purse left
+            </div>
+            <div className="mt-2 text-3xl font-semibold text-white">
+              {richestTeam?.short_code ?? "--"}
+            </div>
+          </div>
+        </div>
+      </SectionCard>
     </>
   );
 }
