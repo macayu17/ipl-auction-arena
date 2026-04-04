@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { getSessionContext } from "@/lib/auth";
+import { publishAuctionEvent } from "@/lib/redis";
 import {
   toLooseSupabaseClient,
   type LooseSupabaseClient,
@@ -65,6 +66,10 @@ export async function createSlideAction(formData: FormData) {
       throw result.error;
     }
 
+    await publishAuctionEvent({
+      type: "slide_created",
+      source: "slides.createSlideAction",
+    });
     revalidateSlideViews();
   } catch (error) {
     console.error("Failed to create slide", error);
@@ -106,6 +111,10 @@ export async function activateSlideAction(formData: FormData) {
       throw result.error;
     }
 
+    await publishAuctionEvent({
+      type: "slide_activated",
+      source: "slides.activateSlideAction",
+    });
     revalidateSlideViews();
   } catch (error) {
     console.error("Failed to activate slide", error);
@@ -120,6 +129,10 @@ export async function deactivateSlidesAction() {
 
     const supabase = await getSupabase();
     await clearActiveSlides(supabase);
+    await publishAuctionEvent({
+      type: "slides_deactivated",
+      source: "slides.deactivateSlidesAction",
+    });
     revalidateSlideViews();
   } catch (error) {
     console.error("Failed to deactivate slides", error);
@@ -145,6 +158,10 @@ export async function deleteSlideAction(formData: FormData) {
       throw result.error;
     }
 
+    await publishAuctionEvent({
+      type: "slide_deleted",
+      source: "slides.deleteSlideAction",
+    });
     revalidateSlideViews();
   } catch (error) {
     console.error("Failed to delete slide", error);
@@ -174,6 +191,10 @@ export async function updateSlideOrderAction(formData: FormData) {
       throw result.error;
     }
 
+    await publishAuctionEvent({
+      type: "slide_reordered",
+      source: "slides.updateSlideOrderAction",
+    });
     revalidateSlideViews();
   } catch (error) {
     console.error("Failed to update slide order", error);

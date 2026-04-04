@@ -7,22 +7,13 @@ import { createServiceClient } from "@/lib/supabase/server";
 import type {
   AuctionState,
   Bid,
+  BidWithTeam,
   Player,
   Slide,
   Team,
   TeamCredential,
+  TeamWithSummary,
 } from "@/types/app.types";
-
-export type BidWithTeam = Bid & {
-  team: Team | null;
-};
-
-export type TeamWithSummary = Team & {
-  players_acquired: number;
-  purse_remaining: number;
-  squad_rating_total: number;
-  credentials: TeamCredential | null;
-};
 
 const defaultAuctionState: AuctionState = {
   id: 1,
@@ -39,6 +30,14 @@ const defaultAuctionState: AuctionState = {
 
 function sortPlayersForQueue(players: Player[]) {
   return [...players].sort((left, right) => {
+    const queueDiff =
+      (left.queue_order ?? Number.MAX_SAFE_INTEGER) -
+      (right.queue_order ?? Number.MAX_SAFE_INTEGER);
+
+    if (queueDiff !== 0) {
+      return queueDiff;
+    }
+
     const ratingDiff = (right.rating ?? 0) - (left.rating ?? 0);
 
     if (ratingDiff !== 0) {
@@ -59,7 +58,7 @@ function buildTeamSummary(
   teams: Team[],
   players: Player[],
   credentials: TeamCredential[] = []
-) {
+): TeamWithSummary[] {
   const credentialByTeamId = new Map(credentials.map((item) => [item.team_id, item]));
 
   return teams
@@ -177,17 +176,18 @@ export const getAdminAuctionPageData = cache(async () => {
     leadingTeam,
     queue: sortPlayersForQueue(
       players.filter((player) => player.status === "pool" || player.status === "unsold")
-    ).slice(0, 8),
+    ),
     bidHistory,
     teamSummary,
   };
 });
 
 export const getTeamsPageData = cache(async () => {
-  const { teamSummary } = await getBaseAuctionData();
+  const { teamSummary, auctionState } = await getBaseAuctionData();
 
   return {
     teams: teamSummary,
+    auctionState,
   };
 });
 

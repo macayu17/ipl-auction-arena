@@ -2,7 +2,7 @@ import { signOutAction } from "@/app/actions/auth";
 import { RealtimeRefresh } from "@/components/auction/realtime-refresh";
 import { AppShell } from "@/components/layout/app-shell";
 import { StatusBanner } from "@/components/layout/status-banner";
-import { ActiveSlideOverlay } from "@/components/slides/active-slide-overlay";
+import { TeamLayoutSlideGate } from "@/components/slides/team-layout-slide-gate";
 import { getTeamForCurrentUser, requireRole } from "@/lib/auth";
 import { getActiveSlide } from "@/lib/auction-data";
 import { hasSupabaseEnv, SUPABASE_ENV_HINT } from "@/lib/supabase/env";
@@ -88,9 +88,7 @@ export default async function TeamLayout({
         </form>
       }
     >
-      {activeSlide ? (
-        <ActiveSlideOverlay slide={activeSlide} audienceLabel="team consoles" />
-      ) : null}
+      <TeamLayoutSlideGate slide={activeSlide} />
       <RealtimeRefresh />
       {children}
     </AppShell>

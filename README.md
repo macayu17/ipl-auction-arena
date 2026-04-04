@@ -61,12 +61,16 @@ AUCTION_ADMIN_EMAIL=
 AUCTION_ADMIN_PASSWORD=
 TEAM_EMAIL_DOMAIN=
 TEAM_PASSWORD_PREFIX=
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+AUCTION_JWT_SECRET=
 ```
 
 ### Notes
 
 - `SUPABASE_SERVICE_ROLE_KEY` is server-only and should never be exposed publicly.
 - `TEAM_EMAIL_DOMAIN` and `TEAM_PASSWORD_PREFIX` are optional.
+- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, and `AUCTION_JWT_SECRET` are optional unless you want the lower-latency Redis event transport.
 
 ## Local Setup
 
@@ -125,6 +129,17 @@ npm run lint
 npm run setup:auction
 npm run import:players
 ```
+
+## Optional Lower-Latency Transport
+
+The app now supports an optional Redis-backed event stream for faster UI refresh propagation while keeping Supabase as the source of truth.
+
+- Auth stays on Supabase.
+- Database writes stay on Supabase.
+- Redis is used only to publish auction events quickly.
+- The browser receives those events through an authenticated SSE route using a short-lived JWT.
+
+See [REDIS_JWT_ROLLOUT.md](./REDIS_JWT_ROLLOUT.md) for the exact setup and requirements.
 
 ## Deployment (Vercel + Supabase)
 

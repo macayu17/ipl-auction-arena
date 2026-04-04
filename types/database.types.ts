@@ -88,6 +88,7 @@ export interface Database {
           status: "pool" | "active" | "sold" | "unsold" | "rtm";
           sold_to: string | null;
           sold_price: number | null;
+          queue_order: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -105,6 +106,7 @@ export interface Database {
           status?: "pool" | "active" | "sold" | "unsold" | "rtm";
           sold_to?: string | null;
           sold_price?: number | null;
+          queue_order?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -122,6 +124,7 @@ export interface Database {
           status?: "pool" | "active" | "sold" | "unsold" | "rtm";
           sold_to?: string | null;
           sold_price?: number | null;
+          queue_order?: number | null;
           created_at?: string;
           updated_at?: string;
         };

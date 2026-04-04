@@ -43,6 +43,13 @@ export interface PlayerWithTeam extends Player {
   team?: Team;
 }
 
+export interface TeamWithSummary extends Team {
+  players_acquired: number;
+  purse_remaining: number;
+  squad_rating_total: number;
+  credentials: TeamCredential | null;
+}
+
 // IPL Team seed data
 export const IPL_TEAMS = [
   { name: "Mumbai Indians", short_code: "MI", color_primary: "#004BA0", purse_total: 1000 },

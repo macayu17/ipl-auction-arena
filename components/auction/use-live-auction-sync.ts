@@ -1,11 +1,10 @@
 "use client";
 
-import { startTransition, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
 
-const CLIENT_SYNC_PATHS = new Set(["/admin/auction", "/team/auction"]);
+type RoleName = "admin" | "team";
 
 function isSupabaseClientConfigured() {
   return Boolean(
@@ -14,24 +13,58 @@ function isSupabaseClientConfigured() {
   );
 }
 
-export function RealtimeRefresh() {
-  const router = useRouter();
-  const pathname = usePathname();
+export function useLiveAuctionSync<T>({
+  initialData,
+  expectedRole,
+}: {
+  initialData: T | null;
+  expectedRole: RoleName;
+}) {
+  const [data, setData] = useState(initialData);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const fetchInFlightRef = useRef(false);
 
   useEffect(() => {
-    if (CLIENT_SYNC_PATHS.has(pathname)) {
-      return;
-    }
+    setData(initialData);
+  }, [initialData]);
 
+  useEffect(() => {
     let stopped = false;
     let reconnectTimeout: number | null = null;
     let eventSource: EventSource | null = null;
     let supabaseCleanup: (() => void) | null = null;
 
-    const refresh = () => {
-      startTransition(() => {
-        router.refresh();
-      });
+    const refreshSnapshot = async () => {
+      if (fetchInFlightRef.current) {
+        return;
+      }
+
+      fetchInFlightRef.current = true;
+      setIsRefreshing(true);
+
+      try {
+        const response = await fetch("/api/auction/live-snapshot", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const payload = (await response.json()) as {
+          role?: RoleName;
+          data?: T;
+        };
+
+        if (!stopped && payload.role === expectedRole && payload.data) {
+          setData(payload.data);
+        }
+      } finally {
+        fetchInFlightRef.current = false;
+        if (!stopped) {
+          setIsRefreshing(false);
+        }
+      }
     };
 
     const startSupabaseFallback = () => {
@@ -46,9 +79,15 @@ export function RealtimeRefresh() {
             private: true,
           },
         })
-        .on("broadcast", { event: "INSERT" }, refresh)
-        .on("broadcast", { event: "UPDATE" }, refresh)
-        .on("broadcast", { event: "DELETE" }, refresh)
+        .on("broadcast", { event: "INSERT" }, () => {
+          void refreshSnapshot();
+        })
+        .on("broadcast", { event: "UPDATE" }, () => {
+          void refreshSnapshot();
+        })
+        .on("broadcast", { event: "DELETE" }, () => {
+          void refreshSnapshot();
+        })
         .subscribe();
 
       supabaseCleanup = () => {
@@ -81,7 +120,7 @@ export function RealtimeRefresh() {
         );
 
         eventSource.onmessage = () => {
-          refresh();
+          void refreshSnapshot();
         };
 
         eventSource.onerror = () => {
@@ -102,6 +141,9 @@ export function RealtimeRefresh() {
     };
 
     void startRedisStream();
+    if (initialData === null) {
+      void refreshSnapshot();
+    }
 
     return () => {
       stopped = true;
@@ -112,7 +154,10 @@ export function RealtimeRefresh() {
         window.clearTimeout(reconnectTimeout);
       }
     };
-  }, [pathname, router]);
+  }, [expectedRole, initialData]);
 
-  return null;
+  return {
+    data,
+    isRefreshing,
+  };
 }

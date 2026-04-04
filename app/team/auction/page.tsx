@@ -1,36 +1,74 @@
+"use client";
+
 import { RadioTower, Shield, TimerReset, Trophy } from "lucide-react";
 
 import { placeBidAction } from "@/app/actions/auction";
 import { TimerDisplay } from "@/components/auction/timer-display";
+import { useLiveAuctionSync } from "@/components/auction/use-live-auction-sync";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { MetricCard } from "@/components/layout/metric-card";
 import { SectionCard } from "@/components/layout/section-card";
-import { requireRole } from "@/lib/auth";
-import { getTeamAuctionPageData } from "@/lib/auction-data";
+import { ActiveSlideOverlay } from "@/components/slides/active-slide-overlay";
 import {
   formatPrice,
   formatPurse,
   getRoleBadgeColor,
 } from "@/lib/utils";
+import type {
+  AuctionState,
+  BidWithTeam,
+  Player,
+  Slide,
+  Team,
+} from "@/types/app.types";
 
-export default async function TeamAuctionPage() {
-  const session = await requireRole("team");
+const emptyAuctionState: AuctionState = {
+  id: 1,
+  phase: "setup",
+  current_player_id: null,
+  current_bid_amount: 0,
+  current_bid_team_id: null,
+  timer_seconds: 30,
+  timer_active: false,
+  bid_increment: 5,
+  created_at: new Date(0).toISOString(),
+  updated_at: new Date(0).toISOString(),
+};
 
-  if (session.status !== "authenticated") {
+export default function TeamAuctionPage() {
+  const { data, isRefreshing } = useLiveAuctionSync<{
+    auctionState: AuctionState;
+    currentPlayer: Player | null;
+    leadingTeam: Team | null;
+    myTeam: Team | null;
+    mySquad: Player[];
+    bidHistory: BidWithTeam[];
+    activeSlide: Slide | null;
+  }>({
+    initialData: null,
+    expectedRole: "team",
+  });
+
+  const auctionState = data?.auctionState ?? emptyAuctionState;
+  const currentPlayer = data?.currentPlayer ?? null;
+  const leadingTeam = data?.leadingTeam ?? null;
+  const myTeam = data?.myTeam ?? null;
+  const mySquad = data?.mySquad ?? [];
+  const bidHistory = data?.bidHistory ?? [];
+  const activeSlide = data?.activeSlide ?? null;
+
+  if (data === null) {
     return (
       <SectionCard
-        title="Team console preview"
-        description="Connect Supabase auth to unlock the personalized live team experience."
+        title="Loading live room"
+        description="Connecting to the latest auction snapshot."
       >
         <div className="rounded-[24px] border border-white/8 bg-white/4 p-6 text-sm leading-6 text-slate-300">
-          Sign in with a linked team account to see purse, bidding, and squad data.
+          Pulling the latest bid board, purse state, and squad snapshot.
         </div>
       </SectionCard>
     );
   }
-
-  const { auctionState, currentPlayer, leadingTeam, myTeam, mySquad, bidHistory } =
-    await getTeamAuctionPageData(session.user.id);
 
   if (!myTeam) {
     return (
@@ -67,10 +105,14 @@ export default async function TeamAuctionPage() {
 
   return (
     <>
+      {activeSlide ? (
+        <ActiveSlideOverlay slide={activeSlide} audienceLabel="team consoles" />
+      ) : null}
+
       <div className="grid gap-3 xl:grid-cols-4">
         <MetricCard
           label="Connection"
-          value="Ready"
+          value={isRefreshing ? "Syncing" : "Ready"}
           hint="Subscribed to the same live room state."
           icon={RadioTower}
         />

@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import { getSessionContext } from "@/lib/auth";
+import { publishAuctionEvent } from "@/lib/redis";
 import {
   toLooseSupabaseClient,
   type LooseSupabaseClient,
@@ -25,6 +27,19 @@ const defaultAuctionState = {
   timer_active: false,
   bid_increment: 5,
 };
+
+const reorderQueueSchema = z.object({
+  orderedPlayerIds: z
+    .string()
+    .transform((value) => JSON.parse(value) as string[])
+    .refine(
+      (value) =>
+        Array.isArray(value) &&
+        value.length > 0 &&
+        value.every((item) => typeof item === "string" && item.length > 0),
+      "Queue order must contain at least one player id."
+    ),
+});
 
 function revalidateAuctionViews() {
   [
@@ -52,6 +67,13 @@ function parsePositiveInteger(
 
 function sortQueue(players: Player[]) {
   return [...players].sort((left, right) => {
+    const queueDiff = (left.queue_order ?? Number.MAX_SAFE_INTEGER) -
+      (right.queue_order ?? Number.MAX_SAFE_INTEGER);
+
+    if (queueDiff !== 0) {
+      return queueDiff;
+    }
+
     const ratingDiff = (right.rating ?? 0) - (left.rating ?? 0);
 
     if (ratingDiff !== 0) {
@@ -174,6 +196,23 @@ async function nominatePlayerById(playerId: string) {
   }
 }
 
+async function getLatestBidsForCurrentPlayer(
+  supabase: LooseSupabaseClient,
+  playerId: string
+) {
+  const bidResult = await supabase
+    .from("bids")
+    .select("*")
+    .eq("player_id", playerId)
+    .order("timestamp", { ascending: false });
+
+  if (bidResult.error) {
+    throw bidResult.error;
+  }
+
+  return (bidResult.data as { id: string; team_id: string; amount: number }[] | null) ?? [];
+}
+
 async function getCurrentPlayerWithTeamContext(
   supabase: LooseSupabaseClient
 ) {
@@ -265,6 +304,10 @@ export async function nominatePlayerAction(formData: FormData) {
     }
 
     await nominatePlayerById(playerId);
+    await publishAuctionEvent({
+      type: "player_nominated",
+      source: "auction.nominatePlayerAction",
+    });
     revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to nominate player", error);
@@ -300,6 +343,10 @@ export async function nominateNextPlayerAction() {
     }
 
     await nominatePlayerById(nextPlayer.id);
+    await publishAuctionEvent({
+      type: "player_nominated",
+      source: "auction.nominateNextPlayerAction",
+    });
     revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to nominate next player", error);
@@ -328,9 +375,50 @@ export async function setAuctionPhaseAction(formData: FormData) {
       throw result.error;
     }
 
+    await publishAuctionEvent({
+      type: "auction_phase_changed",
+      source: "auction.setAuctionPhaseAction",
+    });
     revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to change auction phase", error);
+  }
+}
+
+export async function reorderQueueAction(formData: FormData) {
+  try {
+    if (!(await ensureAdmin())) {
+      return;
+    }
+
+    const parsed = reorderQueueSchema.safeParse({
+      orderedPlayerIds: formData.get("orderedPlayerIds"),
+    });
+
+    if (!parsed.success) {
+      return;
+    }
+
+    const supabase = toLooseSupabaseClient(await createServiceClient());
+
+    for (const [index, playerId] of parsed.data.orderedPlayerIds.entries()) {
+      const result = await supabase
+        .from("players")
+        .update({ queue_order: index + 1 })
+        .eq("id", playerId);
+
+      if (result.error) {
+        throw result.error;
+      }
+    }
+
+    await publishAuctionEvent({
+      type: "queue_reordered",
+      source: "auction.reorderQueueAction",
+    });
+    revalidateAuctionViews();
+  } catch (error) {
+    console.error("Failed to reorder queue", error);
   }
 }
 
@@ -354,6 +442,10 @@ export async function setBidIncrementAction(formData: FormData) {
       throw result.error;
     }
 
+    await publishAuctionEvent({
+      type: "bid_increment_changed",
+      source: "auction.setBidIncrementAction",
+    });
     revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to update bid increment", error);
@@ -385,6 +477,10 @@ export async function setTimerStateAction(formData: FormData) {
       throw result.error;
     }
 
+    await publishAuctionEvent({
+      type: "timer_state_changed",
+      source: "auction.setTimerStateAction",
+    });
     revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to update timer state", error);
@@ -449,9 +545,67 @@ export async function placeBidAction(formData: FormData) {
       throw updateAuctionStateResult.error;
     }
 
+    await publishAuctionEvent({
+      type: "bid_placed",
+      source: "auction.placeBidAction",
+    });
     revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to place bid", error);
+  }
+}
+
+export async function undoLastBidAction() {
+  try {
+    if (!(await ensureAdmin())) {
+      return;
+    }
+
+    const supabase = toLooseSupabaseClient(await createServiceClient());
+    const { auctionState, currentPlayer } =
+      await getCurrentPlayerWithTeamContext(supabase);
+
+    if (!currentPlayer) {
+      return;
+    }
+
+    const bids = await getLatestBidsForCurrentPlayer(supabase, currentPlayer.id);
+    const [latestBid, previousBid] = bids;
+
+    if (!latestBid) {
+      return;
+    }
+
+    const deleteResult = await supabase.from("bids").delete().eq("id", latestBid.id);
+
+    if (deleteResult.error) {
+      throw deleteResult.error;
+    }
+
+    const updateAuctionStateResult = await supabase
+      .from("auction_state")
+      .update({
+        current_bid_amount: previousBid?.amount ?? 0,
+        current_bid_team_id: previousBid?.team_id ?? null,
+        timer_seconds: auctionState.timer_seconds > 0
+          ? auctionState.timer_seconds
+          : defaultAuctionState.timer_seconds,
+        timer_active: Boolean(currentPlayer),
+        phase: currentPlayer ? "live" : auctionState.phase,
+      })
+      .eq("id", 1);
+
+    if (updateAuctionStateResult.error) {
+      throw updateAuctionStateResult.error;
+    }
+
+    await publishAuctionEvent({
+      type: "bid_reverted",
+      source: "auction.undoLastBidAction",
+    });
+    revalidateAuctionViews();
+  } catch (error) {
+    console.error("Failed to undo last bid", error);
   }
 }
 
@@ -534,6 +688,10 @@ export async function sellCurrentPlayerAction() {
       throw updateAuctionStateResult.error;
     }
 
+    await publishAuctionEvent({
+      type: "player_sold",
+      source: "auction.sellCurrentPlayerAction",
+    });
     revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to sell current player", error);
@@ -581,6 +739,10 @@ export async function markUnsoldAction() {
       throw updateAuctionStateResult.error;
     }
 
+    await publishAuctionEvent({
+      type: "player_marked_unsold",
+      source: "auction.markUnsoldAction",
+    });
     revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to mark player unsold", error);
@@ -628,6 +790,10 @@ export async function resetAuctionAction() {
       throw resetAuctionStateResult.error;
     }
 
+    await publishAuctionEvent({
+      type: "auction_reset",
+      source: "auction.resetAuctionAction",
+    });
     revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to reset auction", error);

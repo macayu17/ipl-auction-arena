@@ -1,3 +1,5 @@
+"use client";
+
 import type { Slide } from "@/types/app.types";
 
 export function ActiveSlideOverlay({

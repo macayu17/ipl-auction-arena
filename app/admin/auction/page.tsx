@@ -1,35 +1,87 @@
+"use client";
+
 import { Clock3, Gavel, RadioTower, Trophy, Users } from "lucide-react";
 
 import {
   markUnsoldAction,
   nominateNextPlayerAction,
-  nominatePlayerAction,
   placeBidAction,
   resetAuctionAction,
   sellCurrentPlayerAction,
-  setAuctionPhaseAction,
-  setBidIncrementAction,
   setTimerStateAction,
+  setBidIncrementAction,
+  setAuctionPhaseAction,
+  undoLastBidAction,
 } from "@/app/actions/auction";
+import { NominationQueueManager } from "@/components/auction/nomination-queue-manager";
 import { TimerDisplay } from "@/components/auction/timer-display";
+import { useLiveAuctionSync } from "@/components/auction/use-live-auction-sync";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { MetricCard } from "@/components/layout/metric-card";
 import { SectionCard } from "@/components/layout/section-card";
-import { getAdminAuctionPageData } from "@/lib/auction-data";
 import {
   formatPrice,
   formatPriceShort,
   getRoleBadgeColor,
   getStatusColor,
 } from "@/lib/utils";
+import type {
+  AuctionState,
+  BidWithTeam,
+  Player,
+  Team,
+  TeamWithSummary,
+} from "@/types/app.types";
 
 const phases = ["setup", "live", "paused", "ended"] as const;
 const timerPresets = [15, 20, 30, 45, 60, 90];
 const incrementPresets = [1, 2, 5, 10, 25];
 
-export default async function AdminAuctionPage() {
-  const { auctionState, currentPlayer, leadingTeam, queue, bidHistory, teamSummary } =
-    await getAdminAuctionPageData();
+const emptyAuctionState: AuctionState = {
+  id: 1,
+  phase: "setup",
+  current_player_id: null,
+  current_bid_amount: 0,
+  current_bid_team_id: null,
+  timer_seconds: 30,
+  timer_active: false,
+  bid_increment: 5,
+  created_at: new Date(0).toISOString(),
+  updated_at: new Date(0).toISOString(),
+};
+
+export default function AdminAuctionPage() {
+  const { data, isRefreshing } = useLiveAuctionSync<{
+    auctionState: AuctionState;
+    currentPlayer: Player | null;
+    leadingTeam: Team | null;
+    queue: Player[];
+    bidHistory: BidWithTeam[];
+    teamSummary: TeamWithSummary[];
+  }>({
+    initialData: null,
+    expectedRole: "admin",
+  });
+
+  const auctionState = data?.auctionState ?? emptyAuctionState;
+  const currentPlayer = data?.currentPlayer ?? null;
+  const leadingTeam = data?.leadingTeam ?? null;
+  const queue = data?.queue ?? [];
+  const bidHistory = data?.bidHistory ?? [];
+  const teamSummary = data?.teamSummary ?? [];
+
+  if (data === null) {
+    return (
+      <SectionCard
+        title="Loading auction room"
+        description="Connecting to the latest control-room snapshot."
+      >
+        <div className="rounded-[24px] border border-white/8 bg-white/4 p-6 text-sm leading-6 text-slate-300">
+          Pulling the current player, queue order, bid history, and team board.
+        </div>
+      </SectionCard>
+    );
+  }
 
   const soldPlayers = teamSummary.reduce(
     (sum, team) => sum + team.players_acquired,
@@ -85,6 +137,12 @@ export default async function AdminAuctionPage() {
           }
           icon={Users}
         />
+      </div>
+
+      <div className="flex justify-end">
+        <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.18em] text-[var(--text-soft)]">
+          {isRefreshing ? "Syncing live state" : "Live state synced"}
+        </div>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.95fr_1.2fr_0.95fr]">
@@ -161,7 +219,7 @@ export default async function AdminAuctionPage() {
                   </div>
                 </div>
 
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   <form action={sellCurrentPlayerAction}>
                     <SubmitButton
                       pendingLabel="Selling..."
@@ -196,6 +254,15 @@ export default async function AdminAuctionPage() {
                       Reset Room
                     </SubmitButton>
                   </form>
+                  <form action={undoLastBidAction}>
+                    <SubmitButton
+                      pendingLabel="Rewinding..."
+                      className="w-full rounded-xl border border-[var(--blue)]/20 bg-[rgba(5,102,217,0.12)] px-4 py-3 text-sm font-medium text-[var(--blue-soft)] hover:border-[var(--blue)]/35 hover:bg-[rgba(5,102,217,0.18)]"
+                      disabled={bidHistory.length === 0}
+                    >
+                      Undo Last Bid
+                    </SubmitButton>
+                  </form>
                 </div>
               </div>
             ) : (
@@ -221,53 +288,10 @@ export default async function AdminAuctionPage() {
             title="Nomination Queue"
             description="Upcoming order and quick recall controls."
           >
-            <div className="space-y-2.5">
-              {queue.length === 0 ? (
-                <div className="rounded-[18px] border border-dashed border-white/12 bg-white/4 px-4 py-4 text-sm text-slate-300">
-                  No players waiting in the pool.
-                </div>
-              ) : (
-                queue.map((player, index) => (
-                  <div
-                    key={player.id}
-                    className="screen-frame rounded-[18px] px-4 py-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--gold-soft)]">
-                            {String(index + 1).padStart(2, "0")}
-                          </span>
-                          <span className="font-semibold text-white">
-                            {player.name}
-                          </span>
-                          <span
-                            className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getRoleBadgeColor(player.role)}`}
-                          >
-                            {player.role}
-                          </span>
-                        </div>
-                        <div className="mt-2 text-xs text-[var(--text-soft)]">
-                          {player.nationality} • Rating {player.rating} • Base{" "}
-                          {formatPrice(player.base_price)}
-                        </div>
-                      </div>
-
-                      <form action={nominatePlayerAction}>
-                        <input type="hidden" name="playerId" value={player.id} />
-                        <SubmitButton
-                          pendingLabel="..."
-                          className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white hover:border-white/20 hover:bg-white/10"
-                          disabled={Boolean(currentPlayer)}
-                        >
-                          {player.status === "unsold" ? "Recall" : "Nominate"}
-                        </SubmitButton>
-                      </form>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+            <NominationQueueManager
+              queue={queue}
+              currentPlayerId={currentPlayer?.id ?? null}
+            />
           </SectionCard>
         </div>
 
