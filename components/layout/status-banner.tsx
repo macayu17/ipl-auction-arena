@@ -23,8 +23,8 @@ export function StatusBanner({
 }: StatusBannerProps) {
   return (
     <section className={cn("surface-panel overflow-hidden", toneClasses[tone])}>
-      <div className="border-b border-current/10 px-4 py-3 lg:px-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-current/80">
+      <div className="border-b border-current/10 px-3 py-1.5 text-sm lg:px-5">
+        <p className="text-xs text-[var(--text-muted)] font-semibold tracking-normal text-current/80">
           System notice
         </p>
         <h2 className="mt-2 display-font text-2xl text-current">{title}</h2>

@@ -40,10 +40,10 @@ body {
   font-family: var(--font-body), sans-serif;
   text-rendering: optimizeLegibility;
   background:
-    radial-gradient(circle at top right, rgba(245, 166, 35, 0.12), transparent 28%),
-    radial-gradient(circle at 12% 18%, rgba(5, 102, 217, 0.1), transparent 24%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 20%),
+    radial-gradient(ellipse at top, rgba(232, 168, 56, 0.1), transparent 50%),
+    radial-gradient(circle at bottom left, rgba(5, 102, 217, 0.05), transparent 40%),
     var(--background);
+  background-attachment: fixed;
 }
 
 a {
@@ -74,18 +74,14 @@ textarea {
 
 .surface-panel {
   border: 1px solid var(--border-strong);
-  border-radius: 24px;
-  background:
-    linear-gradient(180deg, rgba(53, 52, 58, 0.94), rgba(27, 27, 32, 0.98));
-  box-shadow: var(--shadow-panel);
-  backdrop-filter: blur(14px);
+  border-radius: 0.5rem;
+  background: var(--surface);
 }
 
 .surface-panel-muted {
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background:
-    linear-gradient(180deg, rgba(31, 31, 37, 0.96), rgba(14, 14, 19, 0.98));
-  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface-low);
 }
 
 .grid-overlay {
@@ -142,4 +138,35 @@ textarea {
     opacity: 0;
     transform: scale(2.2);
   }
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-panel-elevated {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.5);
+}
+
+.glass-button-primary {
+  background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+  color: #131318;
+  border: none;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.glass-button-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 20px rgba(232, 168, 56, 0.4);
+}
+
+.glow-text {
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
 }

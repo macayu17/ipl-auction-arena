@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   description:
     "Realtime mock IPL auction platform for admins and team captains.",
   applicationName: "Mock IPL Auction",
+  icons: {
+    icon: "https://www.iplt20.com/assets/images/IPL_LOGO_CORPORATE_2024.png",
+    shortcut: "https://www.iplt20.com/assets/images/IPL_LOGO_CORPORATE_2024.png",
+    apple: "https://www.iplt20.com/assets/images/IPL_LOGO_CORPORATE_2024.png",
+  },
 };
 
 export default function RootLayout({

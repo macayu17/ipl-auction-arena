@@ -1,12 +1,10 @@
+"use client";
+
 import type { ReactNode } from "react";
-
-import { Shield } from "lucide-react";
-
-import {
-  BottomNav,
-  SidebarNav,
-  type NavigationItem,
-} from "@/components/layout/sidebar-nav";
+import { usePathname } from "next/navigation";
+import PillNav from "./pill-nav";
+import type { NavigationItem } from "./sidebar-nav"; // Keep types or define them here
+import { IPL_LOGO_URL } from "@/lib/team-logos";
 
 type ShellStat = {
   label: string;
@@ -36,104 +34,76 @@ export function AppShell({
   banner,
   children,
 }: AppShellProps) {
+  const pathname = usePathname();
+
+  // Convert Sidebar items to PillNav items
+  const pillNavItems = navItems.map((item) => ({
+    label: item.label,
+    href: item.href,
+  }));
+
   return (
-    <div className="min-h-screen">
-      <header className="fixed inset-x-0 top-0 z-50 h-16 border-b border-white/6 bg-[rgba(19,19,24,0.92)] backdrop-blur">
-        <div className="mx-auto flex h-full max-w-[1800px] items-center justify-between gap-4 px-4 lg:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--gold)]/20 bg-[rgba(245,166,35,0.08)] text-[var(--gold-soft)]">
-              <Shield className="size-4" />
-            </div>
-
-            <div className="min-w-0">
-              <p className="display-font truncate text-xl text-[var(--gold-soft)]">
-                Auction Command Center
-              </p>
-              <div className="hidden items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--text-soft)] sm:flex">
-                <span className="signal-dot" />
-                {badge}
-              </div>
-            </div>
-          </div>
-
-          <div className="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 lg:block">
-            {userLabel}
-          </div>
+    <div className="min-h-screen bg-[var(--background)] flex flex-col relative">
+      {/* PillNav Container */}
+      <div className="w-full flex justify-start pl-4 lg:pl-8 sticky top-0 z-[100] bg-transparent pointer-events-none pt-4">
+        <div className="pointer-events-auto">
+          <PillNav
+            logo={IPL_LOGO_URL}
+            logoAlt="IPL Logo"
+            items={pillNavItems}
+            activeHref={pathname}
+            className="shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-3xl"
+          />
         </div>
-      </header>
+      </div>
 
-      <aside className="fixed left-0 top-16 hidden h-[calc(100vh-4rem)] w-[280px] flex-col border-r border-white/6 bg-[rgba(27,27,32,0.96)] px-4 py-5 shadow-2xl backdrop-blur lg:flex">
-        <div className="rounded-[22px] border border-white/8 bg-[rgba(14,14,19,0.65)] p-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--gold)]/25 bg-[rgba(245,166,35,0.1)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--gold-soft)]">
-            <Shield className="size-3.5" />
-            {badge}
-          </div>
-
-          <div className="mt-4">
-            <p className="display-font text-3xl leading-none text-white">
-              {title}
-            </p>
-            <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">
-              {description}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-5 flex-1 overflow-y-auto pr-1">
-          <SidebarNav items={navItems} />
-        </div>
-
-        {stats.length > 0 ? (
-          <div className="mt-5 grid gap-2.5">
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="surface-panel-muted rounded-[18px] px-4 py-3"
-              >
-                <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--text-soft)]">
-                  {stat.label}
-                </div>
-                <div className="mt-1.5 text-sm font-semibold text-white">
-                  {stat.value}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : null}
-      </aside>
-
-      <div className="px-3 pb-24 pt-[4.5rem] lg:pl-[304px] lg:pr-5 lg:pt-[5.25rem]">
-        <div className="mx-auto max-w-[1600px] space-y-4">
-          <header className="surface-panel overflow-hidden">
-            <div className="grid gap-4 px-4 py-4 lg:grid-cols-[1fr_auto] lg:items-center lg:px-5">
+      <div className="flex-1 w-full px-4 pb-16 pt-6 lg:px-6">
+        <div className="mx-auto max-w-[1800px] space-y-3">
+          <header className="glass-panel rounded-xl overflow-hidden relative">
+            
+            <div className="grid gap-4 px-4 py-3 lg:grid-cols-[1fr_auto] lg:items-center lg:px-6">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--gold-soft)]">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--gold)] bg-[var(--gold)]/10 inline-block px-2 py-0.5 rounded-full border border-[var(--gold)]/20">
                   {badge}
                 </p>
-                <h1 className="mt-2 display-font text-3xl text-white lg:text-[3rem]">
+                <h1 className="mt-1.5 display-font text-xl font-bold tracking-tight text-white lg:text-2xl glow-text leading-[1.1]">
                   {title}
                 </h1>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--text-soft)]">
+                <p className="mt-1 max-w-3xl text-[11px] leading-relaxed text-[var(--text-soft)]">
                   {description}
                 </p>
               </div>
 
-              <div className="flex flex-col items-start gap-3 text-sm text-slate-300 lg:items-end">
-                <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2">
+              <div className="flex flex-wrap items-center gap-3 text-xs lg:justify-end">
+                <div className="rounded-full border border-white/5 bg-black/30 px-3 py-1.5 text-[10px] text-white/50 font-bold uppercase tracking-wider">
                   {userLabel}
                 </div>
                 {actions}
               </div>
             </div>
+            
+            {/* Optional Stats Banner row added below header content to preserve data */}
+            {stats.length > 0 && (
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-0 border-t border-white/5 bg-black/20 divide-x divide-white/5">
+                {stats.map((stat) => (
+                  <div key={stat.label} className="flex-1 px-4 py-3 min-w-[140px] text-center sm:text-left">
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                      {stat.label}
+                    </div>
+                    <div className="mt-0.5 text-sm font-semibold text-white font-mono">
+                      {stat.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </header>
 
           {banner}
 
-          <main className="space-y-4">{children}</main>
+          <main className="space-y-3">{children}</main>
         </div>
       </div>
-
-      <BottomNav items={navItems} />
     </div>
   );
 }

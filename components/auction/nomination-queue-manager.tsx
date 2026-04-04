@@ -7,6 +7,7 @@ import {
   nominatePlayerAction,
   reorderQueueAction,
 } from "@/app/actions/auction";
+import { OverseasBadge } from "@/components/auction/overseas-badge";
 import { formatPrice, getRoleBadgeColor } from "@/lib/utils";
 import type { Player } from "@/types/app.types";
 
@@ -78,7 +79,7 @@ export function NominationQueueManager({
   }
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       <form ref={reorderFormRef} action={reorderQueueAction} className="hidden">
         <input
           ref={hiddenOrderInputRef}
@@ -89,7 +90,7 @@ export function NominationQueueManager({
       </form>
 
       {orderedQueue.length === 0 ? (
-        <div className="rounded-[18px] border border-dashed border-white/12 bg-white/4 px-4 py-4 text-sm text-slate-300">
+        <div className="glass-panel items-center justify-center min-h-[120px] rounded-xl border border-dashed border-white/10 flex px-4 text-sm text-[var(--text-soft)]">
           No players waiting in the pool.
         </div>
       ) : (
@@ -116,54 +117,56 @@ export function NominationQueueManager({
             onDragEnd={() => {
               dragPlayerIdRef.current = null;
             }}
-            className="screen-frame rounded-[18px] px-4 py-4"
+            className="glass-panel rounded-xl px-4 py-3.5 cursor-grab active:cursor-grabbing hover:bg-white/[0.04] transition-colors border border-white/5 bg-black/20"
           >
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--gold-soft)]">
-                    <GripVertical className="size-3.5" />
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between w-full h-full">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
+                    <GripVertical className="w-4 h-4" />
                     {String(index + 1).padStart(2, "0")}
                   </span>
-                  <span className="font-semibold text-white">{player.name}</span>
+                  <span className="font-bold text-white text-lg tracking-tight truncate min-w-0">{player.name}</span>
                   <span
-                    className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium ${getRoleBadgeColor(player.role)}`}
+                    className={`inline-flex rounded-md px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider shrink-0 ${getRoleBadgeColor(player.role)}`}
                   >
                     {player.role}
                   </span>
+                  <OverseasBadge nationality={player.nationality} />
                 </div>
-                <div className="mt-2 text-xs text-[var(--text-soft)]">
-                  {player.nationality} • Rating {player.rating} • Base{" "}
-                  {formatPrice(player.base_price)}
+                <div className="mt-1.5 text-[13px] font-medium text-[var(--text-soft)] whitespace-nowrap overflow-hidden text-ellipsis">
+                  <span className="text-[var(--gold)]/80">Rating {player.rating}</span> • <span className="mono-font text-white">{formatPrice(player.base_price)}</span>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => movePlayer(player.id, -1)}
-                  disabled={index === 0}
-                  className="inline-flex rounded-full border border-white/10 bg-white/5 p-2 text-slate-200 transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label={`Move ${player.name} up`}
-                >
-                  <ArrowUp className="size-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => movePlayer(player.id, 1)}
-                  disabled={index === orderedQueue.length - 1}
-                  className="inline-flex rounded-full border border-white/10 bg-white/5 p-2 text-slate-200 transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label={`Move ${player.name} down`}
-                >
-                  <ArrowDown className="size-4" />
-                </button>
+              <div className="flex items-center justify-end gap-1.5 shrink-0">
+                <div className="flex items-center gap-1 bg-black/40 p-1 rounded-lg border border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => movePlayer(player.id, -1)}
+                    disabled={index === 0}
+                    className="inline-flex rounded-md p-1.5 text-white/50 transition hover:text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
+                    aria-label={`Move ${player.name} up`}
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => movePlayer(player.id, 1)}
+                    disabled={index === orderedQueue.length - 1}
+                    className="inline-flex rounded-md p-1.5 text-white/50 transition hover:text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
+                    aria-label={`Move ${player.name} down`}
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </button>
+                </div>
 
                 <form action={nominatePlayerAction}>
                   <input type="hidden" name="playerId" value={player.id} />
                   <button
                     type="submit"
                     disabled={Boolean(currentPlayerId) && currentPlayerId !== player.id}
-                    className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="glass-button-primary px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.08em] disabled:opacity-40 disabled:cursor-not-allowed shadow-none"
                   >
                     {player.status === "unsold" ? "Recall" : "Nominate"}
                   </button>

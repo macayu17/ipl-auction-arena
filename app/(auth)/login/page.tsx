@@ -1,138 +1,87 @@
-import { RadioTower, ShieldCheck, Trophy, Users } from "lucide-react";
+import { RadioTower, ShieldCheck, Trophy } from "lucide-react";
 
 import { LoginForm } from "@/components/auth/login-form";
 import { StatusBanner } from "@/components/layout/status-banner";
 import { SUPABASE_ENV_HINT, hasSupabaseEnv } from "@/lib/supabase/env";
-
-const highlights = [
-  {
-    icon: Trophy,
-    title: "Auctioneer control",
-    description:
-      "Run nominations, bidding, player sales, and team purse tracking from one control room.",
-  },
-  {
-    icon: RadioTower,
-    title: "Realtime broadcast",
-    description:
-      "Keep the admin screen and all ten team consoles in lockstep through Supabase-powered sync.",
-  },
-  {
-    icon: Users,
-    title: "Role-based access",
-    description:
-      "Separate admin and captain flows so every screen shows the right controls for the right person.",
-  },
-];
+import { IPL_LOGO_URL } from "@/lib/team-logos";
 
 export default function LoginPage() {
   const configured = hasSupabaseEnv();
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden bg-[var(--background)] flex items-center justify-center">
+      {/* Premium ambient glow background */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(245,166,35,0.16),transparent_30%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_15%,rgba(5,102,217,0.12),transparent_26%)]" />
+        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-[var(--gold)]/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[10%] left-[-10%] w-[500px] h-[500px] bg-[var(--blue)]/10 blur-[100px] rounded-full" />
       </div>
 
-      <div className="relative mx-auto max-w-[1500px] px-4 py-6 lg:px-8 lg:py-10">
-        <div className="grid min-h-[calc(100vh-3rem)] gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <section className="surface-panel overflow-hidden p-4 lg:p-6">
-            <div className="grid-overlay flex h-full flex-col justify-between rounded-[22px] border border-white/8 bg-black/15 p-6 lg:p-8">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--gold)]/30 bg-[rgba(245,166,35,0.12)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--gold-soft)]">
-                  <ShieldCheck className="size-3.5" />
-                  Live Auction Stack
-                </div>
+      <div className="relative z-10 w-full max-w-[1200px] px-4 py-8 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-2 items-center mx-auto">
+          {/* Left Side: Brand Narrative */}
+          <section className="flex flex-col justify-center px-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={IPL_LOGO_URL} alt="IPL Logo" className="w-20 h-20 object-contain mb-6 drop-shadow-[0_0_20px_rgba(232,168,56,0.3)]" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold tracking-wider text-white w-fit">
+              <ShieldCheck className="w-4 h-4 text-[var(--gold)]" />
+              LIVE AUCTION COMMAND
+            </div>
 
-                <div className="mt-8 space-y-4">
-                  <p className="display-font text-5xl leading-none text-[var(--gold-soft)] sm:text-6xl lg:text-7xl">
-                    AUCTION
-                    <br />
-                    COMMAND
-                  </p>
-                  <h1 className="max-w-3xl text-3xl font-semibold text-white lg:text-5xl">
-                    Step into the control room before the hammer drops.
-                  </h1>
-                  <p className="max-w-2xl text-sm leading-7 text-slate-200 lg:text-base">
-                    The platform already handles admin orchestration, captain bidding,
-                    live purse tracking, and synchronized room state. This screen now
-                    opens with the same command-center tone as the auction UI itself.
-                  </p>
+            <h1 className="mt-8 display-font text-5xl lg:text-7xl font-bold tracking-tight text-white glow-text leading-[1.1]">
+              The Control Room.
+            </h1>
+            <p className="mt-6 max-w-lg text-base leading-relaxed text-white/60">
+              Orchestrate the live room, manage finances, and sync all team consoles in milliseconds. The high-stakes environment demands a seamless command center.
+            </p>
+
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 pr-8">
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-lg glass-panel flex items-center justify-center text-[var(--gold)]">
+                  <Trophy className="w-5 h-5" />
                 </div>
+                <h3 className="text-sm font-semibold text-white">Auctioneer Control</h3>
+                <p className="text-sm text-white/50 leading-relaxed">Run nominations, bidding, and tracking from a single dashboard.</p>
               </div>
-
-              <div className="mt-8 grid gap-4 xl:grid-cols-3">
-                {highlights.map(({ icon: Icon, title, description }) => (
-                  <article
-                    key={title}
-                    className="rounded-[20px] border border-white/8 bg-[rgba(19,19,24,0.72)] p-5"
-                  >
-                    <div className="inline-flex rounded-xl border border-white/10 bg-[rgba(245,166,35,0.08)] p-3 text-[var(--gold-soft)]">
-                      <Icon className="size-5" />
-                    </div>
-                    <h2 className="mt-4 text-lg font-semibold text-white">{title}</h2>
-                    <p className="mt-2 text-sm leading-6 text-[var(--text-soft)]">
-                      {description}
-                    </p>
-                  </article>
-                ))}
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-lg glass-panel flex items-center justify-center text-[var(--gold)]">
+                  <RadioTower className="w-5 h-5" />
+                </div>
+                <h3 className="text-sm font-semibold text-white">Realtime Broadcast</h3>
+                <p className="text-sm text-white/50 leading-relaxed">Keep all ten team consoles in lockstep seamlessly via Supabase.</p>
               </div>
             </div>
           </section>
 
-          <section className="surface-panel flex items-center p-4 lg:p-6">
-            <div className="mx-auto w-full max-w-xl rounded-[24px] border border-white/8 bg-[rgba(18,18,26,0.92)] p-6 lg:p-8">
-              <div className="flex flex-col items-center text-center">
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--gold)]/20 bg-[rgba(245,166,35,0.08)] text-[var(--gold)]">
-                  <ShieldCheck className="size-7" />
-                </div>
-                <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--gold-soft)]">
-                  Secure Sign In
-                </p>
-                <h2 className="mt-3 display-font text-4xl text-white">Join The Room</h2>
-                <p className="mt-3 max-w-md text-sm leading-6 text-[var(--text-soft)]">
-                  Use the seeded admin or team credentials. Once authenticated, the
-                  app routes you straight into the right console.
-                </p>
+          {/* Right Side: Authentication */}
+          <section className="flex justify-center lg:justify-end lg:pr-8 mt-12 lg:mt-0">
+            <div className="w-full max-w-[440px] glass-panel-elevated rounded-2xl p-8 sm:p-10 relative overflow-hidden">
+              {/* Subtle top edge highlight */}
+              <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--gold)]/30 to-transparent" />
+
+              <div className="text-center mb-8">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={IPL_LOGO_URL} alt="IPL" className="w-14 h-14 object-contain mx-auto mb-4 drop-shadow-[0_0_15px_rgba(232,168,56,0.2)]" />
+                <h2 className="display-font text-3xl font-bold text-white mb-2">Join The Room</h2>
+                <p className="text-sm text-white/50">Enter credentials to securely authenticate.</p>
               </div>
 
               {!configured ? (
-                <div className="mt-6">
+                <div className="mb-8">
                   <StatusBanner
-                    title="Supabase setup still needed"
+                    title="Supabase setup required"
                     description={SUPABASE_ENV_HINT}
                     tone="amber"
                   >
-                    <div className="rounded-xl border border-white/10 bg-slate-950/50 px-4 py-3 text-xs text-slate-200">
-                      <code>NEXT_PUBLIC_SUPABASE_URL</code>
-                      <br />
-                      <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>
-                      <br />
-                      <code>SUPABASE_SERVICE_ROLE_KEY</code>
+                    <div className="rounded-lg border border-white/5 bg-black/40 p-3 text-xs text-slate-300 font-mono mt-3 space-y-1">
+                      <div>NEXT_PUBLIC_SUPABASE_URL</div>
+                      <div>NEXT_PUBLIC_SUPABASE_ANON_KEY</div>
+                      <div>SUPABASE_SERVICE_ROLE_KEY</div>
                     </div>
                   </StatusBanner>
                 </div>
               ) : null}
 
-              <div className="mt-8">
-                <LoginForm configured={configured} />
-              </div>
-
-              <div className="mt-8 grid gap-3 rounded-[20px] border border-white/8 bg-[rgba(31,31,37,0.72)] p-5 text-sm text-[var(--text-soft)]">
-                <div className="flex items-center justify-between gap-4">
-                  <span>Admin redirect</span>
-                  <span className="mono-font text-[var(--gold-soft)]">/admin/auction</span>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <span>Team redirect</span>
-                  <span className="mono-font text-[var(--gold-soft)]">/team/auction</span>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <span>Realtime stack</span>
-                  <span className="mono-font text-[var(--gold-soft)]">Supabase + Next 16</span>
-                </div>
-              </div>
+              <LoginForm configured={configured} />
             </div>
           </section>
         </div>

@@ -76,5 +76,5 @@ export function getStatusColor(status: string): string {
  * Generate nationality flag emoji
  */
 export function getNationalityFlag(nationality: string): string {
-  return nationality === "Indian" ? "🇮🇳" : "🌍";
+  return nationality === "Indian" ? "IND" : "OVS";
 }

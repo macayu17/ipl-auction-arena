@@ -27,9 +27,9 @@ export function ActiveSlideOverlay({
       )}
 
       <div className="relative z-[101] flex min-h-screen items-center justify-center px-6 py-10">
-        <div className="surface-panel grid w-full max-w-5xl gap-8 overflow-hidden border-[var(--gold)]/20 bg-[rgba(7,16,30,0.9)] p-8 shadow-[0_40px_120px_rgba(0,0,0,0.45)] lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
+        <div className="surface-panel grid w-full max-w-5xl gap-8 overflow-hidden border-white/10 bg-white/5 p-8 shadow-sm lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
           <div className="space-y-5">
-            <div className="inline-flex items-center rounded-full border border-[var(--gold)]/35 bg-[rgba(240,165,0,0.14)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-[var(--gold-soft)]">
+            <div className="inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold tracking-normal text-white font-medium">
               Live broadcast
             </div>
             <div className="space-y-4">
@@ -42,28 +42,28 @@ export function ActiveSlideOverlay({
                 admin control room.
               </p>
             </div>
-            <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.16em] text-slate-400">
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">
+            <div className="flex flex-wrap gap-3 text-xs tracking-normal text-slate-400">
+              <span className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                 Slide order {slide.order_index}
               </span>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">
+              <span className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                 Broadcast active
               </span>
             </div>
           </div>
 
-          <div className="grid min-h-[280px] place-items-center rounded-[28px] border border-white/10 bg-white/5 p-5">
+          <div className="grid min-h-[280px] place-items-center rounded-lg border border-white/10 bg-white/5 p-5">
             {slide.image_url ? (
               <div
                 aria-label={slide.title ?? "Active slide"}
                 role="img"
-                className="min-h-[320px] w-full rounded-[20px] bg-cover bg-center"
+                className="min-h-[320px] w-full rounded-lg bg-cover bg-center"
                 style={{ backgroundImage: `url(${slide.image_url})` }}
               />
             ) : (
-              <div className="grid h-full w-full place-items-center rounded-[20px] border border-dashed border-white/12 bg-slate-950/25 p-8 text-center">
+              <div className="grid h-full w-full place-items-center rounded-lg border border-dashed border-white/10 bg-slate-950/25 p-8 text-center">
                 <div className="space-y-3">
-                  <div className="display-font text-3xl text-[var(--gold-soft)]">
+                  <div className="display-font text-3xl text-white font-medium">
                     Auction Intermission
                   </div>
                   <p className="text-sm leading-6 text-slate-300">

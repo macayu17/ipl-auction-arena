@@ -1,5 +1,4 @@
-import { CircleDollarSign, ShieldCheck, Users } from "lucide-react";
-
+import { OverseasBadge } from "@/components/auction/overseas-badge";
 import { MetricCard } from "@/components/layout/metric-card";
 import { SectionCard } from "@/components/layout/section-card";
 import { requireRole } from "@/lib/auth";
@@ -27,7 +26,7 @@ export default async function TeamSquadPage() {
         title="Team squad preview"
         description="Team-specific squad data appears here after authentication is fully configured."
       >
-        <div className="rounded-[24px] border border-white/8 bg-white/4 p-6 text-sm leading-6 text-slate-300">
+        <div className="rounded-lg border border-white/10 bg-white/4 p-6 text-sm leading-6 text-slate-300">
           Sign in with a linked team account to unlock the squad tracker.
         </div>
       </SectionCard>
@@ -42,7 +41,7 @@ export default async function TeamSquadPage() {
         title="Team linkage pending"
         description="This account is authenticated but not yet mapped to a team row."
       >
-        <div className="rounded-[24px] border border-white/8 bg-white/4 p-6 text-sm leading-6 text-slate-300">
+        <div className="rounded-lg border border-white/10 bg-white/4 p-6 text-sm leading-6 text-slate-300">
           Ask the admin to re-run team provisioning or update the `teams.user_id`
           mapping for this user.
         </div>
@@ -62,25 +61,25 @@ export default async function TeamSquadPage() {
           label="Team"
           value={myTeam.short_code}
           hint={`${myTeam.name} can audit balance and roster shape here.`}
-          icon={ShieldCheck}
+          iconName="shield-check"
         />
         <MetricCard
           label="Purse spent"
           value={formatPrice(myTeam.purse_spent)}
           hint="Every completed sale rolls into this immediately."
-          icon={CircleDollarSign}
+          iconName="circle-dollar-sign"
         />
         <MetricCard
           label="Purse left"
           value={formatPurse(myTeam.purse_total, myTeam.purse_spent)}
           hint="Your hard ceiling before the next aggressive bid."
-          icon={Users}
+          iconName="users"
         />
         <MetricCard
           label="Total rating"
           value={String(totalRating)}
           hint={`${overseasCount} overseas players currently signed.`}
-          icon={ShieldCheck}
+          iconName="shield-check"
         />
       </div>
 
@@ -95,19 +94,19 @@ export default async function TeamSquadPage() {
             return (
               <article
                 key={role}
-                className="screen-frame rounded-[22px] p-5"
+                className="rounded-lg border border-white/5 bg-transparent shadow-none rounded-lg p-5"
               >
                 <div className="flex items-center justify-between gap-4">
                   <h2 className="text-lg font-semibold text-white">{role}</h2>
                   <span
-                    className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getRoleBadgeColor(role)}`}
+                    className={`inline-flex rounded-lg border px-3 py-1 text-xs font-medium ${getRoleBadgeColor(role)}`}
                   >
                     {players.length}
                   </span>
                 </div>
                 <div className="mt-4 space-y-3">
                   {players.length === 0 ? (
-                    <div className="grid min-h-[180px] place-items-center rounded-[20px] border border-dashed border-white/12 bg-slate-950/20 p-5 text-center">
+                    <div className="grid min-h-[180px] place-items-center rounded-lg border border-dashed border-white/10 bg-slate-950/20 p-5 text-center">
                       <p className="text-sm leading-6 text-slate-300">
                         No {role.toLowerCase()} signed yet.
                       </p>
@@ -116,14 +115,16 @@ export default async function TeamSquadPage() {
                     players.map((player) => (
                       <div
                         key={player.id}
-                        className="rounded-[18px] border border-white/8 bg-white/4 px-4 py-4"
+                        className="rounded-lg border border-white/10 bg-white/4 px-4 py-4"
                       >
-                        <div className="font-medium text-white">{player.name}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-white">{player.name}</span>
+                          <OverseasBadge nationality={player.nationality} />
+                        </div>
                         <div className="mt-2 flex items-center justify-between gap-4 text-xs text-[var(--text-soft)]">
-                          <span>{player.nationality}</span>
                           <span>Rating {player.rating}</span>
                         </div>
-                        <div className="mt-2 mono-font text-sm text-[var(--gold-soft)]">
+                        <div className="mt-2 mono-font text-sm text-white font-medium">
                           {formatPrice(player.sold_price ?? player.base_price)}
                         </div>
                       </div>

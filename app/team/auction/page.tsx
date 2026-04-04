@@ -3,6 +3,8 @@
 import { RadioTower, Shield, TimerReset, Trophy } from "lucide-react";
 
 import { placeBidAction } from "@/app/actions/auction";
+import { OverseasBadge } from "@/components/auction/overseas-badge";
+import { TeamLogo } from "@/components/auction/team-logo";
 import { TimerDisplay } from "@/components/auction/timer-display";
 import { useLiveAuctionSync } from "@/components/auction/use-live-auction-sync";
 import { SubmitButton } from "@/components/forms/submit-button";
@@ -63,7 +65,7 @@ export default function TeamAuctionPage() {
         title="Loading live room"
         description="Connecting to the latest auction snapshot."
       >
-        <div className="rounded-[24px] border border-white/8 bg-white/4 p-6 text-sm leading-6 text-slate-300">
+        <div className="rounded-lg border border-white/10 bg-white/4 p-6 text-sm leading-6 text-slate-300">
           Pulling the latest bid board, purse state, and squad snapshot.
         </div>
       </SectionCard>
@@ -76,7 +78,7 @@ export default function TeamAuctionPage() {
         title="Team linkage pending"
         description="This login worked, but it is not attached to a row in the `teams` table yet."
       >
-        <div className="rounded-[24px] border border-white/8 bg-white/4 p-6 text-sm leading-6 text-slate-300">
+        <div className="rounded-lg border border-white/10 bg-white/4 p-6 text-sm leading-6 text-slate-300">
           Link this user to a team from the admin setup flow, then refresh the page.
         </div>
       </SectionCard>
@@ -148,20 +150,18 @@ export default function TeamAuctionPage() {
           >
             {currentPlayer ? (
               <div className="space-y-4">
-                <div className="relative overflow-hidden rounded-[24px] border border-white/8 bg-[radial-gradient(circle_at_top_right,rgba(245,166,35,0.18),transparent_35%),linear-gradient(180deg,rgba(31,31,37,0.96),rgba(14,14,19,0.98))] p-5 lg:p-6">
+                <div className="relative overflow-hidden rounded-lg border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(245,166,35,0.18),transparent_35%),linear-gradient(180deg,rgba(31,31,37,0.96),rgba(14,14,19,0.98))] p-5 lg:p-6">
                   <div className="flex flex-wrap items-center gap-2">
                     <span
-                      className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getRoleBadgeColor(currentPlayer.role)}`}
+                      className={`inline-flex rounded-lg border px-3 py-1 text-xs font-medium ${getRoleBadgeColor(currentPlayer.role)}`}
                     >
                       {currentPlayer.role}
                     </span>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.16em] text-slate-300">
-                      {currentPlayer.nationality}
-                    </span>
+                    <OverseasBadge nationality={currentPlayer.nationality} />
                   </div>
 
                   <div className="mt-10">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--gold-soft)]">
+                    <p className="text-xs font-semibold text-[var(--text-muted)] tracking-normal">
                       Live nomination
                     </p>
                     <h2 className="mt-2 display-font text-5xl text-white lg:text-6xl">
@@ -174,8 +174,8 @@ export default function TeamAuctionPage() {
                   </div>
 
                   <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                    <div className="screen-frame rounded-[18px] p-4">
-                      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-soft)]">
+                    <div className="rounded-lg border border-white/5 bg-transparent shadow-none rounded-lg p-4">
+                      <div className="text-[10px] font-semibold tracking-normal text-[var(--text-soft)]">
                         Current
                       </div>
                       <div className="mt-2 text-xl font-semibold text-white">
@@ -184,16 +184,16 @@ export default function TeamAuctionPage() {
                         )}
                       </div>
                     </div>
-                    <div className="screen-frame rounded-[18px] p-4">
-                      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-soft)]">
+                    <div className="rounded-lg border border-white/5 bg-transparent shadow-none rounded-lg p-4">
+                      <div className="text-[10px] font-semibold tracking-normal text-[var(--text-soft)]">
                         Next bid
                       </div>
                       <div className="mt-2 text-xl font-semibold text-white">
                         {formatPrice(nextBidAmount)}
                       </div>
                     </div>
-                    <div className="screen-frame rounded-[18px] p-4">
-                      <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text-soft)]">
+                    <div className="rounded-lg border border-white/5 bg-transparent shadow-none rounded-lg p-4">
+                      <div className="text-[10px] font-semibold tracking-normal text-[var(--text-soft)]">
                         Timer
                       </div>
                       <div className="mt-2 text-xl font-semibold text-white">
@@ -207,17 +207,20 @@ export default function TeamAuctionPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[24px] border border-white/8 bg-[rgba(31,31,37,0.85)] p-5">
+                <div className="rounded-lg border border-white/10 bg-white/5 p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-soft)]">
+                      <div className="text-xs text-[var(--text-muted)] font-semibold tracking-normal text-[var(--text-soft)]">
                         Leading team
                       </div>
-                      <div className="mt-2 text-2xl font-semibold text-white">
-                        {leadingTeam?.name ?? "No active bidder"}
+                      <div className="flex items-center gap-3">
+                        {leadingTeam ? <TeamLogo shortCode={leadingTeam.short_code} size={36} /> : null}
+                        <div className="text-2xl font-semibold text-white">
+                          {leadingTeam?.name ?? "No active bidder"}
+                        </div>
                       </div>
                     </div>
-                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--gold-soft)]">
+                    <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs tracking-normal text-white font-medium">
                       {auctionState.phase}
                     </div>
                   </div>
@@ -229,7 +232,7 @@ export default function TeamAuctionPage() {
                   <form action={placeBidAction} className="mt-5">
                     <SubmitButton
                       pendingLabel="Sending bid..."
-                      className="w-full rounded-[22px] border border-[var(--gold)]/25 bg-[rgba(245,166,35,0.12)] px-5 py-5 text-lg font-semibold text-[var(--gold-soft)] hover:border-[var(--gold)]/45 hover:bg-[rgba(245,166,35,0.18)]"
+                      className="w-full rounded-lg border border-white/10 bg-white/5 px-5 py-5 text-lg font-semibold text-white font-medium hover:border-white/10 hover:bg-white/5"
                       disabled={!canBid}
                     >
                       {currentPlayer
@@ -240,9 +243,9 @@ export default function TeamAuctionPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid min-h-[420px] place-items-center rounded-[24px] border border-dashed border-white/15 bg-white/4 p-8 text-center">
+              <div className="grid min-h-[420px] place-items-center rounded-lg border border-dashed border-white/15 bg-white/4 p-8 text-center">
                 <div className="max-w-lg space-y-4">
-                  <p className="display-font text-5xl text-[var(--gold-soft)]">LIVE VIEW</p>
+                  <p className="display-font text-5xl text-white font-medium">LIVE VIEW</p>
                   <h2 className="text-3xl font-semibold text-white">
                     No player has been nominated yet
                   </h2>
@@ -263,25 +266,28 @@ export default function TeamAuctionPage() {
           >
             <div className="space-y-3">
               {bidHistory.length === 0 ? (
-                <div className="rounded-[20px] border border-dashed border-white/12 bg-white/4 px-4 py-4 text-sm text-slate-300">
+                <div className="rounded-lg border border-dashed border-white/10 bg-white/4 px-4 py-4 text-sm text-slate-300">
                   No bids yet for this player.
                 </div>
               ) : (
                 bidHistory.map((bid) => (
                   <div
                     key={bid.id}
-                    className="screen-frame rounded-[18px] px-4 py-3"
+                    className="rounded-lg border border-white/5 bg-transparent shadow-none rounded-lg px-3 py-1.5 text-sm"
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <div className="font-medium text-white">
-                          {bid.team?.short_code ?? "Unknown team"}
+                        <div className="flex items-center gap-2">
+                          {bid.team ? <TeamLogo shortCode={bid.team.short_code} size={24} /> : null}
+                          <span className="font-medium text-white">
+                            {bid.team?.short_code ?? "Unknown team"}
+                          </span>
                         </div>
                         <div className="mt-1 text-xs text-[var(--text-soft)]">
                           {new Date(bid.timestamp).toLocaleString("en-IN")}
                         </div>
                       </div>
-                      <div className="mono-font text-[var(--gold-soft)]">
+                      <div className="mono-font text-white font-medium">
                         {formatPrice(bid.amount)}
                       </div>
                     </div>
@@ -297,14 +303,14 @@ export default function TeamAuctionPage() {
           >
             <div className="space-y-3">
               {mySquad.length === 0 ? (
-                <div className="rounded-[20px] border border-dashed border-white/12 bg-white/4 px-4 py-5 text-sm text-slate-300">
+                <div className="rounded-lg border border-dashed border-white/10 bg-white/4 px-4 py-5 text-sm text-slate-300">
                   No players purchased yet.
                 </div>
               ) : (
                 mySquad.slice(0, 6).map((player) => (
                   <div
                     key={player.id}
-                    className="screen-frame rounded-[18px] px-4 py-4"
+                    className="rounded-lg border border-white/5 bg-transparent shadow-none rounded-lg px-4 py-4"
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div>
@@ -313,7 +319,7 @@ export default function TeamAuctionPage() {
                           {player.role} • Rating {player.rating}
                         </div>
                       </div>
-                      <div className="mono-font text-[var(--gold-soft)]">
+                      <div className="mono-font text-white font-medium">
                         {formatPrice(player.sold_price ?? player.base_price)}
                       </div>
                     </div>

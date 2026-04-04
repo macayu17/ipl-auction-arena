@@ -17,16 +17,16 @@ function SubmitButton({ configured }: { configured: boolean }) {
     <button
       type="submit"
       disabled={pending || !configured}
-      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--gold)] px-5 py-3.5 text-sm font-semibold uppercase tracking-[0.18em] text-[#291800] transition hover:bg-[var(--gold-soft)] disabled:cursor-not-allowed disabled:opacity-60"
+      className="glass-button-primary flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-[15px] font-bold tracking-wide disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending ? (
         <>
-          <LoaderCircle className="size-4 animate-spin" />
+          <LoaderCircle className="w-5 h-5 animate-spin" />
           Signing In...
         </>
       ) : (
         <>
-          <LogIn className="size-4" />
+          <LogIn className="w-5 h-5" />
           Enter Auction Room
         </>
       )}
@@ -38,11 +38,11 @@ export function LoginForm({ configured }: { configured: boolean }) {
   const [state, formAction] = useActionState(signInAction, initialSignInState);
 
   return (
-    <form action={formAction} className="space-y-5">
-      <div className="space-y-2">
+    <form action={formAction} className="space-y-6">
+      <div className="space-y-2.5">
         <label
           htmlFor="email"
-          className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--gold-soft)]"
+          className="block text-sm font-medium text-white/70 tracking-wide"
         >
           Login Email
         </label>
@@ -52,14 +52,14 @@ export function LoginForm({ configured }: { configured: boolean }) {
           type="email"
           autoComplete="email"
           placeholder="auction@collegefest.in"
-          className="w-full rounded-xl border border-white/10 bg-[rgba(14,14,19,0.9)] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-[var(--gold)] focus:bg-black/50"
+          className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-[15px] text-white outline-none focus:border-[var(--gold)] focus:bg-black/50 focus:ring-1 focus:ring-[var(--gold)]/50 transition-all placeholder:text-white/30"
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <label
           htmlFor="password"
-          className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--gold-soft)]"
+          className="block text-sm font-medium text-white/70 tracking-wide"
         >
           Password
         </label>
@@ -69,17 +69,19 @@ export function LoginForm({ configured }: { configured: boolean }) {
           type="password"
           autoComplete="current-password"
           placeholder="••••••••"
-          className="w-full rounded-xl border border-white/10 bg-[rgba(14,14,19,0.9)] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-[var(--gold)] focus:bg-black/50"
+          className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-[15px] text-white outline-none focus:border-[var(--gold)] focus:bg-black/50 focus:ring-1 focus:ring-[var(--gold)]/50 transition-all placeholder:text-white/30"
         />
       </div>
 
       {state.status === "error" ? (
-        <div className="rounded-xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
           {state.message}
         </div>
       ) : null}
 
-      <SubmitButton configured={configured} />
+      <div className="pt-2">
+        <SubmitButton configured={configured} />
+      </div>
     </form>
   );
 }

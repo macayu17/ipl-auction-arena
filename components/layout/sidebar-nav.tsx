@@ -35,19 +35,19 @@ export function SidebarNav({ items }: { items: NavigationItem[] }) {
             key={item.href}
             href={item.href}
             className={cn(
-              "block rounded-[18px] border px-3 py-3 transition",
+              "block rounded-lg border px-3 py-3 transition",
               isActive
-                ? "border-[var(--gold)]/30 bg-[rgba(245,166,35,0.1)] text-white shadow-[0_10px_30px_rgba(245,166,35,0.08)]"
-                : "border-white/6 bg-transparent text-slate-300 hover:border-white/12 hover:bg-white/4 hover:text-white"
+                ? "border-white/10 bg-white/5 text-white shadow-sm"
+                : "border-white/10 bg-transparent text-slate-300 hover:border-white/10 hover:bg-white/4 hover:text-white"
             )}
           >
             <div className="flex items-center gap-3">
               <div
                 className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-xl border text-[10px] font-black uppercase tracking-[0.26em]",
+                  "flex h-10 w-10 items-center justify-center rounded-lg border text-[10px] font-black tracking-normal",
                   isActive
-                    ? "border-[var(--gold)]/35 bg-[rgba(245,166,35,0.14)] text-[var(--gold-soft)]"
-                    : "border-white/8 bg-white/4 text-[var(--text-soft)]"
+                    ? "border-white/10 bg-white/5 text-white font-medium"
+                    : "border-white/10 bg-white/4 text-[var(--text-soft)]"
                 )}
               >
                 {shorthand}
@@ -72,7 +72,7 @@ export function BottomNav({ items }: { items: NavigationItem[] }) {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/6 bg-[rgba(27,27,32,0.96)] px-2 py-2 backdrop-blur lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-white/5 px-2 py-2 backdrop-blur lg:hidden">
       <div className="grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-2">
         {items.slice(0, 4).map((item) => {
           const isActive = isActiveRoute(pathname, item.href);
@@ -85,23 +85,23 @@ export function BottomNav({ items }: { items: NavigationItem[] }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-center transition",
+                "flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-2 text-center transition",
                 isActive
-                  ? "bg-[rgba(245,166,35,0.12)] text-[var(--gold-soft)]"
+                  ? "bg-white/5 text-white font-medium"
                   : "text-[var(--text-soft)] hover:bg-white/4 hover:text-white"
               )}
             >
               <span
                 className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-lg border text-[9px] font-black uppercase tracking-[0.2em]",
+                  "flex h-8 w-8 items-center justify-center rounded-lg border text-[9px] font-black tracking-normal",
                   isActive
-                    ? "border-[var(--gold)]/30 bg-[rgba(245,166,35,0.12)]"
-                    : "border-white/8 bg-white/4"
+                    ? "border-white/10 bg-white/5"
+                    : "border-white/10 bg-white/4"
                 )}
               >
                 {shorthand}
               </span>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.18em]">
+              <span className="text-[10px] font-semibold tracking-normal">
                 {item.shortLabel ?? item.label}
               </span>
             </Link>

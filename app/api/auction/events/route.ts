@@ -3,6 +3,15 @@ import { verifyAuctionStreamToken } from "@/lib/auction-stream-token";
 
 export const dynamic = "force-dynamic";
 
+function isAbortError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const maybeError = error as { name?: string; code?: number };
+  return maybeError.name === "AbortError" || maybeError.code === 20;
+}
+
 export async function GET(request: Request) {
   if (!hasRedisEnv()) {
     return new Response("Redis event transport is not configured.", {
@@ -38,13 +47,47 @@ export async function GET(request: Request) {
     async start(controller) {
       const reader = upstream.body!.getReader();
       const encoder = new TextEncoder();
+      let closed = false;
+
+      const closeController = () => {
+        if (closed) {
+          return;
+        }
+
+        closed = true;
+        try {
+          controller.close();
+        } catch {
+          // Ignore close races during reconnect/disconnect churn.
+        }
+      };
+
+      const cancelReader = () => {
+        void reader.cancel().catch(() => {
+          // Reader cancel can reject when already closed; treat as expected.
+        });
+      };
+
+      const abortUpstream = () => {
+        if (!abortController.signal.aborted) {
+          abortController.abort();
+        }
+      };
 
       controller.enqueue(encoder.encode(": connected\n\n"));
 
-      request.signal.addEventListener("abort", () => {
-        abortController.abort();
-        void reader.cancel();
-      });
+      const onAbort = () => {
+        abortUpstream();
+        cancelReader();
+        closeController();
+      };
+
+      if (request.signal.aborted) {
+        onAbort();
+        return;
+      }
+
+      request.signal.addEventListener("abort", onAbort, { once: true });
 
       try {
         while (true) {
@@ -58,14 +101,21 @@ export async function GET(request: Request) {
             controller.enqueue(value);
           }
         }
-      } catch {
-        // Closing the client request or upstream stream is expected during reconnects.
+      } catch (error) {
+        if (!isAbortError(error)) {
+          console.error("Auction SSE stream read failed", error);
+        }
       } finally {
-        controller.close();
+        request.signal.removeEventListener("abort", onAbort);
+        abortUpstream();
+        cancelReader();
+        closeController();
       }
     },
     cancel() {
-      abortController.abort();
+      if (!abortController.signal.aborted) {
+        abortController.abort();
+      }
     },
   });
 

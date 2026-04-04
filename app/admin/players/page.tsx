@@ -1,5 +1,3 @@
-import { Database, FileUp, Filter, Trophy } from "lucide-react";
-
 import {
   createPlayerAction,
   deletePlayerAction,
@@ -7,6 +5,8 @@ import {
   importUploadedPlayersAction,
   updatePlayerAction,
 } from "@/app/actions/players";
+import { OverseasBadge } from "@/components/auction/overseas-badge";
+import { TeamLogo } from "@/components/auction/team-logo";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { MetricCard } from "@/components/layout/metric-card";
 import { SectionCard } from "@/components/layout/section-card";
@@ -37,10 +37,10 @@ export default async function AdminPlayersPage() {
   return (
     <>
       <div className="grid gap-3 xl:grid-cols-4">
-        <MetricCard label="Total" value={String(summary.total)} icon={Database} />
-        <MetricCard label="Pool" value={String(summary.pool)} icon={Filter} />
-        <MetricCard label="Sold" value={String(summary.sold)} icon={Trophy} />
-        <MetricCard label="Unsold" value={String(summary.unsold)} icon={FileUp} />
+        <MetricCard label="Total" value={String(summary.total)} iconName="database" />
+        <MetricCard label="Pool" value={String(summary.pool)} iconName="filter" />
+        <MetricCard label="Sold" value={String(summary.sold)} iconName="trophy" />
+        <MetricCard label="Unsold" value={String(summary.unsold)} iconName="file-up" />
       </div>
 
       <SectionCard
@@ -50,23 +50,23 @@ export default async function AdminPlayersPage() {
         <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
           <form
             action={createPlayerAction}
-            className="command-grid grid gap-3 rounded-[20px] border border-white/8 bg-[rgba(19,19,24,0.72)] p-4"
+            className="glass-panel grid gap-4 rounded-xl border border-white/5 bg-black/20 p-6"
           >
-            <div className="text-[11px] uppercase tracking-[0.22em] text-slate-400">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--gold)]">
               Add player
             </div>
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
               <input
                 name="name"
                 type="text"
                 required
                 placeholder="Player name"
-                className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                className="rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 placeholder:text-white/30 transition-all"
               />
               <select
                 name="role"
                 defaultValue="Batsman"
-                className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none"
+                className="rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all font-medium"
               >
                 {roleOrder.map((role) => (
                   <option key={role} value={role}>
@@ -77,7 +77,7 @@ export default async function AdminPlayersPage() {
               <select
                 name="nationality"
                 defaultValue="Indian"
-                className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none"
+                className="rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all font-medium"
               >
                 <option value="Indian">Indian</option>
                 <option value="Overseas">Overseas</option>
@@ -89,7 +89,7 @@ export default async function AdminPlayersPage() {
                 step="1"
                 required
                 placeholder="Base price (Lakhs)"
-                className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                className="rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-[14px] font-mono text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 placeholder:text-white/30 transition-all"
               />
               <input
                 name="rating"
@@ -99,7 +99,7 @@ export default async function AdminPlayersPage() {
                 step="1"
                 required
                 placeholder="Rating"
-                className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                className="rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-[14px] font-mono text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 placeholder:text-white/30 transition-all"
               />
               <input
                 name="iplCaps"
@@ -108,30 +108,30 @@ export default async function AdminPlayersPage() {
                 step="1"
                 defaultValue="0"
                 placeholder="IPL caps"
-                className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                className="rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-[14px] font-mono text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 placeholder:text-white/30 transition-all"
               />
               <input
                 name="battingStyle"
                 type="text"
                 placeholder="Batting style"
-                className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                className="rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 placeholder:text-white/30 transition-all"
               />
               <input
                 name="bowlingStyle"
                 type="text"
                 placeholder="Bowling style"
-                className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                className="rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 placeholder:text-white/30 transition-all"
               />
             </div>
             <input
               name="photoUrl"
               type="url"
               placeholder="Photo URL (optional)"
-              className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+              className="rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 placeholder:text-white/30 transition-all"
             />
             <SubmitButton
               pendingLabel="Saving..."
-              className="rounded-2xl border border-[var(--gold)]/30 bg-[rgba(240,165,0,0.12)] px-4 py-3 text-sm font-semibold text-[var(--gold-soft)] hover:border-[var(--gold)]/50 hover:bg-[rgba(240,165,0,0.18)]"
+              className="glass-button-primary mt-2 px-6 py-3.5 text-[14px] font-bold uppercase tracking-wider w-full lg:w-auto self-start"
             >
               Create player
             </SubmitButton>
@@ -140,9 +140,9 @@ export default async function AdminPlayersPage() {
           <div className="grid gap-4">
             <form
               action={importUploadedPlayersAction}
-              className="command-grid grid gap-3 rounded-[20px] border border-white/8 bg-[rgba(19,19,24,0.72)] p-4"
+              className="glass-panel grid gap-4 rounded-xl border border-white/5 bg-black/20 p-6"
             >
-              <div className="text-[11px] uppercase tracking-[0.22em] text-slate-400">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--gold)]">
                 Upload CSV
               </div>
               <input
@@ -150,38 +150,38 @@ export default async function AdminPlayersPage() {
                 type="file"
                 accept=".csv,text/csv"
                 required
-                className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white file:mr-4 file:rounded-full file:border-0 file:bg-[rgba(240,165,0,0.12)] file:px-3 file:py-2 file:text-sm file:font-medium file:text-[var(--gold-soft)]"
+                className="rounded-xl border border-dashed border-white/20 bg-black/30 px-3 py-2.5 text-[14px] text-white file:mr-4 file:rounded-lg file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-white file:cursor-pointer hover:border-[var(--gold)]/50 transition-colors w-full"
               />
-              <div className="flex flex-wrap gap-2 text-xs text-slate-400">
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+              <div className="flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
+                <span className="rounded-md border border-white/10 bg-black/40 px-3 py-1.5">
                   Columns: Player&apos;s Name, Category, Rating
                 </span>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                <span className="rounded-md border border-white/10 bg-black/40 px-3 py-1.5">
                   Duplicate names are skipped
                 </span>
               </div>
               <SubmitButton
                 pendingLabel="Uploading..."
-                className="rounded-2xl border border-[var(--gold)]/30 bg-[rgba(240,165,0,0.12)] px-4 py-3 text-sm font-semibold text-[var(--gold-soft)] hover:border-[var(--gold)]/50 hover:bg-[rgba(240,165,0,0.18)]"
+                className="rounded-xl border border-white/20 bg-white/10 px-6 py-3.5 text-[14px] font-bold uppercase tracking-wider text-white hover:bg-white/20 transition-all w-full lg:w-auto self-start mt-2"
               >
                 Import uploaded CSV
               </SubmitButton>
             </form>
 
-            <div className="screen-frame rounded-[20px] p-4">
-              <div className="text-[11px] uppercase tracking-[0.22em] text-slate-400">
+            <div className="glass-panel rounded-xl border border-white/5 bg-black/20 p-6">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--gold)]">
                 Bundled source
               </div>
-              <div className="mt-1.5 text-lg font-semibold text-white">
+              <div className="mt-2 text-xl font-bold tracking-tight text-white mono-font">
                 IPL AUCTION DATA SHEET.csv
               </div>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-3">
                 {roleSummary.map((item) => (
                   <span
                     key={item.role}
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.16em] text-slate-300"
+                    className="rounded-md border border-white/10 bg-black/40 px-3 py-1.5 text-[11px] font-bold tracking-wider text-slate-300"
                   >
-                    {item.role} {item.count}
+                    <span className="uppercase text-[var(--text-soft)] mr-1">{item.role}</span> {item.count}
                   </span>
                 ))}
               </div>
@@ -191,7 +191,7 @@ export default async function AdminPlayersPage() {
               <form action={importBundledPlayersAction}>
                 <SubmitButton
                   pendingLabel="Syncing..."
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white hover:border-white/20 hover:bg-white/10"
+                  className="w-full rounded-xl border border-[var(--gold)]/30 bg-[var(--gold)]/10 px-6 py-3.5 text-[14px] font-bold uppercase tracking-wider text-[var(--gold)] hover:bg-[var(--gold)]/20 transition-all"
                 >
                   Sync bundled CSV
                 </SubmitButton>
@@ -207,7 +207,7 @@ export default async function AdminPlayersPage() {
       >
         <div className="space-y-3">
           {players.length === 0 ? (
-            <div className="rounded-[22px] border border-dashed border-white/12 bg-white/4 px-4 py-8 text-center text-sm text-slate-300">
+            <div className="glass-panel flex items-center justify-center min-h-[200px] rounded-xl border border-dashed border-white/10 px-4 text-sm text-[var(--text-soft)]">
               Upload a CSV or sync the bundled file to populate the pool.
             </div>
           ) : (
@@ -218,49 +218,63 @@ export default async function AdminPlayersPage() {
               return (
                 <details
                   key={player.id}
-                  className="rounded-[20px] border border-white/8 bg-[rgba(14,14,19,0.32)]"
+                  className="glass-panel rounded-xl border border-white/5 bg-black/20 group overflow-hidden"
                 >
-                  <summary className="flex cursor-pointer list-none flex-col gap-3 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
+                  <summary className="flex cursor-pointer list-none flex-col gap-4 px-6 py-5 lg:flex-row lg:items-center lg:justify-between hover:bg-white/[0.04] transition-colors focus:outline-none focus:bg-white/[0.06]">
                     <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold text-white">{player.name}</span>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="font-bold text-white text-lg tracking-tight">{player.name}</span>
                         <span
-                          className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getRoleBadgeColor(player.role)}`}
+                          className={`inline-flex rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${getRoleBadgeColor(player.role)}`}
                         >
                           {player.role}
                         </span>
+                        <OverseasBadge nationality={player.nationality} />
                         <span
-                          className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-[0.14em] ${getStatusColor(player.status)}`}
+                          className={`inline-flex rounded-md border border-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${getStatusColor(player.status)}`}
                         >
                           {player.status}
                         </span>
                       </div>
-                      <div className="mt-2 text-xs text-[var(--text-soft)]">
-                        {player.nationality} • Rating {player.rating} • Base{" "}
-                        {formatPrice(player.base_price)} • Caps {player.ipl_caps} • Team{" "}
-                        {soldTeam?.short_code ?? "-"}
+                      <div className="mt-2.5 text-[13px] font-medium text-[var(--text-soft)] flex flex-wrap items-center gap-2">
+                        <span className="text-[var(--gold)]/80">Rating {player.rating}</span>
+                        <span>•</span>
+                        <span className="text-white/60 text-[11px] uppercase tracking-wider">Base</span>
+                        <span className="mono-font text-white">{formatPrice(player.base_price)}</span>
+                        <span>•</span>
+                        <span className="text-white/60 text-[11px] uppercase tracking-wider">Caps</span>
+                        <span className="text-white">{player.ipl_caps}</span>
+                        <span>•</span>
+                        {soldTeam ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <TeamLogo shortCode={soldTeam.short_code} size={18} />
+                            <span className="text-[var(--blue-soft)] font-bold">{soldTeam.short_code}</span>
+                          </span>
+                        ) : (
+                          <span className="text-[var(--blue-soft)] font-bold">-</span>
+                        )}
                       </div>
                     </div>
-                    <div className="text-xs uppercase tracking-[0.2em] text-[var(--gold-soft)]">
-                      Edit player
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-white/40 group-open:text-[var(--gold)] transition-colors border border-white/10 rounded-md px-3 py-1.5 bg-black/40 text-center">
+                      Edit details
                     </div>
                   </summary>
 
-                  <div className="border-t border-white/8 px-4 py-4">
-                    <form action={updatePlayerAction} className="grid gap-3">
+                  <div className="border-t border-white/10 px-6 py-6 bg-black/40">
+                    <form action={updatePlayerAction} className="grid gap-4">
                       <input type="hidden" name="playerId" value={player.id} />
-                      <div className="grid gap-3 lg:grid-cols-2">
+                      <div className="grid gap-4 lg:grid-cols-2">
                         <input
                           name="name"
                           type="text"
                           required
                           defaultValue={player.name}
-                          className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none"
+                          className="rounded-xl border border-white/10 bg-black/60 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all font-medium"
                         />
                         <select
                           name="role"
                           defaultValue={player.role}
-                          className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none"
+                          className="rounded-xl border border-white/10 bg-black/60 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all font-medium"
                         >
                           {roleOrder.map((role) => (
                             <option key={role} value={role}>
@@ -271,7 +285,7 @@ export default async function AdminPlayersPage() {
                         <select
                           name="nationality"
                           defaultValue={player.nationality}
-                          className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none"
+                          className="rounded-xl border border-white/10 bg-black/60 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all font-medium"
                         >
                           <option value="Indian">Indian</option>
                           <option value="Overseas">Overseas</option>
@@ -283,7 +297,7 @@ export default async function AdminPlayersPage() {
                           step="1"
                           required
                           defaultValue={player.base_price}
-                          className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none"
+                          className="rounded-xl border border-white/10 bg-black/60 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all font-mono"
                         />
                         <input
                           name="rating"
@@ -293,7 +307,7 @@ export default async function AdminPlayersPage() {
                           step="1"
                           required
                           defaultValue={player.rating}
-                          className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none"
+                          className="rounded-xl border border-white/10 bg-black/60 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all font-mono"
                         />
                         <input
                           name="iplCaps"
@@ -301,21 +315,21 @@ export default async function AdminPlayersPage() {
                           min="0"
                           step="1"
                           defaultValue={player.ipl_caps}
-                          className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none"
+                          className="rounded-xl border border-white/10 bg-black/60 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all font-mono"
                         />
                         <input
                           name="battingStyle"
                           type="text"
                           defaultValue={player.batting_style ?? ""}
                           placeholder="Batting style"
-                          className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                          className="rounded-xl border border-white/10 bg-black/60 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 placeholder:text-slate-500 transition-all"
                         />
                         <input
                           name="bowlingStyle"
                           type="text"
                           defaultValue={player.bowling_style ?? ""}
                           placeholder="Bowling style"
-                          className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                          className="rounded-xl border border-white/10 bg-black/60 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 placeholder:text-slate-500 transition-all"
                         />
                       </div>
                       <input
@@ -323,29 +337,28 @@ export default async function AdminPlayersPage() {
                         type="url"
                         defaultValue={player.photo_url ?? ""}
                         placeholder="Photo URL"
-                        className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
+                        className="rounded-xl border border-white/10 bg-black/60 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 placeholder:text-slate-500 transition-all"
                       />
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-4 mt-2">
                         <SubmitButton
                           pendingLabel="Saving..."
-                          className="rounded-xl border border-[var(--gold)]/30 bg-[rgba(240,165,0,0.12)] px-4 py-3 text-sm font-semibold text-[var(--gold-soft)] hover:border-[var(--gold)]/50 hover:bg-[rgba(240,165,0,0.18)]"
+                          className="glass-button-primary px-8 py-3.5 text-[13px] font-bold uppercase tracking-wider"
                         >
-                          Save player
+                          Save changes
                         </SubmitButton>
+                        <form action={deletePlayerAction} className="inline-block">
+                          <input type="hidden" name="playerId" value={player.id} />
+                          <SubmitButton
+                            pendingLabel="Deleting..."
+                            disabled={!canDelete}
+                            className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-8 py-3.5 text-[13px] font-bold uppercase tracking-wider text-rose-300 hover:bg-rose-500/20 hover:border-rose-500/50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            {canDelete
+                              ? "Delete player"
+                              : "Sold or active players cannot be deleted"}
+                          </SubmitButton>
+                        </form>
                       </div>
-                    </form>
-
-                    <form action={deletePlayerAction} className="mt-3">
-                      <input type="hidden" name="playerId" value={player.id} />
-                      <SubmitButton
-                        pendingLabel="Deleting..."
-                        disabled={!canDelete}
-                        className="rounded-xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-100 hover:border-rose-400/35 hover:bg-rose-500/15"
-                      >
-                        {canDelete
-                          ? "Delete player"
-                          : "Sold or active players cannot be deleted"}
-                      </SubmitButton>
                     </form>
                   </div>
                 </details>

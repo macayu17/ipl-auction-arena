@@ -123,7 +123,7 @@ export function CredentialsExportButton({ rows }: { rows: CredentialRow[] }) {
       type="button"
       onClick={handleExport}
       disabled={rows.length === 0}
-      className="rounded-full border border-[var(--gold)]/30 bg-[rgba(245,166,35,0.12)] px-4 py-2 text-sm font-medium text-[var(--gold-soft)] transition hover:border-[var(--gold)]/45 hover:bg-[rgba(245,166,35,0.18)] disabled:cursor-not-allowed disabled:opacity-60"
+      className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white font-medium transition hover:border-white/10 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
     >
       Export Credentials PDF
     </button>
