@@ -66,11 +66,73 @@ async function executeRedisPipeline(commands: RedisCommand[]) {
   return result;
 }
 
-export async function publishAuctionEvent(event: {
+/* ------------------------------------------------------------------ */
+/*  Generic key/value cache operations                                 */
+/* ------------------------------------------------------------------ */
+
+async function executeRedisCommand(command: string[]) {
+  const { url, token } = getRedisEnv();
+  const path = command.map((c) => encodeURIComponent(c)).join("/");
+  const response = await fetch(`${url}/${path}`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Redis command failed (${response.status}): ${command[0]}`);
+  }
+
+  return (await response.json()) as { result: unknown };
+}
+
+/** Read a cached JSON value. Returns `null` if key is missing. */
+export async function getRedisValue<T = unknown>(
+  key: string
+): Promise<T | null> {
+  if (!hasRedisEnv()) return null;
+
+  try {
+    const { result } = await executeRedisCommand(["GET", key]);
+    if (result === null || result === undefined) return null;
+    return JSON.parse(String(result)) as T;
+  } catch {
+    return null;
+  }
+}
+
+/** Write a JSON value with an optional TTL in seconds. */
+export async function setRedisValue(
+  key: string,
+  value: unknown,
+  ttlSeconds = 60
+): Promise<void> {
+  if (!hasRedisEnv()) return;
+
+  await executeRedisPipeline([
+    ["SET", key, JSON.stringify(value), "EX", String(ttlSeconds)],
+  ]);
+}
+
+/** Delete one or more cache keys. */
+export async function deleteRedisKeys(...keys: string[]): Promise<void> {
+  if (!hasRedisEnv() || keys.length === 0) return;
+  await executeRedisPipeline([["DEL", ...keys]]);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Pub/Sub event publishing                                           */
+/* ------------------------------------------------------------------ */
+
+export type AuctionEventPayload = {
   type: string;
   source: string;
   at?: string;
-}) {
+  /** Optional delta data the client can apply without a full snapshot fetch. */
+  delta?: Record<string, unknown>;
+};
+
+export async function publishAuctionEvent(event: AuctionEventPayload) {
   if (!hasRedisEnv()) {
     return;
   }

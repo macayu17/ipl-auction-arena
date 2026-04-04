@@ -45,7 +45,7 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col relative">
       {/* PillNav Container */}
-      <div className="w-full flex justify-start pl-4 lg:pl-8 sticky top-0 z-[100] bg-transparent pointer-events-none pt-4">
+      <div className="w-full flex justify-start pl-4 lg:pl-8 sticky top-0 z-[100] bg-transparent pointer-events-none pt-4 pb-2">
         <div className="pointer-events-auto">
           <PillNav
             logo={IPL_LOGO_URL}
@@ -57,7 +57,7 @@ export function AppShell({
         </div>
       </div>
 
-      <div className="flex-1 w-full px-4 pb-16 pt-6 lg:px-6">
+      <div className="flex-1 w-full px-4 pb-16 pt-8 lg:px-6 lg:pt-10">
         <div className="mx-auto max-w-[1800px] space-y-3">
           <header className="glass-panel rounded-xl overflow-hidden relative">
             

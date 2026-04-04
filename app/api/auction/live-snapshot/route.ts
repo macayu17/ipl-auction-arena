@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 
 import { getSessionContext } from "@/lib/auth";
 import {
-  getActiveSlide,
-  getAdminAuctionPageData,
-  getTeamAuctionPageData,
-} from "@/lib/auction-data";
+  getCachedAdminSnapshot,
+  getCachedTeamSnapshot,
+} from "@/lib/auction-cache";
+import { getActiveSlide } from "@/lib/auction-data";
 
 export const dynamic = "force-dynamic";
 
@@ -19,12 +19,12 @@ export async function GET() {
   if (session.role === "admin") {
     return NextResponse.json({
       role: "admin",
-      data: await getAdminAuctionPageData(),
+      data: await getCachedAdminSnapshot(),
     });
   }
 
   const [teamData, activeSlide] = await Promise.all([
-    getTeamAuctionPageData(session.user.id),
+    getCachedTeamSnapshot(session.user.id),
     getActiveSlide().catch(() => null),
   ]);
 

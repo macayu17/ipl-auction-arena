@@ -249,7 +249,7 @@ const PillNav: React.FC<PillNavProps> = ({
   } as React.CSSProperties;
 
   return (
-    <div className="absolute top-[1.5em] z-[1000] w-full left-0 md:w-auto md:left-auto md:max-w-max mx-auto md:mx-0 flex justify-center">
+    <div className="relative z-[1000] w-full md:w-auto md:max-w-max mx-auto md:mx-0 flex justify-center">
       <nav
         className={`w-max flex items-center justify-center md:justify-start box-border px-4 md:px-0 ${className}`}
         aria-label="Primary"

@@ -33,18 +33,26 @@ export async function createClient() {
   );
 }
 
+/**
+ * Service-role client singleton.
+ * The service client uses a fixed key with no per-user state,
+ * so it's safe to reuse across requests within the same process.
+ */
+let _serviceClient: ReturnType<typeof createSupabaseClient<Database>> | null =
+  null;
+
 export async function createServiceClient() {
+  if (_serviceClient) return _serviceClient;
+
   const { url } = getSupabaseEnv();
   const serviceRoleKey = getServiceRoleKey();
 
-  return createSupabaseClient<Database>(
-    url,
-    serviceRoleKey,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
+  _serviceClient = createSupabaseClient<Database>(url, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  return _serviceClient;
 }

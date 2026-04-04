@@ -76,7 +76,21 @@ export async function GET(request: Request) {
 
       controller.enqueue(encoder.encode(": connected\n\n"));
 
+      // Heartbeat: send a comment every 15s to detect dead connections
+      const heartbeat = setInterval(() => {
+        try {
+          if (!closed) {
+            controller.enqueue(
+              encoder.encode(`: heartbeat ${Date.now()}\n\n`)
+            );
+          }
+        } catch {
+          clearInterval(heartbeat);
+        }
+      }, 15_000);
+
       const onAbort = () => {
+        clearInterval(heartbeat);
         abortUpstream();
         cancelReader();
         closeController();
@@ -106,6 +120,7 @@ export async function GET(request: Request) {
           console.error("Auction SSE stream read failed", error);
         }
       } finally {
+        clearInterval(heartbeat);
         request.signal.removeEventListener("abort", onAbort);
         abortUpstream();
         cancelReader();

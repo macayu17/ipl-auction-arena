@@ -4,6 +4,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getSessionContext } from "@/lib/auth";
+import {
+  invalidateAllCaches,
+  warmAdminCache,
+  warmAllTeamCaches,
+} from "@/lib/auction-cache";
 import { publishAuctionEvent } from "@/lib/redis";
 import {
   toLooseSupabaseClient,
@@ -50,6 +55,30 @@ function revalidateAuctionViews() {
     "/team/auction",
     "/team/squad",
   ].forEach((path) => revalidatePath(path));
+}
+
+/** Warm Redis snapshot caches for admin + all team captains. */
+async function warmAllCaches() {
+  try {
+    const supabase = toLooseSupabaseClient(await createServiceClient());
+    const teamsResult = await supabase
+      .from("teams")
+      .select("user_id")
+      .neq("user_id", "");
+
+    const teamUserIds = (
+      (teamsResult.data as { user_id: string | null }[] | null) ?? []
+    )
+      .map((t) => t.user_id)
+      .filter(Boolean) as string[];
+
+    await Promise.allSettled([
+      warmAdminCache(),
+      warmAllTeamCaches(teamUserIds),
+    ]);
+  } catch (error) {
+    console.error("Cache warming failed (non-fatal)", error);
+  }
 }
 
 function parsePositiveInteger(
@@ -304,6 +333,7 @@ export async function nominatePlayerAction(formData: FormData) {
     }
 
     await nominatePlayerById(playerId);
+    await warmAllCaches();
     await publishAuctionEvent({
       type: "player_nominated",
       source: "auction.nominatePlayerAction",
@@ -343,6 +373,7 @@ export async function nominateNextPlayerAction() {
     }
 
     await nominatePlayerById(nextPlayer.id);
+    await warmAllCaches();
     await publishAuctionEvent({
       type: "player_nominated",
       source: "auction.nominateNextPlayerAction",
@@ -375,9 +406,11 @@ export async function setAuctionPhaseAction(formData: FormData) {
       throw result.error;
     }
 
+    await warmAllCaches();
     await publishAuctionEvent({
       type: "auction_phase_changed",
       source: "auction.setAuctionPhaseAction",
+      delta: { phase, timerActive: phase === "live" },
     });
     revalidateAuctionViews();
   } catch (error) {
@@ -412,6 +445,7 @@ export async function reorderQueueAction(formData: FormData) {
       }
     }
 
+    await warmAllCaches();
     await publishAuctionEvent({
       type: "queue_reordered",
       source: "auction.reorderQueueAction",
@@ -442,9 +476,11 @@ export async function setBidIncrementAction(formData: FormData) {
       throw result.error;
     }
 
+    await warmAllCaches();
     await publishAuctionEvent({
       type: "bid_increment_changed",
       source: "auction.setBidIncrementAction",
+      delta: { bidIncrement },
     });
     revalidateAuctionViews();
   } catch (error) {
@@ -477,9 +513,11 @@ export async function setTimerStateAction(formData: FormData) {
       throw result.error;
     }
 
+    await warmAllCaches();
     await publishAuctionEvent({
       type: "timer_state_changed",
       source: "auction.setTimerStateAction",
+      delta: { timerSeconds, timerActive },
     });
     revalidateAuctionViews();
   } catch (error) {
@@ -545,9 +583,17 @@ export async function placeBidAction(formData: FormData) {
       throw updateAuctionStateResult.error;
     }
 
+    await warmAllCaches();
     await publishAuctionEvent({
       type: "bid_placed",
       source: "auction.placeBidAction",
+      delta: {
+        currentBidAmount: nextBidAmount,
+        currentBidTeamId: team.id,
+        currentBidTeamCode: team.short_code,
+        timerSeconds: 30,
+        timerActive: true,
+      },
     });
     revalidateAuctionViews();
   } catch (error) {
@@ -599,6 +645,7 @@ export async function undoLastBidAction() {
       throw updateAuctionStateResult.error;
     }
 
+    await warmAllCaches();
     await publishAuctionEvent({
       type: "bid_reverted",
       source: "auction.undoLastBidAction",
@@ -688,6 +735,7 @@ export async function sellCurrentPlayerAction() {
       throw updateAuctionStateResult.error;
     }
 
+    await warmAllCaches();
     await publishAuctionEvent({
       type: "player_sold",
       source: "auction.sellCurrentPlayerAction",
@@ -739,6 +787,7 @@ export async function markUnsoldAction() {
       throw updateAuctionStateResult.error;
     }
 
+    await warmAllCaches();
     await publishAuctionEvent({
       type: "player_marked_unsold",
       source: "auction.markUnsoldAction",
@@ -790,6 +839,7 @@ export async function resetAuctionAction() {
       throw resetAuctionStateResult.error;
     }
 
+    await invalidateAllCaches();
     await publishAuctionEvent({
       type: "auction_reset",
       source: "auction.resetAuctionAction",
