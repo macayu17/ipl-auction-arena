@@ -2,13 +2,18 @@ import { NextResponse } from "next/server";
 
 import { getSessionContext } from "@/lib/auth";
 import {
-  getCachedAdminSnapshot,
-  getCachedTeamSnapshot,
-} from "@/lib/auction-cache";
-import { getActiveSlide } from "@/lib/auction-data";
+  getAdminAuctionPageData,
+  getTeamAuctionPageData,
+  getActiveSlide,
+} from "@/lib/auction-data";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Direct-from-DB snapshot endpoint.
+ * No Redis cache layer — Supabase queries are fast enough (~50-80ms)
+ * and the cache was causing stale data + extra complexity.
+ */
 export async function GET() {
   const session = await getSessionContext();
 
@@ -19,12 +24,12 @@ export async function GET() {
   if (session.role === "admin") {
     return NextResponse.json({
       role: "admin",
-      data: await getCachedAdminSnapshot(),
+      data: await getAdminAuctionPageData(),
     });
   }
 
   const [teamData, activeSlide] = await Promise.all([
-    getCachedTeamSnapshot(session.user.id),
+    getTeamAuctionPageData(session.user.id),
     getActiveSlide().catch(() => null),
   ]);
 

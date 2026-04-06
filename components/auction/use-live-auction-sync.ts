@@ -6,110 +6,19 @@ import { createClient } from "@/lib/supabase/client";
 
 type RoleName = "admin" | "team";
 
-type AuctionEvent = {
-  type?: string;
-  delta?: Record<string, unknown>;
-};
-
 /**
- * Try to apply a delta patch from an SSE event directly to the local state.
- * Returns the patched data or `null` if a full refresh is required.
+ * Auction live-sync hook — v3 (Supabase Broadcast + fast polling).
+ *
+ * Architecture:
+ *  1. Initial load → fetch /api/auction/live-snapshot
+ *  2. PRIMARY: Supabase Realtime Broadcast channel "auction-sync"
+ *     - Server actions broadcast a thin "refresh" signal after every mutation
+ *     - Client receives it via WebSocket (~30-50ms) and triggers snapshot fetch
+ *  3. SAFETY NET: 3-second polling interval
+ *     - Catches any missed broadcasts (reconnections, network blips)
+ *     - Does NOT fetch if data arrived via broadcast within the last 2s
+ *  4. NO more Redis SSE, NO more postgres_changes
  */
-function tryApplyDelta<T>(
-  currentData: T | null,
-  event: AuctionEvent
-): T | null {
-  if (!currentData || !event.delta || !event.type) return null;
-
-  const data = currentData as Record<string, unknown>;
-  const auctionState = data.auctionState as Record<string, unknown> | undefined;
-
-  if (!auctionState) return null;
-
-  try {
-    switch (event.type) {
-      case "bid_placed": {
-        const d = event.delta;
-        return {
-          ...currentData,
-          auctionState: {
-            ...auctionState,
-            current_bid_amount: d.currentBidAmount,
-            current_bid_team_id: d.currentBidTeamId,
-            timer_seconds: d.timerSeconds ?? 30,
-            timer_active: d.timerActive ?? true,
-          },
-        } as T;
-      }
-
-      case "timer_state_changed": {
-        const d = event.delta;
-        return {
-          ...currentData,
-          auctionState: {
-            ...auctionState,
-            timer_seconds: d.timerSeconds,
-            timer_active: d.timerActive,
-          },
-        } as T;
-      }
-
-      case "auction_phase_changed": {
-        const d = event.delta;
-        return {
-          ...currentData,
-          auctionState: {
-            ...auctionState,
-            phase: d.phase,
-            timer_active: d.timerActive ?? auctionState.timer_active,
-          },
-        } as T;
-      }
-
-      case "bid_increment_changed": {
-        const d = event.delta;
-        return {
-          ...currentData,
-          auctionState: {
-            ...auctionState,
-            bid_increment: d.bidIncrement,
-          },
-        } as T;
-      }
-
-      default:
-        return null;
-    }
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Apply a Supabase Realtime `auction_state` row update directly to local state.
- */
-function applyRealtimeRow<T>(
-  currentData: T | null,
-  newRow: Record<string, unknown>
-): T | null {
-  if (!currentData) return null;
-
-  try {
-    const dataObj = currentData as Record<string, unknown>;
-    const existingAuctionState = (dataObj.auctionState ?? {}) as Record<string, unknown>;
-
-    return {
-      ...dataObj,
-      auctionState: {
-        ...existingAuctionState,
-        ...newRow,
-      },
-    } as T;
-  } catch {
-    return null;
-  }
-}
-
 export function useLiveAuctionSync<T>({
   initialData,
   expectedRole,
@@ -120,11 +29,7 @@ export function useLiveAuctionSync<T>({
   const [data, setData] = useState(initialData);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const fetchInFlightRef = useRef(false);
-  const dataRef = useRef(data);
-
-  useEffect(() => {
-    dataRef.current = data;
-  }, [data]);
+  const lastFetchTimeRef = useRef(0);
 
   useEffect(() => {
     setData(initialData);
@@ -150,6 +55,7 @@ export function useLiveAuctionSync<T>({
 
       if (payload.role === expectedRole && payload.data) {
         setData(payload.data);
+        lastFetchTimeRef.current = Date.now();
       }
     } finally {
       fetchInFlightRef.current = false;
@@ -159,141 +65,44 @@ export function useLiveAuctionSync<T>({
 
   useEffect(() => {
     let stopped = false;
-    let reconnectTimeout: number | null = null;
-    let eventSource: EventSource | null = null;
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
 
     /* ---------------------------------------------------------------
-     * PRIMARY: Supabase Realtime — subscribe to auction_state changes
+     * PRIMARY: Supabase Realtime Broadcast
+     * Server actions send { type: "broadcast", event: "auction-update" }
+     * on channel "auction-sync". This arrives via WebSocket (~30-50ms).
      * --------------------------------------------------------------- */
     const supabase = createClient();
-    const realtimeChannel = supabase
-      .channel("auction-live", { config: { broadcast: { self: true } } })
-      .on(
-        "postgres_changes" as "system",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "auction_state",
-          filter: "id=eq.1",
-        } as Record<string, unknown>,
-        (payload: { new?: Record<string, unknown> }) => {
-          if (stopped || !payload.new) return;
-          const patched = applyRealtimeRow(dataRef.current, payload.new);
-          if (patched) {
-            setData(patched);
-          } else {
-            void refreshSnapshot();
-          }
+    const channel = supabase
+      .channel("auction-sync")
+      .on("broadcast", { event: "auction-update" }, () => {
+        if (!stopped) {
+          void refreshSnapshot();
         }
-      )
-      // Also listen for any table changes that signal a full refresh
-      .on(
-        "postgres_changes" as "system",
-        {
-          event: "*",
-          schema: "public",
-          table: "bids",
-        } as Record<string, unknown>,
-        () => {
-          if (!stopped) void refreshSnapshot();
-        }
-      )
-      .on(
-        "postgres_changes" as "system",
-        {
-          event: "*",
-          schema: "public",
-          table: "players",
-        } as Record<string, unknown>,
-        () => {
-          if (!stopped) void refreshSnapshot();
-        }
-      )
-      .on(
-        "postgres_changes" as "system",
-        {
-          event: "*",
-          schema: "public",
-          table: "teams",
-        } as Record<string, unknown>,
-        () => {
-          if (!stopped) void refreshSnapshot();
-        }
-      )
+      })
       .subscribe();
 
     /* ---------------------------------------------------------------
-     * SECONDARY: Redis SSE — fast delta patches (parallel channel)
+     * SAFETY NET: Poll every 3 seconds
+     * Skip if a broadcast-triggered fetch happened within the last 2s.
      * --------------------------------------------------------------- */
-    const handleSSEEvent = (rawData: string) => {
+    pollInterval = setInterval(() => {
       if (stopped) return;
-
-      try {
-        const event = JSON.parse(rawData) as AuctionEvent;
-        const patched = tryApplyDelta(dataRef.current, event);
-
-        if (patched) {
-          setData(patched);
-          return;
-        }
-      } catch {
-        // Not valid JSON → full refresh
+      const timeSinceLastFetch = Date.now() - lastFetchTimeRef.current;
+      if (timeSinceLastFetch > 2000) {
+        void refreshSnapshot();
       }
+    }, 3000);
 
-      void refreshSnapshot();
-    };
-
-    const startRedisStream = async () => {
-      try {
-        const tokenResponse = await fetch("/api/auth/auction-token", {
-          cache: "no-store",
-        });
-
-        if (!tokenResponse.ok) return;
-
-        const { token } = (await tokenResponse.json()) as { token?: string };
-
-        if (!token || stopped) return;
-
-        eventSource = new EventSource(
-          `/api/auction/events?token=${encodeURIComponent(token)}`
-        );
-
-        eventSource.onmessage = (messageEvent) => {
-          handleSSEEvent(messageEvent.data ?? "");
-        };
-
-        eventSource.onerror = () => {
-          eventSource?.close();
-          eventSource = null;
-
-          if (stopped) return;
-
-          reconnectTimeout = window.setTimeout(() => {
-            void startRedisStream();
-          }, 500);
-        };
-      } catch {
-        // Redis unavailable — Supabase Realtime will handle it
-      }
-    };
-
-    void startRedisStream();
-
-    if (initialData === null) {
-      void refreshSnapshot();
-    }
+    /* Initial fetch */
+    void refreshSnapshot();
 
     return () => {
       stopped = true;
-      eventSource?.close();
-      void supabase.removeChannel(realtimeChannel);
-
-      if (reconnectTimeout) {
-        window.clearTimeout(reconnectTimeout);
-      }
+      void supabase.removeChannel(channel);
+      if (pollInterval) clearInterval(pollInterval);
     };
-  }, [expectedRole, initialData, refreshSnapshot]);
+  }, [expectedRole, refreshSnapshot]);
 
   return {
     data,

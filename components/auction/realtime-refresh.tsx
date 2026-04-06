@@ -5,14 +5,11 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
 
+/**
+ * Pages that use useLiveAuctionSync handle their own refresh.
+ * This component handles refresh for all OTHER admin/team pages.
+ */
 const CLIENT_SYNC_PATHS = new Set(["/admin/auction", "/team/auction"]);
-
-function isSupabaseClientConfigured() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
-}
 
 export function RealtimeRefresh() {
   const router = useRouter();
@@ -23,94 +20,18 @@ export function RealtimeRefresh() {
       return;
     }
 
-    let stopped = false;
-    let reconnectTimeout: number | null = null;
-    let eventSource: EventSource | null = null;
-    let supabaseCleanup: (() => void) | null = null;
-
-    const refresh = () => {
-      startTransition(() => {
-        router.refresh();
-      });
-    };
-
-    const startSupabaseFallback = () => {
-      if (!isSupabaseClientConfigured() || supabaseCleanup) {
-        return;
-      }
-
-      const supabase = createClient();
-      const channel = supabase
-        .channel("auction:global", {
-          config: {
-            private: true,
-          },
-        })
-        .on("broadcast", { event: "INSERT" }, refresh)
-        .on("broadcast", { event: "UPDATE" }, refresh)
-        .on("broadcast", { event: "DELETE" }, refresh)
-        .subscribe();
-
-      supabaseCleanup = () => {
-        void supabase.removeChannel(channel);
-      };
-    };
-
-    const startRedisStream = async () => {
-      try {
-        const tokenResponse = await fetch("/api/auth/auction-token", {
-          cache: "no-store",
+    const supabase = createClient();
+    const channel = supabase
+      .channel("auction-sync-nav")
+      .on("broadcast", { event: "auction-update" }, () => {
+        startTransition(() => {
+          router.refresh();
         });
-
-        if (!tokenResponse.ok) {
-          startSupabaseFallback();
-          return;
-        }
-
-        const { token } = (await tokenResponse.json()) as {
-          token?: string;
-        };
-
-        if (!token || stopped) {
-          startSupabaseFallback();
-          return;
-        }
-
-        eventSource = new EventSource(
-          `/api/auction/events?token=${encodeURIComponent(token)}`
-        );
-
-        eventSource.onmessage = () => {
-          refresh();
-        };
-
-        eventSource.onerror = () => {
-          eventSource?.close();
-          eventSource = null;
-
-          if (stopped) {
-            return;
-          }
-
-          reconnectTimeout = window.setTimeout(() => {
-            void startRedisStream();
-          }, 1500);
-        };
-      } catch {
-        startSupabaseFallback();
-      }
-    };
-
-    void startRedisStream();
+      })
+      .subscribe();
 
     return () => {
-      stopped = true;
-      eventSource?.close();
-      supabaseCleanup?.();
-
-      if (reconnectTimeout) {
-        window.clearTimeout(reconnectTimeout);
-      }
+      void supabase.removeChannel(channel);
     };
   }, [pathname, router]);
 

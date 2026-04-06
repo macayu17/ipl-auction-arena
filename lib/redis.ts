@@ -124,6 +124,8 @@ export async function deleteRedisKeys(...keys: string[]): Promise<void> {
 /*  Pub/Sub event publishing                                           */
 /* ------------------------------------------------------------------ */
 
+import { broadcastAuctionUpdate } from "@/lib/auction-broadcast";
+
 export type AuctionEventPayload = {
   type: string;
   source: string;
@@ -133,18 +135,28 @@ export type AuctionEventPayload = {
 };
 
 export async function publishAuctionEvent(event: AuctionEventPayload) {
+  // PRIMARY: Supabase Realtime Broadcast (WebSocket, ~30-50ms)
+  // Fire-and-forget — never blocks the action
+  void broadcastAuctionUpdate().catch(() => {});
+
+  // LEGACY: Redis PUBLISH (optional, used by SSE proxy)
   if (!hasRedisEnv()) {
     return;
   }
 
-  await executeRedisPipeline([
-    [
-      "PUBLISH",
-      AUCTION_EVENT_CHANNEL,
-      JSON.stringify({
-        ...event,
-        at: event.at ?? new Date().toISOString(),
-      }),
-    ],
-  ]);
+  try {
+    await executeRedisPipeline([
+      [
+        "PUBLISH",
+        AUCTION_EVENT_CHANNEL,
+        JSON.stringify({
+          ...event,
+          at: event.at ?? new Date().toISOString(),
+        }),
+      ],
+    ]);
+  } catch {
+    // Redis failure is non-fatal — broadcast already sent
+  }
 }
+
