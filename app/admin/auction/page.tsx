@@ -1,8 +1,10 @@
 "use client";
 
-import { Clock3, Gavel, RadioTower, Trophy, Users } from "lucide-react";
+import { Clock3, Gavel, RadioTower, Trophy, Users, Wallet } from "lucide-react";
+import { useRef } from "react";
 
 import {
+  adjustAllPursesAction,
   markUnsoldAction,
   nominateNextPlayerAction,
   placeBidAction,
@@ -11,6 +13,7 @@ import {
   setTimerStateAction,
   setBidIncrementAction,
   setAuctionPhaseAction,
+  setCustomBidAction,
   undoLastBidAction,
 } from "@/app/actions/auction";
 import { NominationQueueManager } from "@/components/auction/nomination-queue-manager";
@@ -21,6 +24,7 @@ import { useLiveAuctionSync } from "@/components/auction/use-live-auction-sync";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { MetricCard } from "@/components/layout/metric-card";
 import { SectionCard } from "@/components/layout/section-card";
+import { TEAM_COLORS } from "@/lib/team-colors";
 import {
   formatPrice,
   formatPriceShort,
@@ -37,7 +41,8 @@ import type {
 
 const phases = ["setup", "live", "paused", "ended"] as const;
 const timerPresets = [15, 20, 30, 45, 60, 90];
-const incrementPresets = [1, 2, 5, 10, 25, 50];
+/** Standard bid increment amounts in Lakhs */
+const incrementPresets = [5, 10, 25, 50, 100, 200];
 
 const emptyAuctionState: AuctionState = {
   id: 1,
@@ -53,6 +58,9 @@ const emptyAuctionState: AuctionState = {
 };
 
 export default function AdminAuctionPage() {
+  const customBidRef = useRef<HTMLInputElement>(null);
+  const customBidTeamRef = useRef<HTMLSelectElement>(null);
+
   const { data, isRefreshing } = useLiveAuctionSync<{
     auctionState: AuctionState;
     currentPlayer: Player | null;
@@ -102,10 +110,6 @@ export default function AdminAuctionPage() {
       ? auctionState.current_bid_amount + auctionState.bid_increment
       : currentPlayer.base_price
     : 0;
-  const ratingMax = Math.max(
-    1,
-    ...orderedTeams.map((team) => team.squad_rating_total || 0)
-  );
   const topRatedTeam = orderedTeams[0] ?? null;
 
   return (
@@ -147,7 +151,8 @@ export default function AdminAuctionPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-[1fr_1.3fr_1fr]">
+      <div className="grid gap-3 xl:grid-cols-[1fr_1.5fr_0.8fr]">
+        {/* ============ COLUMN 1: Player + Queue ============ */}
         <div className="space-y-3">
           <SectionCard
             title="On the Block"
@@ -199,22 +204,6 @@ export default function AdminAuctionPage() {
                       </div>
                       <div className="mt-1 text-lg font-bold text-white mono-font">
                         {formatPrice(currentBidAmount)}
-                      </div>
-                    </div>
-                    <div className="glass-panel rounded-lg p-3 border border-white/5 bg-black/30">
-                      <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
-                        Next bid
-                      </div>
-                      <div className="mt-1 text-lg font-bold text-white/50 mono-font">
-                        {formatPrice(nextBidAmount)}
-                      </div>
-                    </div>
-                    <div className="glass-panel rounded-lg p-3 border border-white/5 bg-black/30">
-                      <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
-                        Highest bidder
-                      </div>
-                      <div className="mt-1 text-lg font-bold text-white mono-font">
-                        {leadingTeam?.short_code ?? "--"}
                       </div>
                     </div>
                   </div>
@@ -298,14 +287,67 @@ export default function AdminAuctionPage() {
           </SectionCard>
         </div>
 
+        {/* ============ COLUMN 2: Auction Engine + Quick Bid ============ */}
         <div className="space-y-3">
+          {/* Quick Bid — Team Logo Buttons */}
+          <SectionCard
+            title="Quick Bid"
+            description="Tap a team logo to place the next bid instantly."
+          >
+            <div className="grid grid-cols-5 gap-2">
+              {teamSummary.map((team) => {
+                const colors = TEAM_COLORS[team.short_code];
+                const isLeading = leadingTeam?.id === team.id;
+                const purseLeft = team.purse_remaining;
+                const canAfford = purseLeft >= nextBidAmount;
+                const isSameTeam = auctionState.current_bid_team_id === team.id;
+                const disabled = !currentPlayer || auctionState.phase !== "live" || isSameTeam || !canAfford;
+
+                return (
+                  <form key={team.id} action={placeBidAction}>
+                    <input type="hidden" name="teamId" value={team.id} />
+                    <button
+                      type="submit"
+                      disabled={disabled}
+                      className="w-full flex flex-col items-center gap-1.5 rounded-xl p-3 border transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:scale-[1.04] active:scale-95"
+                      style={{
+                        borderColor: isLeading ? colors?.primary ?? "var(--gold)" : "rgba(255,255,255,0.08)",
+                        backgroundColor: isLeading ? (colors?.bgTint ?? "rgba(255,255,255,0.05)") : "rgba(0,0,0,0.2)",
+                        boxShadow: isLeading ? `0 0 20px ${colors?.glow ?? "transparent"}` : "none",
+                      }}
+                    >
+                      <TeamLogo shortCode={team.short_code} size={40} />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-white">{team.short_code}</span>
+                      <span className="text-[9px] font-medium text-white/40 mono-font">{formatPriceShort(purseLeft)}</span>
+                    </button>
+                  </form>
+                );
+              })}
+            </div>
+
+            {/* Next bid amount display */}
+            <div className="mt-3 flex items-center justify-between rounded-xl border border-[var(--gold)]/20 bg-[var(--gold)]/5 px-4 py-3">
+              <div>
+                <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--gold)]">Next bid amount</div>
+                <div className="text-2xl font-bold text-white mono-font mt-0.5">
+                  {currentPlayer ? formatPrice(nextBidAmount) : "--"}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Increment</div>
+                <div className="text-lg font-bold text-white/70 mono-font mt-0.5">{formatPriceShort(auctionState.bid_increment)}</div>
+              </div>
+            </div>
+          </SectionCard>
+
+          {/* Auction Engine — Timer + Bid Info */}
           <SectionCard
             title="Auction Engine"
-            description="Live amount, timer state, and fallback bid controls."
+            description="Timer, bid status, and live auction stage."
           >
             <div className="glass-panel p-5 rounded-2xl relative overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--gold-soft)_0%,transparent_70%)] opacity-20 pointer-events-none" />
-              
+
               <div className="relative flex flex-wrap items-center justify-between gap-2">
                 <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-200">
                   <RadioTower className="w-3 h-3" />
@@ -371,59 +413,51 @@ export default function AdminAuctionPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="glass-panel rounded-xl p-4 border border-[var(--gold)]/20 bg-[var(--gold)]/5">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--gold)]">
-                      Next valid bid
-                    </div>
-                    <div className="mt-1.5 text-2xl font-bold text-white mono-font">
-                      {currentPlayer ? formatPrice(nextBidAmount) : "--"}
-                    </div>
-                    <p className="mt-1 text-[10px] leading-relaxed text-[var(--gold)]/60">
-                      Increment {formatPriceShort(auctionState.bid_increment)}
-                    </p>
+                {/* Custom bid override */}
+                <form action={setCustomBidAction} className="glass-panel rounded-xl p-4 border border-white/5 bg-black/30">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
+                    Custom bid (override)
                   </div>
-
-                  <form
-                    action={placeBidAction}
-                    className="glass-panel rounded-xl p-4 border border-white/5 bg-black/30"
-                  >
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
-                      Admin fallback bid
-                    </div>
-                    <div className="mt-2 grid gap-2 grid-cols-[1fr_auto]">
-                      <select
-                        name="teamId"
-                        className="rounded-lg border border-white/10 bg-black/50 px-2.5 py-1.5 text-[12px] font-medium text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all"
-                        defaultValue=""
-                        disabled={!currentPlayer || auctionState.phase !== "live"}
-                      >
-                        <option value="" disabled>
-                          Select team
-                        </option>
-                        {teamSummary.map((team) => (
-                          <option key={team.id} value={team.id}>
-                            {team.short_code} | rating {team.squad_rating_total}
-                          </option>
-                        ))}
-                      </select>
+                  <div className="mt-2 grid gap-2">
+                    <select
+                      ref={customBidTeamRef}
+                      name="teamId"
+                      className="w-full rounded-lg border border-white/10 bg-black/50 px-2.5 py-1.5 text-[12px] font-medium text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all"
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Select team</option>
+                      {teamSummary.map((team) => (
+                        <option key={team.id} value={team.id}>{team.short_code}</option>
+                      ))}
+                    </select>
+                    <div className="grid grid-cols-[1fr_auto] gap-2">
+                      <input
+                        ref={customBidRef}
+                        name="amount"
+                        type="number"
+                        min="1"
+                        step="1"
+                        placeholder="Amount (L)"
+                        className="w-full rounded-lg border border-white/10 bg-black/50 px-2.5 py-1.5 text-[12px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all mono-font h-8"
+                      />
                       <SubmitButton
                         pendingLabel="..."
-                        className="rounded-lg border border-[var(--gold)]/30 bg-[var(--gold)]/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[var(--gold)] hover:bg-[var(--gold)]/20 transition-all"
-                        disabled={!currentPlayer || auctionState.phase !== "live"}
+                        className="h-8 px-3 inline-flex items-center justify-center rounded-lg border border-[var(--gold)]/30 bg-[var(--gold)]/10 text-[10px] font-bold uppercase tracking-wider text-[var(--gold)] hover:bg-[var(--gold)]/20 transition-all"
+                        disabled={!currentPlayer}
                       >
-                        Bid
+                        Set
                       </SubmitButton>
                     </div>
-                  </form>
-                </div>
+                  </div>
+                </form>
               </div>
             </div>
           </SectionCard>
 
+          {/* Room Controls — Phase, Timer, Increment */}
           <SectionCard
             title="Room Controls"
-            description="Phase, timer presets, and increment scale."
+            description="Phase, timer presets, increment scale, and purse."
           >
             <div className="space-y-4">
               <div>
@@ -433,7 +467,7 @@ export default function AdminAuctionPage() {
                 <div className="rounded-lg border border-white/10 bg-black/40 p-1 grid grid-cols-4 gap-1">
                   {phases.map((phase) => (
                     <form key={phase} action={setAuctionPhaseAction}>
-                      <input type="hidden" name="phase" value={phase} />        
+                      <input type="hidden" name="phase" value={phase} />
                       <SubmitButton
                         pendingLabel="..."
                         className={`w-full h-8 inline-flex items-center justify-center rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${
@@ -512,7 +546,7 @@ export default function AdminAuctionPage() {
                           pendingLabel="..."
                           className={`w-full h-8 rounded-md border text-[12px] font-bold transition-all ${auctionState.bid_increment === increment ? "border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--gold)]" : "border-white/10 bg-black/40 text-[var(--text-soft)] hover:text-white hover:bg-white/10 hover:border-white/20"}`}
                         >
-                          {increment}
+                          {formatPriceShort(increment)}
                         </SubmitButton>
                       </form>
                     ))}
@@ -538,9 +572,36 @@ export default function AdminAuctionPage() {
                   </form>
                 </div>
               </div>
+
+              {/* All-teams purse adjustment */}
+              <form action={adjustAllPursesAction} className="glass-panel rounded-xl p-4 border border-white/5 bg-black/30">
+                <div className="flex items-center gap-2 mb-3">
+                  <Wallet className="w-3.5 h-3.5 text-[var(--text-soft)]" />
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
+                    Set all teams purse (L)
+                  </div>
+                </div>
+                <div className="grid grid-cols-[1fr_auto] gap-2">
+                  <input
+                    name="purseTotal"
+                    type="number"
+                    min="1"
+                    step="1"
+                    defaultValue="1000"
+                    className="w-full rounded-md border border-white/10 bg-black/50 px-2.5 py-1.5 text-[12px] font-mono text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all h-8"
+                  />
+                  <SubmitButton
+                    pendingLabel="..."
+                    className="h-8 px-4 inline-flex items-center justify-center rounded-md border border-[var(--gold)]/30 bg-[var(--gold)]/10 text-[10px] font-bold uppercase tracking-wider text-[var(--gold)] hover:bg-[var(--gold)]/20 transition-all"
+                  >
+                    Apply
+                  </SubmitButton>
+                </div>
+              </form>
             </div>
           </SectionCard>
 
+          {/* Bid Activity Feed */}
           <SectionCard
             title="Bid Activity Feed"
             description="Most recent bids for the current player."
@@ -583,105 +644,49 @@ export default function AdminAuctionPage() {
           </SectionCard>
         </div>
 
+        {/* ============ COLUMN 3: Team Pulse ============ */}
         <div className="space-y-3">
           <SectionCard
             title="Team Pulse"
-            description="Purse pressure and total rating visibility for the admin desk."
+            description="Purse pressure and rating for the admin desk."
           >
-            <div className="space-y-4">
-              {topRatedTeam ? (
-                <div className="glass-panel-elevated relative overflow-hidden rounded-xl border border-[var(--blue)]/30 bg-[var(--blue)]/5 p-5">
-                  <div className="absolute inset-x-0 bottom-0 h-0.5 bg-[var(--blue)]/50" />
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--blue-soft)]">
-                    Highest squad rating
-                  </div>
-                  <div className="mt-2 text-2xl font-bold tracking-tight text-white glow-text leading-none">
-                    {topRatedTeam.name}
-                  </div>
-                  <div className="mt-3 text-[13px] text-white/70">
-                    {topRatedTeam.players_acquired} players • purse{" "}
-                    {formatPrice(topRatedTeam.purse_remaining)} • rating{" "}
-                    {topRatedTeam.squad_rating_total}
-                  </div>
-                </div>
-              ) : null}
-
+            <div className="space-y-3">
               {orderedTeams.map((team) => {
-                const ratingPercent = Math.max(
-                  12,
-                  Math.round((team.squad_rating_total / ratingMax) * 100)
-                );
                 const isLeader = leadingTeam?.id === team.id;
-                const neonColor = team.color_primary ?? "var(--gold)";
+                const colors = TEAM_COLORS[team.short_code];
 
                 return (
                   <div
                     key={team.id}
-                    className={`glass-panel rounded-xl px-5 py-5 transition-all ${
-                      isLeader
-                        ? "border-[var(--blue)]/50 shadow-[0_0_30px_rgba(5,102,217,0.15)] bg-[var(--blue)]/5"
-                        : "border-white/5 bg-black/20"
-                    }`}
+                    className="glass-panel rounded-xl px-4 py-3 transition-all"
+                    style={{
+                      borderColor: isLeader ? (colors?.border ?? "var(--gold)") : "rgba(255,255,255,0.05)",
+                      boxShadow: isLeader ? `0 0 20px ${colors?.glow ?? "transparent"}` : "none",
+                      backgroundColor: isLeader ? (colors?.bgTint ?? "rgba(255,255,255,0.05)") : "rgba(0,0,0,0.2)",
+                    }}
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-3">
-                          <TeamLogo shortCode={team.short_code} size={36} />
-                          <span className="text-xl font-bold tracking-tight text-white">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <TeamLogo shortCode={team.short_code} size={28} />
+                        <div>
+                          <span className="text-sm font-bold tracking-tight text-white">
                             {team.short_code}
                           </span>
                           {isLeader ? (
-                            <span className="rounded-full border border-[var(--blue)]/50 bg-[var(--blue)]/10 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--blue-soft)]">
-                              Active bidder
+                            <span className="ml-2 rounded-full border px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider" style={{ borderColor: colors?.border, color: colors?.primary }}>
+                              Bidding
                             </span>
                           ) : null}
                         </div>
-                        <div className="mt-2 text-[13px] text-[var(--text-soft)]">
-                          {team.name}
-                        </div>
                       </div>
                       <div className="text-right">
-                        <div className="mono-font text-white font-bold text-lg">
+                        <div className="mono-font text-white font-bold text-sm">
                           {formatPrice(team.purse_remaining)}
                         </div>
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-soft)] mt-0.5">
-                          Purse left
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
+                          {team.players_acquired}p · r{team.squad_rating_total}
                         </div>
                       </div>
-                    </div>
-
-                    <div className="mt-5 grid grid-cols-3 gap-4 text-sm">
-                      <div className="bg-black/30 rounded-lg p-3 border border-white/5">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
-                          Players
-                        </div>
-                        <div className="mt-1.5 font-bold text-white text-lg leading-none">
-                          {team.players_acquired}
-                        </div>
-                      </div>
-                      <div className="bg-black/30 rounded-lg p-3 border border-white/5">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
-                          Rating
-                        </div>
-                        <div className="mt-1.5 font-bold text-white text-lg leading-none">
-                          {team.squad_rating_total}
-                        </div>
-                      </div>
-                      <div className="bg-black/30 rounded-lg p-3 border border-white/5">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
-                          Rank
-                        </div>
-                        <div className="mt-1.5 font-bold text-[var(--gold)] text-lg leading-none">
-                          #{orderedTeams.findIndex((item) => item.id === team.id) + 1}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 h-2 overflow-hidden rounded-full bg-black/50 border border-white/5 relative">
-                      <div
-                        className="absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out"
-                        style={{ width: `${ratingPercent}%`, backgroundColor: neonColor, boxShadow: `0 0 10px ${neonColor}` }}
-                      />
                     </div>
                   </div>
                 );
@@ -693,7 +698,3 @@ export default function AdminAuctionPage() {
     </>
   );
 }
-
-
-
-

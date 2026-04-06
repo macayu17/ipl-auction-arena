@@ -11,13 +11,6 @@ type AuctionEvent = {
   delta?: Record<string, unknown>;
 };
 
-function isSupabaseClientConfigured() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
-}
-
 /**
  * Try to apply a delta patch from an SSE event directly to the local state.
  * Returns the patched data or `null` if a full refresh is required.
@@ -85,9 +78,33 @@ function tryApplyDelta<T>(
       }
 
       default:
-        // Unknown event type → requires full snapshot
         return null;
     }
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Apply a Supabase Realtime `auction_state` row update directly to local state.
+ */
+function applyRealtimeRow<T>(
+  currentData: T | null,
+  newRow: Record<string, unknown>
+): T | null {
+  if (!currentData) return null;
+
+  try {
+    const dataObj = currentData as Record<string, unknown>;
+    const existingAuctionState = (dataObj.auctionState ?? {}) as Record<string, unknown>;
+
+    return {
+      ...dataObj,
+      auctionState: {
+        ...existingAuctionState,
+        ...newRow,
+      },
+    } as T;
   } catch {
     return null;
   }
@@ -105,7 +122,6 @@ export function useLiveAuctionSync<T>({
   const fetchInFlightRef = useRef(false);
   const dataRef = useRef(data);
 
-  // Keep a live ref of the latest data for delta patching
   useEffect(() => {
     dataRef.current = data;
   }, [data]);
@@ -145,57 +161,86 @@ export function useLiveAuctionSync<T>({
     let stopped = false;
     let reconnectTimeout: number | null = null;
     let eventSource: EventSource | null = null;
-    let supabaseCleanup: (() => void) | null = null;
 
-    const handleEvent = (rawData: string) => {
+    /* ---------------------------------------------------------------
+     * PRIMARY: Supabase Realtime — subscribe to auction_state changes
+     * --------------------------------------------------------------- */
+    const supabase = createClient();
+    const realtimeChannel = supabase
+      .channel("auction-live", { config: { broadcast: { self: true } } })
+      .on(
+        "postgres_changes" as "system",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "auction_state",
+          filter: "id=eq.1",
+        } as Record<string, unknown>,
+        (payload: { new?: Record<string, unknown> }) => {
+          if (stopped || !payload.new) return;
+          const patched = applyRealtimeRow(dataRef.current, payload.new);
+          if (patched) {
+            setData(patched);
+          } else {
+            void refreshSnapshot();
+          }
+        }
+      )
+      // Also listen for any table changes that signal a full refresh
+      .on(
+        "postgres_changes" as "system",
+        {
+          event: "*",
+          schema: "public",
+          table: "bids",
+        } as Record<string, unknown>,
+        () => {
+          if (!stopped) void refreshSnapshot();
+        }
+      )
+      .on(
+        "postgres_changes" as "system",
+        {
+          event: "*",
+          schema: "public",
+          table: "players",
+        } as Record<string, unknown>,
+        () => {
+          if (!stopped) void refreshSnapshot();
+        }
+      )
+      .on(
+        "postgres_changes" as "system",
+        {
+          event: "*",
+          schema: "public",
+          table: "teams",
+        } as Record<string, unknown>,
+        () => {
+          if (!stopped) void refreshSnapshot();
+        }
+      )
+      .subscribe();
+
+    /* ---------------------------------------------------------------
+     * SECONDARY: Redis SSE — fast delta patches (parallel channel)
+     * --------------------------------------------------------------- */
+    const handleSSEEvent = (rawData: string) => {
       if (stopped) return;
 
-      // Try to parse the event and apply a delta patch
       try {
         const event = JSON.parse(rawData) as AuctionEvent;
         const patched = tryApplyDelta(dataRef.current, event);
 
         if (patched) {
           setData(patched);
-          // Still refresh in background for full consistency after a short delay
-          setTimeout(() => {
-            if (!stopped) void refreshSnapshot();
-          }, 800);
           return;
         }
       } catch {
-        // Not valid JSON or parse error → full refresh
+        // Not valid JSON → full refresh
       }
 
       void refreshSnapshot();
-    };
-
-    const startSupabaseFallback = () => {
-      if (!isSupabaseClientConfigured() || supabaseCleanup) {
-        return;
-      }
-
-      const supabase = createClient();
-      const channel = supabase
-        .channel("auction:global", {
-          config: {
-            private: true,
-          },
-        })
-        .on("broadcast", { event: "INSERT" }, () => {
-          void refreshSnapshot();
-        })
-        .on("broadcast", { event: "UPDATE" }, () => {
-          void refreshSnapshot();
-        })
-        .on("broadcast", { event: "DELETE" }, () => {
-          void refreshSnapshot();
-        })
-        .subscribe();
-
-      supabaseCleanup = () => {
-        void supabase.removeChannel(channel);
-      };
     };
 
     const startRedisStream = async () => {
@@ -204,46 +249,37 @@ export function useLiveAuctionSync<T>({
           cache: "no-store",
         });
 
-        if (!tokenResponse.ok) {
-          startSupabaseFallback();
-          return;
-        }
+        if (!tokenResponse.ok) return;
 
-        const { token } = (await tokenResponse.json()) as {
-          token?: string;
-        };
+        const { token } = (await tokenResponse.json()) as { token?: string };
 
-        if (!token || stopped) {
-          startSupabaseFallback();
-          return;
-        }
+        if (!token || stopped) return;
 
         eventSource = new EventSource(
           `/api/auction/events?token=${encodeURIComponent(token)}`
         );
 
         eventSource.onmessage = (messageEvent) => {
-          handleEvent(messageEvent.data ?? "");
+          handleSSEEvent(messageEvent.data ?? "");
         };
 
         eventSource.onerror = () => {
           eventSource?.close();
           eventSource = null;
 
-          if (stopped) {
-            return;
-          }
+          if (stopped) return;
 
           reconnectTimeout = window.setTimeout(() => {
             void startRedisStream();
-          }, 1500);
+          }, 500);
         };
       } catch {
-        startSupabaseFallback();
+        // Redis unavailable — Supabase Realtime will handle it
       }
     };
 
     void startRedisStream();
+
     if (initialData === null) {
       void refreshSnapshot();
     }
@@ -251,7 +287,7 @@ export function useLiveAuctionSync<T>({
     return () => {
       stopped = true;
       eventSource?.close();
-      supabaseCleanup?.();
+      void supabase.removeChannel(realtimeChannel);
 
       if (reconnectTimeout) {
         window.clearTimeout(reconnectTimeout);

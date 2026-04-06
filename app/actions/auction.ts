@@ -4,11 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getSessionContext } from "@/lib/auth";
-import {
-  invalidateAllCaches,
-  warmAdminCache,
-  warmAllTeamCaches,
-} from "@/lib/auction-cache";
+import { invalidateAllCaches } from "@/lib/auction-cache";
 import { publishAuctionEvent } from "@/lib/redis";
 import {
   toLooseSupabaseClient,
@@ -57,30 +53,6 @@ function revalidateAuctionViews() {
   ].forEach((path) => revalidatePath(path));
 }
 
-/** Warm Redis snapshot caches for admin + all team captains. */
-async function warmAllCaches() {
-  try {
-    const supabase = toLooseSupabaseClient(await createServiceClient());
-    const teamsResult = await supabase
-      .from("teams")
-      .select("user_id")
-      .neq("user_id", "");
-
-    const teamUserIds = (
-      (teamsResult.data as { user_id: string | null }[] | null) ?? []
-    )
-      .map((t) => t.user_id)
-      .filter(Boolean) as string[];
-
-    await Promise.allSettled([
-      warmAdminCache(),
-      warmAllTeamCaches(teamUserIds),
-    ]);
-  } catch (error) {
-    console.error("Cache warming failed (non-fatal)", error);
-  }
-}
-
 function parsePositiveInteger(
   value: FormDataEntryValue | null,
   fallback: number
@@ -127,16 +99,6 @@ async function ensureAdmin() {
   }
 
   return session.user;
-}
-
-async function ensureAuthenticatedSession() {
-  const session = await getSessionContext();
-
-  if (session.status !== "authenticated") {
-    return null;
-  }
-
-  return session;
 }
 
 async function getAuctionState(supabase: LooseSupabaseClient) {
@@ -273,51 +235,21 @@ function getNextBidAmount(auctionState: AuctionState, currentPlayer: Player) {
     : currentPlayer.base_price;
 }
 
-async function resolveTeamForBid(
+async function resolveTeamById(
   supabase: LooseSupabaseClient,
-  formData: FormData
+  teamId: string
 ) {
-  const session = await ensureAuthenticatedSession();
+  const teamResult = await supabase
+    .from("teams")
+    .select("*")
+    .eq("id", teamId)
+    .maybeSingle();
 
-  if (!session) {
-    return null;
+  if (teamResult.error) {
+    throw teamResult.error;
   }
 
-  if (session.role === "admin") {
-    const teamId = String(formData.get("teamId") ?? "").trim();
-
-    if (!teamId) {
-      return null;
-    }
-
-    const teamResult = await supabase
-      .from("teams")
-      .select("*")
-      .eq("id", teamId)
-      .maybeSingle();
-
-    if (teamResult.error) {
-      throw teamResult.error;
-    }
-
-    return teamResult.data as Team | null;
-  }
-
-  if (session.role === "team") {
-    const teamResult = await supabase
-      .from("teams")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .maybeSingle();
-
-    if (teamResult.error) {
-      throw teamResult.error;
-    }
-
-    return teamResult.data as Team | null;
-  }
-
-  return null;
+  return teamResult.data as Team | null;
 }
 
 export async function nominatePlayerAction(formData: FormData) {
@@ -333,7 +265,6 @@ export async function nominatePlayerAction(formData: FormData) {
     }
 
     await nominatePlayerById(playerId);
-    await warmAllCaches();
     await publishAuctionEvent({
       type: "player_nominated",
       source: "auction.nominatePlayerAction",
@@ -373,7 +304,6 @@ export async function nominateNextPlayerAction() {
     }
 
     await nominatePlayerById(nextPlayer.id);
-    await warmAllCaches();
     await publishAuctionEvent({
       type: "player_nominated",
       source: "auction.nominateNextPlayerAction",
@@ -406,7 +336,6 @@ export async function setAuctionPhaseAction(formData: FormData) {
       throw result.error;
     }
 
-    await warmAllCaches();
     await publishAuctionEvent({
       type: "auction_phase_changed",
       source: "auction.setAuctionPhaseAction",
@@ -445,7 +374,6 @@ export async function reorderQueueAction(formData: FormData) {
       }
     }
 
-    await warmAllCaches();
     await publishAuctionEvent({
       type: "queue_reordered",
       source: "auction.reorderQueueAction",
@@ -476,7 +404,6 @@ export async function setBidIncrementAction(formData: FormData) {
       throw result.error;
     }
 
-    await warmAllCaches();
     await publishAuctionEvent({
       type: "bid_increment_changed",
       source: "auction.setBidIncrementAction",
@@ -513,7 +440,6 @@ export async function setTimerStateAction(formData: FormData) {
       throw result.error;
     }
 
-    await warmAllCaches();
     await publishAuctionEvent({
       type: "timer_state_changed",
       source: "auction.setTimerStateAction",
@@ -527,36 +453,26 @@ export async function setTimerStateAction(formData: FormData) {
 
 export async function placeBidAction(formData: FormData) {
   try {
-    const session = await ensureAuthenticatedSession();
-
-    if (!session || (session.role !== "team" && session.role !== "admin")) {
+    if (!(await ensureAdmin())) {
       return;
     }
+
+    const teamId = String(formData.get("teamId") ?? "").trim();
+    if (!teamId) return;
 
     const supabase = toLooseSupabaseClient(await createServiceClient());
     const [{ auctionState, currentPlayer }, team] = await Promise.all([
       getCurrentPlayerWithTeamContext(supabase),
-      resolveTeamForBid(supabase, formData),
+      resolveTeamById(supabase, teamId),
     ]);
 
-    if (!currentPlayer || !team) {
-      return;
-    }
-
-    if (auctionState.phase !== "live") {
-      return;
-    }
-
-    if (auctionState.current_bid_team_id === team.id) {
-      return;
-    }
+    if (!currentPlayer || !team) return;
+    if (auctionState.phase !== "live") return;
+    if (auctionState.current_bid_team_id === team.id) return;
 
     const nextBidAmount = getNextBidAmount(auctionState, currentPlayer);
     const purseRemaining = team.purse_total - team.purse_spent;
-
-    if (purseRemaining < nextBidAmount) {
-      return;
-    }
+    if (purseRemaining < nextBidAmount) return;
 
     const insertBidResult = await supabase.from("bids").insert({
       player_id: currentPlayer.id,
@@ -564,9 +480,7 @@ export async function placeBidAction(formData: FormData) {
       amount: nextBidAmount,
     });
 
-    if (insertBidResult.error) {
-      throw insertBidResult.error;
-    }
+    if (insertBidResult.error) throw insertBidResult.error;
 
     const updateAuctionStateResult = await supabase
       .from("auction_state")
@@ -579,11 +493,8 @@ export async function placeBidAction(formData: FormData) {
       })
       .eq("id", 1);
 
-    if (updateAuctionStateResult.error) {
-      throw updateAuctionStateResult.error;
-    }
+    if (updateAuctionStateResult.error) throw updateAuctionStateResult.error;
 
-    await warmAllCaches();
     await publishAuctionEvent({
       type: "bid_placed",
       source: "auction.placeBidAction",
@@ -598,6 +509,90 @@ export async function placeBidAction(formData: FormData) {
     revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to place bid", error);
+  }
+}
+
+/**
+ * Set a custom bid amount + team directly (for corrections / jumps).
+ * Admin only.
+ */
+export async function setCustomBidAction(formData: FormData) {
+  try {
+    if (!(await ensureAdmin())) return;
+
+    const teamId = String(formData.get("teamId") ?? "").trim();
+    const amount = Number(formData.get("amount") ?? 0);
+    if (!teamId || !Number.isFinite(amount) || amount <= 0) return;
+
+    const supabase = toLooseSupabaseClient(await createServiceClient());
+    const [{ auctionState, currentPlayer }, team] = await Promise.all([
+      getCurrentPlayerWithTeamContext(supabase),
+      resolveTeamById(supabase, teamId),
+    ]);
+
+    if (!currentPlayer || !team) return;
+
+    const insertBidResult = await supabase.from("bids").insert({
+      player_id: currentPlayer.id,
+      team_id: team.id,
+      amount,
+    });
+    if (insertBidResult.error) throw insertBidResult.error;
+
+    const updateResult = await supabase
+      .from("auction_state")
+      .update({
+        current_bid_amount: amount,
+        current_bid_team_id: team.id,
+        timer_seconds: auctionState.timer_seconds > 0 ? auctionState.timer_seconds : 30,
+        timer_active: true,
+        phase: "live",
+      })
+      .eq("id", 1);
+    if (updateResult.error) throw updateResult.error;
+
+    await publishAuctionEvent({
+      type: "bid_placed",
+      source: "auction.setCustomBidAction",
+      delta: {
+        currentBidAmount: amount,
+        currentBidTeamId: team.id,
+        currentBidTeamCode: team.short_code,
+        timerSeconds: auctionState.timer_seconds > 0 ? auctionState.timer_seconds : 30,
+        timerActive: true,
+      },
+    });
+    revalidateAuctionViews();
+  } catch (error) {
+    console.error("Failed to set custom bid", error);
+  }
+}
+
+/**
+ * Adjust purse_total for ALL teams at once. Admin only.
+ */
+export async function adjustAllPursesAction(formData: FormData) {
+  try {
+    if (!(await ensureAdmin())) return;
+
+    const purseTotal = Number(formData.get("purseTotal") ?? 0);
+    if (!Number.isFinite(purseTotal) || purseTotal <= 0) return;
+
+    const supabase = toLooseSupabaseClient(await createServiceClient());
+    const result = await supabase
+      .from("teams")
+      .update({ purse_total: purseTotal })
+      .neq("id", "");
+
+    if (result.error) throw result.error;
+
+    await publishAuctionEvent({
+      type: "purse_adjusted",
+      source: "auction.adjustAllPursesAction",
+    });
+    revalidateAuctionViews();
+  } catch (error) {
+    console.error("Failed to adjust purses", error);
   }
 }
 
@@ -645,7 +640,6 @@ export async function undoLastBidAction() {
       throw updateAuctionStateResult.error;
     }
 
-    await warmAllCaches();
     await publishAuctionEvent({
       type: "bid_reverted",
       source: "auction.undoLastBidAction",
@@ -735,7 +729,6 @@ export async function sellCurrentPlayerAction() {
       throw updateAuctionStateResult.error;
     }
 
-    await warmAllCaches();
     await publishAuctionEvent({
       type: "player_sold",
       source: "auction.sellCurrentPlayerAction",
@@ -787,7 +780,6 @@ export async function markUnsoldAction() {
       throw updateAuctionStateResult.error;
     }
 
-    await warmAllCaches();
     await publishAuctionEvent({
       type: "player_marked_unsold",
       source: "auction.markUnsoldAction",
