@@ -3,6 +3,9 @@ import "server-only";
 import { createClient } from "@supabase/supabase-js";
 
 let _broadcastClient: ReturnType<typeof createClient> | null = null;
+let _broadcastChannel:
+  | ReturnType<ReturnType<typeof createClient>["channel"]>
+  | null = null;
 
 function getBroadcastClient() {
   if (_broadcastClient) return _broadcastClient;
@@ -23,6 +26,13 @@ function getBroadcastClient() {
   return _broadcastClient;
 }
 
+function getBroadcastChannel() {
+  if (_broadcastChannel) return _broadcastChannel;
+
+  _broadcastChannel = getBroadcastClient().channel("auction-sync");
+  return _broadcastChannel;
+}
+
 /**
  * Broadcast a message to all connected auction clients.
  * Uses Supabase Realtime Broadcast (WebSocket push).
@@ -31,16 +41,18 @@ function getBroadcastClient() {
  */
 export async function broadcastAuctionUpdate(payload?: any) {
   try {
-    const client = getBroadcastClient();
+    const channel = getBroadcastChannel();
+    const result = await channel.httpSend(
+      "auction-update",
+      payload ? { ...payload, at: Date.now() } : { at: Date.now() },
+      { timeout: 800 }
+    );
 
-    const channel = client.channel("auction-sync");
-    await channel.subscribe();
-    await channel.send({
-      type: "broadcast",
-      event: "auction-update",
-      payload: payload ? { ...payload, at: Date.now() } : { at: Date.now() },
-    });
-    await client.removeChannel(channel);
+    if (!result.success) {
+      throw new Error(
+        `Broadcast REST failed (${result.status}): ${result.error}`
+      );
+    }
   } catch (error) {
     // Non-fatal: clients will fall back to 3s polling
     console.error("Broadcast failed (non-fatal):", error);

@@ -451,50 +451,41 @@ export async function setTimerStateAction(formData: FormData) {
 export async function placeBidAction(formData: FormData) {
   try {
     if (!(await ensureAdmin())) {
-      return;
+      return { success: false, error: "Unauthorized" };
     }
 
     const teamId = String(formData.get("teamId") ?? "").trim();
-    if (!teamId) return;
+    if (!teamId) return { success: false, error: "Missing team ID" };
 
-    const supabase = toLooseSupabaseClient(await createServiceClient());
-    const [{ auctionState, currentPlayer }, team] = await Promise.all([
-      getCurrentPlayerWithTeamContext(supabase),
-      resolveTeamById(supabase, teamId),
-    ]);
-
-    if (!currentPlayer || !team) return;
-    if (auctionState.phase !== "live") return;
-    if (auctionState.current_bid_team_id === team.id) return;
-
-    const nextBidAmount = getNextBidAmount(auctionState, currentPlayer);
-    const purseRemaining = team.purse_total - team.purse_spent;
-    if (purseRemaining < nextBidAmount) return;
-
-    const insertBidResult = await supabase.from("bids").insert({
-      player_id: currentPlayer.id,
-      team_id: team.id,
-      amount: nextBidAmount,
+    const supabase = await createServiceClient();
+    
+    // Execute all 5 db operations in 1 ultra-fast RPC call
+    const result = await (supabase as any).rpc("place_auction_bid", {
+      p_team_id: teamId,
     });
 
-    if (insertBidResult.error) throw insertBidResult.error;
+    if (result.error) {
+      throw result.error;
+    }
 
-    const updateAuctionStateResult = await supabase
-      .from("auction_state")
-      .update({
-        current_bid_amount: nextBidAmount,
-        current_bid_team_id: team.id,
-        timer_seconds: 30,
-        timer_active: true,
-        phase: "live",
-      })
-      .eq("id", 1);
+    const data = result.data as {
+      success: boolean;
+      delta?: Record<string, unknown>;
+      error?: string;
+    } | null;
 
-    if (updateAuctionStateResult.error) throw updateAuctionStateResult.error;
+    if (data?.success && data.delta) {
+      await publishAuctionEvent({
+        type: "bid_placed",
+        source: "auction.placeBidAction",
+        delta: data.delta,
+      });
+    }
 
-    // Broadcasting moved to the client-side component to avert 2s WS handshake delay.
+    return data ?? { success: false };
   } catch (error) {
     console.error("Failed to place bid", error);
+    return { success: false };
   }
 }
 
@@ -504,11 +495,11 @@ export async function placeBidAction(formData: FormData) {
  */
 export async function setCustomBidAction(formData: FormData) {
   try {
-    if (!(await ensureAdmin())) return;
+    if (!(await ensureAdmin())) return { success: false };
 
     const teamId = String(formData.get("teamId") ?? "").trim();
     const amount = Number(formData.get("amount") ?? 0);
-    if (!teamId || !Number.isFinite(amount) || amount <= 0) return;
+    if (!teamId || !Number.isFinite(amount) || amount <= 0) return { success: false };
 
     const supabase = toLooseSupabaseClient(await createServiceClient());
     const [{ auctionState, currentPlayer }, team] = await Promise.all([
@@ -516,7 +507,7 @@ export async function setCustomBidAction(formData: FormData) {
       resolveTeamById(supabase, teamId),
     ]);
 
-    if (!currentPlayer || !team) return;
+    if (!currentPlayer || !team) return { success: false };
 
     const insertBidResult = await supabase.from("bids").insert({
       player_id: currentPlayer.id,
@@ -525,21 +516,41 @@ export async function setCustomBidAction(formData: FormData) {
     });
     if (insertBidResult.error) throw insertBidResult.error;
 
+    const timerSeconds = auctionState.timer_seconds > 0 ? auctionState.timer_seconds : 30;
+
     const updateResult = await supabase
       .from("auction_state")
       .update({
         current_bid_amount: amount,
         current_bid_team_id: team.id,
-        timer_seconds: auctionState.timer_seconds > 0 ? auctionState.timer_seconds : 30,
+        timer_seconds: timerSeconds,
         timer_active: true,
         phase: "live",
       })
       .eq("id", 1);
     if (updateResult.error) throw updateResult.error;
 
-    // Broadcasting moved to the client-side component to avert 2s WS handshake delay.
+    const delta = {
+      currentBidAmount: amount,
+      currentBidTeamId: team.id,
+      currentBidTeamCode: team.short_code,
+      timerSeconds: timerSeconds,
+      timerActive: true,
+    };
+
+    await publishAuctionEvent({
+      type: "bid_placed",
+      source: "auction.setCustomBidAction",
+      delta,
+    });
+
+    return {
+      success: true,
+      delta,
+    };
   } catch (error) {
     console.error("Failed to set custom bid", error);
+    return { success: false };
   }
 }
 
