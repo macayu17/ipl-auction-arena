@@ -24,12 +24,12 @@ function getBroadcastClient() {
 }
 
 /**
- * Broadcast a "refresh" signal to all connected auction clients.
- * Uses Supabase Realtime Broadcast (WebSocket push, ~30-50ms delivery).
+ * Broadcast a message to all connected auction clients.
+ * Uses Supabase Realtime Broadcast (WebSocket push).
  *
  * This is fire-and-forget — never blocks the server action.
  */
-export async function broadcastAuctionUpdate() {
+export async function broadcastAuctionUpdate(payload?: any) {
   try {
     const client = getBroadcastClient();
 
@@ -38,7 +38,7 @@ export async function broadcastAuctionUpdate() {
     await channel.send({
       type: "broadcast",
       event: "auction-update",
-      payload: { at: Date.now() },
+      payload: payload ? { ...payload, at: Date.now() } : { at: Date.now() },
     });
     await client.removeChannel(channel);
   } catch (error) {

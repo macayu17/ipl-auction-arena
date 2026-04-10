@@ -42,13 +42,16 @@ const reorderQueueSchema = z.object({
     ),
 });
 
-function revalidateAuctionViews() {
+/**
+ * Revalidate non-auction views (dashboard, players, teams).
+ * Auction pages use client-side state via useLiveAuctionSync,
+ * so revalidating them just causes unnecessary full-page RSC re-renders.
+ */
+function revalidateNonAuctionViews() {
   [
-    "/admin/auction",
     "/admin/dashboard",
     "/admin/players",
     "/admin/teams",
-    "/team/auction",
     "/team/squad",
   ].forEach((path) => revalidatePath(path));
 }
@@ -269,7 +272,6 @@ export async function nominatePlayerAction(formData: FormData) {
       type: "player_nominated",
       source: "auction.nominatePlayerAction",
     });
-    revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to nominate player", error);
   }
@@ -308,7 +310,6 @@ export async function nominateNextPlayerAction() {
       type: "player_nominated",
       source: "auction.nominateNextPlayerAction",
     });
-    revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to nominate next player", error);
   }
@@ -341,7 +342,6 @@ export async function setAuctionPhaseAction(formData: FormData) {
       source: "auction.setAuctionPhaseAction",
       delta: { phase, timerActive: phase === "live" },
     });
-    revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to change auction phase", error);
   }
@@ -378,7 +378,6 @@ export async function reorderQueueAction(formData: FormData) {
       type: "queue_reordered",
       source: "auction.reorderQueueAction",
     });
-    revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to reorder queue", error);
   }
@@ -409,7 +408,6 @@ export async function setBidIncrementAction(formData: FormData) {
       source: "auction.setBidIncrementAction",
       delta: { bidIncrement },
     });
-    revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to update bid increment", error);
   }
@@ -445,7 +443,6 @@ export async function setTimerStateAction(formData: FormData) {
       source: "auction.setTimerStateAction",
       delta: { timerSeconds, timerActive },
     });
-    revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to update timer state", error);
   }
@@ -506,7 +503,6 @@ export async function placeBidAction(formData: FormData) {
         timerActive: true,
       },
     });
-    revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to place bid", error);
   }
@@ -562,7 +558,6 @@ export async function setCustomBidAction(formData: FormData) {
         timerActive: true,
       },
     });
-    revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to set custom bid", error);
   }
@@ -579,10 +574,18 @@ export async function adjustAllPursesAction(formData: FormData) {
     if (!Number.isFinite(purseTotal) || purseTotal <= 0) return;
 
     const supabase = toLooseSupabaseClient(await createServiceClient());
+
+    // Fetch all team IDs first, then update with a proper filter
+    const teamsResult = await supabase.from("teams").select("id");
+    if (teamsResult.error) throw teamsResult.error;
+
+    const teamIds = ((teamsResult.data ?? []) as { id: string }[]).map((t) => t.id);
+    if (teamIds.length === 0) return;
+
     const result = await supabase
       .from("teams")
       .update({ purse_total: purseTotal })
-      .neq("id", "");
+      .in("id", teamIds);
 
     if (result.error) throw result.error;
 
@@ -590,7 +593,7 @@ export async function adjustAllPursesAction(formData: FormData) {
       type: "purse_adjusted",
       source: "auction.adjustAllPursesAction",
     });
-    revalidateAuctionViews();
+    revalidateNonAuctionViews();
   } catch (error) {
     console.error("Failed to adjust purses", error);
   }
@@ -644,7 +647,6 @@ export async function undoLastBidAction() {
       type: "bid_reverted",
       source: "auction.undoLastBidAction",
     });
-    revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to undo last bid", error);
   }
@@ -733,7 +735,6 @@ export async function sellCurrentPlayerAction() {
       type: "player_sold",
       source: "auction.sellCurrentPlayerAction",
     });
-    revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to sell current player", error);
   }
@@ -784,7 +785,6 @@ export async function markUnsoldAction() {
       type: "player_marked_unsold",
       source: "auction.markUnsoldAction",
     });
-    revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to mark player unsold", error);
   }
@@ -836,7 +836,6 @@ export async function resetAuctionAction() {
       type: "auction_reset",
       source: "auction.resetAuctionAction",
     });
-    revalidateAuctionViews();
   } catch (error) {
     console.error("Failed to reset auction", error);
   }

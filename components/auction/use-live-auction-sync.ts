@@ -75,10 +75,40 @@ export function useLiveAuctionSync<T>({
     const supabase = createClient();
     const channel = supabase
       .channel("auction-sync")
-      .on("broadcast", { event: "auction-update" }, () => {
-        if (!stopped) {
-          void refreshSnapshot();
+      .on("broadcast", { event: "auction-update" }, (message) => {
+        if (stopped) return;
+
+        const eventPayload = message.payload;
+        
+        // Optimistic UI for high-frequency bids
+        if (eventPayload && eventPayload.type === "bid_placed" && eventPayload.delta) {
+          const d = eventPayload.delta as Record<string, any>;
+          setData((prev: any) => {
+            if (!prev || !prev.auctionState) return prev;
+
+            const newBid = {
+              id: "opt-" + Date.now(),
+              amount: d.currentBidAmount,
+              team_id: d.currentBidTeamId,
+              timestamp: new Date().toISOString(),
+              team: { short_code: d.currentBidTeamCode, name: d.currentBidTeamCode },
+            };
+
+            return {
+              ...prev,
+              auctionState: {
+                ...prev.auctionState,
+                current_bid_amount: d.currentBidAmount,
+                current_bid_team_id: d.currentBidTeamId,
+                timer_seconds: d.timerSeconds,
+                timer_active: d.timerActive,
+              },
+              bidHistory: prev.bidHistory ? [newBid, ...prev.bidHistory] : prev.bidHistory,
+            };
+          });
         }
+
+        void refreshSnapshot();
       })
       .subscribe();
 

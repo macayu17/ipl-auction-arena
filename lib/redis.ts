@@ -137,7 +137,7 @@ export type AuctionEventPayload = {
 export async function publishAuctionEvent(event: AuctionEventPayload) {
   // PRIMARY: Supabase Realtime Broadcast (WebSocket, ~30-50ms)
   // Fire-and-forget — never blocks the action
-  void broadcastAuctionUpdate().catch(() => {});
+  void broadcastAuctionUpdate(event).catch(() => {});
 
   // LEGACY: Redis PUBLISH (optional, used by SSE proxy)
   if (!hasRedisEnv()) {
