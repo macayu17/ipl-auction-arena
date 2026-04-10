@@ -59,7 +59,7 @@ BEGIN
     SET 
         current_bid_amount = v_next_bid_amount,
         current_bid_team_id = v_team.id,
-        timer_seconds = 30,
+        timer_seconds = 10,
         timer_active = true,
         phase = 'live',
         updated_at = now()
@@ -72,7 +72,7 @@ BEGIN
             'currentBidAmount', v_next_bid_amount,
             'currentBidTeamId', v_team.id,
             'currentBidTeamCode', v_team.short_code,
-            'timerSeconds', 30,
+            'timerSeconds', 10,
             'timerActive', true
         )
     );

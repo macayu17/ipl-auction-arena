@@ -23,13 +23,15 @@ import type {
   Team,
 } from "@/types/app.types";
 
+type TeamVisiblePlayer = Omit<Player, "rating">;
+
 const emptyAuctionState: AuctionState = {
   id: 1,
   phase: "setup",
   current_player_id: null,
   current_bid_amount: 0,
   current_bid_team_id: null,
-  timer_seconds: 30,
+  timer_seconds: 10,
   timer_active: false,
   bid_increment: 5,
   created_at: new Date(0).toISOString(),
@@ -39,10 +41,10 @@ const emptyAuctionState: AuctionState = {
 export default function TeamAuctionPage() {
   const { data, isRefreshing } = useLiveAuctionSync<{
     auctionState: AuctionState;
-    currentPlayer: Player | null;
+    currentPlayer: TeamVisiblePlayer | null;
     leadingTeam: Team | null;
     myTeam: Team | null;
-    mySquad: Player[];
+    mySquad: TeamVisiblePlayer[];
     bidHistory: BidWithTeam[];
     activeSlide: Slide | null;
   }>({
@@ -170,8 +172,7 @@ export default function TeamAuctionPage() {
                       {currentPlayer.name}
                     </h2>
                     <p className="mt-3 text-sm leading-6 text-white/50">
-                      Rating {currentPlayer.rating}. Base {formatPrice(currentPlayer.base_price)}.
-                      Current leader {leadingTeam?.name ?? "not set yet"}.
+                      Base {formatPrice(currentPlayer.base_price)}. Current leader {leadingTeam?.name ?? "not set yet"}.
                     </p>
                   </div>
 
@@ -364,7 +365,7 @@ export default function TeamAuctionPage() {
                       <div>
                         <div className="font-medium text-white">{player.name}</div>
                         <div className="mt-0.5 text-xs text-white/40">
-                          {player.role} • Rating {player.rating}
+                          {player.role}
                         </div>
                       </div>
                       <div className="mono-font font-bold" style={{ color: accentColor }}>

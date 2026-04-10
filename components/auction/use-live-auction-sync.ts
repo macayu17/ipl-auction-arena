@@ -5,6 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type RoleName = "admin" | "team";
+const FALLBACK_POLL_INTERVAL_MS = 1000;
+const RECENT_FETCH_WINDOW_MS = 700;
 
 /**
  * Auction live-sync hook — v3 (Supabase Broadcast + fast polling).
@@ -14,9 +16,9 @@ type RoleName = "admin" | "team";
  *  2. PRIMARY: Supabase Realtime Broadcast channel "auction-sync"
  *     - Server actions broadcast a thin "refresh" signal after every mutation
  *     - Client receives it via WebSocket (~30-50ms) and triggers snapshot fetch
- *  3. SAFETY NET: 3-second polling interval
+ *  3. SAFETY NET: 1-second polling interval
  *     - Catches any missed broadcasts (reconnections, network blips)
- *     - Does NOT fetch if data arrived via broadcast within the last 2s
+ *     - Does NOT fetch if data arrived via broadcast/fetch within the last 700ms
  *  4. NO more Redis SSE, NO more postgres_changes
  */
 export function useLiveAuctionSync<T>({
@@ -29,6 +31,7 @@ export function useLiveAuctionSync<T>({
   const [data, setData] = useState(initialData);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const fetchInFlightRef = useRef(false);
+  const pendingRefreshRef = useRef(false);
   const lastFetchTimeRef = useRef(0);
 
   useEffect(() => {
@@ -36,7 +39,10 @@ export function useLiveAuctionSync<T>({
   }, [initialData]);
 
   const refreshSnapshot = useCallback(async () => {
-    if (fetchInFlightRef.current) return;
+    if (fetchInFlightRef.current) {
+      pendingRefreshRef.current = true;
+      return;
+    }
 
     fetchInFlightRef.current = true;
     setIsRefreshing(true);
@@ -60,6 +66,11 @@ export function useLiveAuctionSync<T>({
     } finally {
       fetchInFlightRef.current = false;
       setIsRefreshing(false);
+
+      if (pendingRefreshRef.current) {
+        pendingRefreshRef.current = false;
+        void refreshSnapshot();
+      }
     }
   }, [expectedRole]);
 
@@ -86,6 +97,22 @@ export function useLiveAuctionSync<T>({
           setData((prev: any) => {
             if (!prev || !prev.auctionState) return prev;
 
+            const teamFromSummary = Array.isArray(prev.teamSummary)
+              ? prev.teamSummary.find((team: any) => team.id === d.currentBidTeamId)
+              : null;
+            const teamFromMyTeam = prev.myTeam?.id === d.currentBidTeamId
+              ? prev.myTeam
+              : null;
+            const optimisticLeadingTeam = teamFromSummary
+              ?? teamFromMyTeam
+              ?? (prev.leadingTeam?.id === d.currentBidTeamId
+                ? prev.leadingTeam
+                : {
+                    id: d.currentBidTeamId,
+                    short_code: d.currentBidTeamCode,
+                    name: d.currentBidTeamCode,
+                  });
+
             const newBid = {
               id: "opt-" + Date.now(),
               amount: d.currentBidAmount,
@@ -103,26 +130,29 @@ export function useLiveAuctionSync<T>({
                 timer_seconds: d.timerSeconds,
                 timer_active: d.timerActive,
               },
+              leadingTeam: optimisticLeadingTeam,
               bidHistory: prev.bidHistory ? [newBid, ...prev.bidHistory] : prev.bidHistory,
             };
           });
         }
+
+        lastFetchTimeRef.current = Date.now();
 
         void refreshSnapshot();
       })
       .subscribe();
 
     /* ---------------------------------------------------------------
-     * SAFETY NET: Poll every 3 seconds
-     * Skip if a broadcast-triggered fetch happened within the last 2s.
+     * SAFETY NET: Poll every 1 second
+     * Skip if a recent fetch already happened in the last 700ms.
      * --------------------------------------------------------------- */
     pollInterval = setInterval(() => {
       if (stopped) return;
       const timeSinceLastFetch = Date.now() - lastFetchTimeRef.current;
-      if (timeSinceLastFetch > 2000) {
+      if (timeSinceLastFetch > RECENT_FETCH_WINDOW_MS) {
         void refreshSnapshot();
       }
-    }, 3000);
+    }, FALLBACK_POLL_INTERVAL_MS);
 
     /* Initial fetch */
     void refreshSnapshot();

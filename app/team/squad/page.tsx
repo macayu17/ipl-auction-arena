@@ -52,7 +52,6 @@ export default async function TeamSquadPage() {
   const overseasCount = squad.filter(
     (player) => player.nationality === "Overseas"
   ).length;
-  const totalRating = squad.reduce((sum, player) => sum + player.rating, 0);
 
   return (
     <>
@@ -76,9 +75,9 @@ export default async function TeamSquadPage() {
           iconName="users"
         />
         <MetricCard
-          label="Total rating"
-          value={String(totalRating)}
-          hint={`${overseasCount} overseas players currently signed.`}
+          label="Overseas players"
+          value={String(overseasCount)}
+          hint={`${squad.length} total players currently signed.`}
           iconName="shield-check"
         />
       </div>
@@ -120,9 +119,6 @@ export default async function TeamSquadPage() {
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-white">{player.name}</span>
                           <OverseasBadge nationality={player.nationality} />
-                        </div>
-                        <div className="mt-2 flex items-center justify-between gap-4 text-xs text-[var(--text-soft)]">
-                          <span>Rating {player.rating}</span>
                         </div>
                         <div className="mt-2 mono-font text-sm text-white font-medium">
                           {formatPrice(player.sold_price ?? player.base_price)}

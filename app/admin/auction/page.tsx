@@ -40,7 +40,7 @@ import type {
 } from "@/types/app.types";
 
 const phases = ["setup", "live", "paused", "ended"] as const;
-const timerPresets = [15, 20, 30, 45, 60, 90];
+const timerPresets = [10, 15, 20, 30, 45, 60, 90];
 /** Standard bid increment amounts in Lakhs */
 const incrementPresets = [5, 10, 25, 50, 100, 200];
 
@@ -50,7 +50,7 @@ const emptyAuctionState: AuctionState = {
   current_player_id: null,
   current_bid_amount: 0,
   current_bid_team_id: null,
-  timer_seconds: 30,
+  timer_seconds: 10,
   timer_active: false,
   bid_increment: 5,
   created_at: new Date(0).toISOString(),

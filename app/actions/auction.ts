@@ -24,7 +24,7 @@ const defaultAuctionState = {
   current_player_id: null,
   current_bid_amount: 0,
   current_bid_team_id: null,
-  timer_seconds: 30,
+  timer_seconds: 10,
   timer_active: false,
   bid_increment: 5,
 };
@@ -71,6 +71,12 @@ function parsePositiveInteger(
 
 function sortQueue(players: Player[]) {
   return [...players].sort((left, right) => {
+    const unsoldDiff = Number(left.status === "unsold") - Number(right.status === "unsold");
+
+    if (unsoldDiff !== 0) {
+      return unsoldDiff;
+    }
+
     const queueDiff = (left.queue_order ?? Number.MAX_SAFE_INTEGER) -
       (right.queue_order ?? Number.MAX_SAFE_INTEGER);
 
@@ -180,7 +186,7 @@ async function nominatePlayerById(playerId: string) {
       current_player_id: playerId,
       current_bid_amount: 0,
       current_bid_team_id: null,
-      timer_seconds: 30,
+      timer_seconds: defaultAuctionState.timer_seconds,
       timer_active: false,
     })
     .eq("id", 1);
@@ -516,7 +522,9 @@ export async function setCustomBidAction(formData: FormData) {
     });
     if (insertBidResult.error) throw insertBidResult.error;
 
-    const timerSeconds = auctionState.timer_seconds > 0 ? auctionState.timer_seconds : 30;
+    const timerSeconds = auctionState.timer_seconds > 0
+      ? auctionState.timer_seconds
+      : defaultAuctionState.timer_seconds;
 
     const updateResult = await supabase
       .from("auction_state")
@@ -713,7 +721,7 @@ export async function sellCurrentPlayerAction() {
         current_player_id: null,
         current_bid_amount: 0,
         current_bid_team_id: null,
-        timer_seconds: 30,
+        timer_seconds: defaultAuctionState.timer_seconds,
         timer_active: false,
       })
       .eq("id", 1);
@@ -763,7 +771,7 @@ export async function markUnsoldAction() {
         current_player_id: null,
         current_bid_amount: 0,
         current_bid_team_id: null,
-        timer_seconds: 30,
+        timer_seconds: defaultAuctionState.timer_seconds,
         timer_active: false,
       })
       .eq("id", 1);

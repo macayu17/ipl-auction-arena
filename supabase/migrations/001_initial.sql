@@ -88,7 +88,7 @@ create table if not exists public.auction_state (
   current_player_id uuid references public.players(id) on delete set null,
   current_bid_amount integer not null default 0 check (current_bid_amount >= 0),
   current_bid_team_id uuid references public.teams(id) on delete set null,
-  timer_seconds integer not null default 30 check (timer_seconds >= 0),
+  timer_seconds integer not null default 10 check (timer_seconds >= 0),
   timer_active boolean not null default false,
   bid_increment integer not null default 5 check (bid_increment > 0),
   created_at timestamptz not null default timezone('utc', now()),

@@ -15,13 +15,15 @@ import type {
   TeamWithSummary,
 } from "@/types/app.types";
 
+type TeamVisiblePlayer = Omit<Player, "rating">;
+
 const defaultAuctionState: AuctionState = {
   id: 1,
   phase: "setup",
   current_player_id: null,
   current_bid_amount: 0,
   current_bid_team_id: null,
-  timer_seconds: 30,
+  timer_seconds: 10,
   timer_active: false,
   bid_increment: 5,
   created_at: new Date(0).toISOString(),
@@ -30,6 +32,12 @@ const defaultAuctionState: AuctionState = {
 
 function sortPlayersForQueue(players: Player[]) {
   return [...players].sort((left, right) => {
+    const unsoldDiff = Number(left.status === "unsold") - Number(right.status === "unsold");
+
+    if (unsoldDiff !== 0) {
+      return unsoldDiff;
+    }
+
     const queueDiff =
       (left.queue_order ?? Number.MAX_SAFE_INTEGER) -
       (right.queue_order ?? Number.MAX_SAFE_INTEGER);
@@ -52,6 +60,11 @@ function sortPlayersForQueue(players: Player[]) {
 
     return left.name.localeCompare(right.name);
   });
+}
+
+function stripPlayerRating(player: Player): TeamVisiblePlayer {
+  const { rating: _ignored, ...safePlayer } = player;
+  return safePlayer;
 }
 
 function buildTeamSummary(
@@ -290,10 +303,12 @@ export const getTeamAuctionPageData = cache(async (userId: string) => {
 
   return {
     auctionState,
-    currentPlayer,
+    currentPlayer: currentPlayer ? stripPlayerRating(currentPlayer) : null,
     leadingTeam,
     myTeam,
-    mySquad: players.filter((player) => player.sold_to === myTeam?.id),
+    mySquad: players
+      .filter((player) => player.sold_to === myTeam?.id)
+      .map(stripPlayerRating),
     bidHistory,
   };
 });
@@ -311,7 +326,15 @@ export const getTeamSquadPageData = cache(async (userId: string) => {
           return left.role.localeCompare(right.role);
         }
 
-        return (right.rating ?? 0) - (left.rating ?? 0);
-      }),
+        const leftPrice = left.sold_price ?? left.base_price;
+        const rightPrice = right.sold_price ?? right.base_price;
+
+        if (leftPrice !== rightPrice) {
+          return rightPrice - leftPrice;
+        }
+
+        return left.name.localeCompare(right.name);
+      })
+      .map(stripPlayerRating),
   };
 });
