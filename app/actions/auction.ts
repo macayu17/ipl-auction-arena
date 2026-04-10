@@ -492,17 +492,7 @@ export async function placeBidAction(formData: FormData) {
 
     if (updateAuctionStateResult.error) throw updateAuctionStateResult.error;
 
-    await publishAuctionEvent({
-      type: "bid_placed",
-      source: "auction.placeBidAction",
-      delta: {
-        currentBidAmount: nextBidAmount,
-        currentBidTeamId: team.id,
-        currentBidTeamCode: team.short_code,
-        timerSeconds: 30,
-        timerActive: true,
-      },
-    });
+    // Broadcasting moved to the client-side component to avert 2s WS handshake delay.
   } catch (error) {
     console.error("Failed to place bid", error);
   }
@@ -547,17 +537,7 @@ export async function setCustomBidAction(formData: FormData) {
       .eq("id", 1);
     if (updateResult.error) throw updateResult.error;
 
-    await publishAuctionEvent({
-      type: "bid_placed",
-      source: "auction.setCustomBidAction",
-      delta: {
-        currentBidAmount: amount,
-        currentBidTeamId: team.id,
-        currentBidTeamCode: team.short_code,
-        timerSeconds: auctionState.timer_seconds > 0 ? auctionState.timer_seconds : 30,
-        timerActive: true,
-      },
-    });
+    // Broadcasting moved to the client-side component to avert 2s WS handshake delay.
   } catch (error) {
     console.error("Failed to set custom bid", error);
   }

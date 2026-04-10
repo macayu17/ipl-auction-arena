@@ -24,6 +24,7 @@ import { useLiveAuctionSync } from "@/components/auction/use-live-auction-sync";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { MetricCard } from "@/components/layout/metric-card";
 import { SectionCard } from "@/components/layout/section-card";
+import { createClient } from "@/lib/supabase/client";
 import { TEAM_COLORS } from "@/lib/team-colors";
 import {
   formatPrice,
@@ -304,7 +305,24 @@ export default function AdminAuctionPage() {
                 const disabled = !currentPlayer || auctionState.phase !== "live" || isSameTeam || !canAfford;
 
                 return (
-                  <form key={team.id} action={placeBidAction}>
+                  <form key={team.id} action={async (formData) => {
+                    await placeBidAction(formData);
+                    const supabase = createClient();
+                    supabase.channel("auction-sync").send({
+                      type: "broadcast",
+                      event: "auction-update",
+                      payload: {
+                        type: "bid_placed",
+                        delta: {
+                          currentBidAmount: nextBidAmount,
+                          currentBidTeamId: team.id,
+                          currentBidTeamCode: team.short_code,
+                          timerSeconds: 30,
+                          timerActive: true,
+                        }
+                      }
+                    });
+                  }}>
                     <input type="hidden" name="teamId" value={team.id} />
                     <button
                       type="submit"
@@ -414,7 +432,30 @@ export default function AdminAuctionPage() {
                 </div>
 
                 {/* Custom bid override */}
-                <form action={setCustomBidAction} className="glass-panel rounded-xl p-4 border border-white/5 bg-black/30">
+                <form action={async (formData) => {
+                  await setCustomBidAction(formData);
+                  const amount = Number(formData.get("amount") ?? 0);
+                  const teamId = String(formData.get("teamId") ?? "").trim();
+                  const targetTeam = teamSummary.find(t => t.id === teamId);
+                  
+                  if (targetTeam && amount > 0) {
+                    const supabase = createClient();
+                    supabase.channel("auction-sync").send({
+                      type: "broadcast",
+                      event: "auction-update",
+                      payload: {
+                        type: "bid_placed",
+                        delta: {
+                          currentBidAmount: amount,
+                          currentBidTeamId: targetTeam.id,
+                          currentBidTeamCode: targetTeam.short_code,
+                          timerSeconds: auctionState.timer_seconds > 0 ? auctionState.timer_seconds : 30,
+                          timerActive: true,
+                        }
+                      }
+                    });
+                  }
+                }} className="glass-panel rounded-xl p-4 border border-white/5 bg-black/30">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
                     Custom bid (override)
                   </div>
