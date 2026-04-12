@@ -5,6 +5,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type RoleName = "admin" | "team";
+type SyncAuctionState = {
+  current_bid_amount: number;
+  current_bid_team_id: string | null;
+  timer_seconds: number;
+  timer_active: boolean;
+  [key: string]: unknown;
+};
+
+type SyncPayloadBase = {
+  auctionState: SyncAuctionState;
+  [key: string]: unknown;
+};
+
 const MAX_FRONTEND_DELAY_MS = 200;
 const FALLBACK_POLL_INTERVAL_MS = MAX_FRONTEND_DELAY_MS;
 const RECENT_FETCH_WINDOW_MS = 100;
@@ -22,7 +35,7 @@ const RECENT_FETCH_WINDOW_MS = 100;
  *     - Keeps missed-event recovery within a 200ms frontend delay target
  *  4. NO more Redis SSE, NO more postgres_changes
  */
-export function useLiveAuctionSync<T>({
+export function useLiveAuctionSync<T extends SyncPayloadBase>({
   initialData,
   expectedRole,
 }: {
@@ -91,53 +104,40 @@ export function useLiveAuctionSync<T>({
         if (stopped) return;
 
         const eventPayload = message.payload;
-        
+
         // Optimistic UI for high-frequency bids
         if (eventPayload && eventPayload.type === "bid_placed" && eventPayload.delta) {
-          const d = eventPayload.delta as Record<string, unknown>;
-          setData((prev) => {
-            if (!prev || !prev.auctionState) return prev;
+          const d = eventPayload.delta as Partial<{
+            currentBidAmount: number;
+            currentBidTeamId: string;
+            timerSeconds: number;
+            timerActive: boolean;
+          }>;
 
-            const teamFromSummary = Array.isArray(prev.teamSummary)
-              ? prev.teamSummary.find((team) => team.id === d.currentBidTeamId)
-              : null;
-            const teamFromMyTeam = prev.myTeam?.id === d.currentBidTeamId
-              ? prev.myTeam
-              : null;
-            const optimisticLeadingTeam = teamFromSummary
-              ?? teamFromMyTeam
-              ?? (prev.leadingTeam?.id === d.currentBidTeamId
-                ? prev.leadingTeam
-                : {
-                    id: d.currentBidTeamId,
-                    short_code: d.currentBidTeamCode,
-                    name: d.currentBidTeamCode,
-                  });
+          if (
+            typeof d.currentBidAmount === "number" &&
+            typeof d.currentBidTeamId === "string" &&
+            typeof d.timerSeconds === "number" &&
+            typeof d.timerActive === "boolean"
+          ) {
+            setData((prev) => {
+              if (!prev) return prev;
 
-            const newBid = {
-              id: "opt-" + Date.now(),
-              amount: d.currentBidAmount,
-              team_id: d.currentBidTeamId,
-              timestamp: new Date().toISOString(),
-              team: { short_code: d.currentBidTeamCode, name: d.currentBidTeamCode },
-            };
+              return {
+                ...prev,
+                auctionState: {
+                  ...prev.auctionState,
+                  current_bid_amount: d.currentBidAmount,
+                  current_bid_team_id: d.currentBidTeamId,
+                  timer_seconds: d.timerSeconds,
+                  timer_active: d.timerActive,
+                },
+              };
+            });
 
-            return {
-              ...prev,
-              auctionState: {
-                ...prev.auctionState,
-                current_bid_amount: d.currentBidAmount,
-                current_bid_team_id: d.currentBidTeamId,
-                timer_seconds: d.timerSeconds,
-                timer_active: d.timerActive,
-              },
-              leadingTeam: optimisticLeadingTeam,
-              bidHistory: prev.bidHistory ? [newBid, ...prev.bidHistory] : prev.bidHistory,
-            };
-          });
-
-          // Frontend already applied a delta; mark sync activity to avoid unnecessary poll fetches.
-          lastFetchTimeRef.current = Date.now();
+            // Frontend already applied a delta; mark sync activity to avoid unnecessary poll fetches.
+            lastFetchTimeRef.current = Date.now();
+          }
         }
 
         void refreshSnapshot();
