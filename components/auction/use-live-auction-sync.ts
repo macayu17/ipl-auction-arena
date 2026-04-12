@@ -5,8 +5,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type RoleName = "admin" | "team";
-const FALLBACK_POLL_INTERVAL_MS = 1000;
-const RECENT_FETCH_WINDOW_MS = 700;
+const MAX_FRONTEND_DELAY_MS = 200;
+const FALLBACK_POLL_INTERVAL_MS = MAX_FRONTEND_DELAY_MS;
+const RECENT_FETCH_WINDOW_MS = 100;
 
 /**
  * Auction live-sync hook — v3 (Supabase Broadcast + fast polling).
@@ -16,9 +17,9 @@ const RECENT_FETCH_WINDOW_MS = 700;
  *  2. PRIMARY: Supabase Realtime Broadcast channel "auction-sync"
  *     - Server actions broadcast a thin "refresh" signal after every mutation
  *     - Client receives it via WebSocket (~30-50ms) and triggers snapshot fetch
- *  3. SAFETY NET: 1-second polling interval
+ *  3. SAFETY NET: 200ms polling interval
  *     - Catches any missed broadcasts (reconnections, network blips)
- *     - Does NOT fetch if data arrived via broadcast/fetch within the last 700ms
+ *     - Keeps missed-event recovery within a 200ms frontend delay target
  *  4. NO more Redis SSE, NO more postgres_changes
  */
 export function useLiveAuctionSync<T>({
@@ -93,12 +94,12 @@ export function useLiveAuctionSync<T>({
         
         // Optimistic UI for high-frequency bids
         if (eventPayload && eventPayload.type === "bid_placed" && eventPayload.delta) {
-          const d = eventPayload.delta as Record<string, any>;
-          setData((prev: any) => {
+          const d = eventPayload.delta as Record<string, unknown>;
+          setData((prev) => {
             if (!prev || !prev.auctionState) return prev;
 
             const teamFromSummary = Array.isArray(prev.teamSummary)
-              ? prev.teamSummary.find((team: any) => team.id === d.currentBidTeamId)
+              ? prev.teamSummary.find((team) => team.id === d.currentBidTeamId)
               : null;
             const teamFromMyTeam = prev.myTeam?.id === d.currentBidTeamId
               ? prev.myTeam
@@ -134,22 +135,23 @@ export function useLiveAuctionSync<T>({
               bidHistory: prev.bidHistory ? [newBid, ...prev.bidHistory] : prev.bidHistory,
             };
           });
-        }
 
-        lastFetchTimeRef.current = Date.now();
+          // Frontend already applied a delta; mark sync activity to avoid unnecessary poll fetches.
+          lastFetchTimeRef.current = Date.now();
+        }
 
         void refreshSnapshot();
       })
       .subscribe();
 
     /* ---------------------------------------------------------------
-     * SAFETY NET: Poll every 1 second
-     * Skip if a recent fetch already happened in the last 700ms.
+     * SAFETY NET: Poll every 200ms.
+     * Skip if data was synced in the last 100ms to reduce redundant reads.
      * --------------------------------------------------------------- */
     pollInterval = setInterval(() => {
       if (stopped) return;
       const timeSinceLastFetch = Date.now() - lastFetchTimeRef.current;
-      if (timeSinceLastFetch > RECENT_FETCH_WINDOW_MS) {
+      if (timeSinceLastFetch >= RECENT_FETCH_WINDOW_MS) {
         void refreshSnapshot();
       }
     }, FALLBACK_POLL_INTERVAL_MS);
