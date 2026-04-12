@@ -19,8 +19,9 @@ type SyncPayloadBase = {
 };
 
 const MAX_FRONTEND_DELAY_MS = 200;
-const FALLBACK_POLL_INTERVAL_MS = MAX_FRONTEND_DELAY_MS;
-const RECENT_FETCH_WINDOW_MS = 100;
+const FALLBACK_POLL_INTERVAL_MS = 1000;
+const RECENT_FETCH_WINDOW_MS = 900;
+const BROADCAST_SYNC_DEBOUNCE_MS = 120;
 
 /**
  * Auction live-sync hook — v3 (Supabase Broadcast + fast polling).
@@ -30,9 +31,9 @@ const RECENT_FETCH_WINDOW_MS = 100;
  *  2. PRIMARY: Supabase Realtime Broadcast channel "auction-sync"
  *     - Server actions broadcast a thin "refresh" signal after every mutation
  *     - Client receives it via WebSocket (~30-50ms) and triggers snapshot fetch
- *  3. SAFETY NET: 200ms polling interval
+ *  3. SAFETY NET: 1s polling interval
  *     - Catches any missed broadcasts (reconnections, network blips)
- *     - Keeps missed-event recovery within a 200ms frontend delay target
+ *     - Broadcast remains primary for fast updates; polling is a resilience fallback
  *  4. NO more Redis SSE, NO more postgres_changes
  */
 export function useLiveAuctionSync<T extends SyncPayloadBase>({
@@ -91,6 +92,17 @@ export function useLiveAuctionSync<T extends SyncPayloadBase>({
   useEffect(() => {
     let stopped = false;
     let pollInterval: ReturnType<typeof setInterval> | null = null;
+    let scheduledRefresh: ReturnType<typeof setTimeout> | null = null;
+
+    const scheduleSnapshotRefresh = (delayMs: number) => {
+      if (scheduledRefresh) return;
+
+      scheduledRefresh = setTimeout(() => {
+        scheduledRefresh = null;
+        if (stopped) return;
+        void refreshSnapshot();
+      }, delayMs);
+    };
 
     /* ---------------------------------------------------------------
      * PRIMARY: Supabase Realtime Broadcast
@@ -137,16 +149,21 @@ export function useLiveAuctionSync<T extends SyncPayloadBase>({
 
             // Frontend already applied a delta; mark sync activity to avoid unnecessary poll fetches.
             lastFetchTimeRef.current = Date.now();
+
+            // Coalesce high-frequency bid broadcasts and fetch one reconciliation snapshot.
+            scheduleSnapshotRefresh(MAX_FRONTEND_DELAY_MS);
+            return;
           }
         }
 
-        void refreshSnapshot();
+        // Non-bid updates (phase/timer/sold/etc.) should sync quickly, but can still be coalesced.
+        scheduleSnapshotRefresh(BROADCAST_SYNC_DEBOUNCE_MS);
       })
       .subscribe();
 
     /* ---------------------------------------------------------------
-     * SAFETY NET: Poll every 200ms.
-     * Skip if data was synced in the last 100ms to reduce redundant reads.
+     * SAFETY NET: Poll every 1s.
+     * Skip if a recent fetch already happened in the last 900ms.
      * --------------------------------------------------------------- */
     pollInterval = setInterval(() => {
       if (stopped) return;
@@ -163,6 +180,7 @@ export function useLiveAuctionSync<T extends SyncPayloadBase>({
       stopped = true;
       void supabase.removeChannel(channel);
       if (pollInterval) clearInterval(pollInterval);
+      if (scheduledRefresh) clearTimeout(scheduledRefresh);
     };
   }, [expectedRole, refreshSnapshot]);
 

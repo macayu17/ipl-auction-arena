@@ -39,7 +39,7 @@ function getBroadcastChannel() {
  *
  * This is fire-and-forget — never blocks the server action.
  */
-export async function broadcastAuctionUpdate(payload?: any) {
+export async function broadcastAuctionUpdate(payload?: Record<string, unknown>) {
   try {
     const channel = getBroadcastChannel();
     const result = await channel.httpSend(
@@ -54,7 +54,7 @@ export async function broadcastAuctionUpdate(payload?: any) {
       );
     }
   } catch (error) {
-    // Non-fatal: clients will fall back to 3s polling
+    // Non-fatal: clients will fall back to interval polling
     console.error("Broadcast failed (non-fatal):", error);
   }
 }
