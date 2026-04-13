@@ -19,11 +19,21 @@ if (playerImageBaseUrl) {
   try {
     const parsedPlayerImageBaseUrl = new URL(playerImageBaseUrl);
     const normalizedPathname = parsedPlayerImageBaseUrl.pathname.replace(/\/+$/, "");
+    const protocol =
+      parsedPlayerImageBaseUrl.protocol === "https:"
+        ? "https"
+        : parsedPlayerImageBaseUrl.protocol === "http:"
+          ? "http"
+          : null;
+
+    if (!protocol) {
+      throw new Error("Unsupported PLAYER_IMAGE_BASE_URL protocol");
+    }
 
     remotePatterns.push({
-      protocol: parsedPlayerImageBaseUrl.protocol.replace(":", ""),
+      protocol,
       hostname: parsedPlayerImageBaseUrl.hostname,
-      port: parsedPlayerImageBaseUrl.port,
+      port: parsedPlayerImageBaseUrl.port || "",
       pathname: `${normalizedPathname || ""}/**`,
       search: "",
     });
