@@ -64,6 +64,7 @@ TEAM_PASSWORD_PREFIX=
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
 AUCTION_JWT_SECRET=
+PLAYER_IMAGE_BASE_URL=
 ```
 
 ### Notes
@@ -71,6 +72,7 @@ AUCTION_JWT_SECRET=
 - `SUPABASE_SERVICE_ROLE_KEY` is server-only and should never be exposed publicly.
 - `TEAM_EMAIL_DOMAIN` and `TEAM_PASSWORD_PREFIX` are optional.
 - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, and `AUCTION_JWT_SECRET` are optional unless you want the lower-latency Redis event transport.
+- `PLAYER_IMAGE_BASE_URL` is optional. Set it to your public Cloudflare R2 base URL to serve player headshots remotely.
 
 ## Local Setup
 
@@ -140,6 +142,33 @@ The app now supports an optional Redis-backed event stream for faster UI refresh
 - The browser receives those events through an authenticated SSE route using a short-lived JWT.
 
 See [REDIS_JWT_ROLLOUT.md](./REDIS_JWT_ROLLOUT.md) for the exact setup and requirements.
+
+## Cloudflare R2 for Player Images
+
+To keep deployment small and improve global image delivery, you can host player headshots in Cloudflare R2.
+
+1. Create an R2 bucket and upload files from `public/player-images`.
+2. Enable public access via an `r2.dev` URL or attach a custom domain.
+3. Set `PLAYER_IMAGE_BASE_URL` in `.env.local` and deployment env vars.
+4. Restart or redeploy so `next.config.ts` picks up the new image host.
+
+Example:
+
+```env
+PLAYER_IMAGE_BASE_URL=https://your-public-r2-domain/player-images
+```
+
+The app will automatically resolve nominee photos from:
+
+- `PLAYER_IMAGE_BASE_URL/<image_filename>` when configured
+- local `/player-images/<image_filename>` when `PLAYER_IMAGE_BASE_URL` is not set
+
+If you want the CSV to store R2 URLs directly, regenerate it with:
+
+```powershell
+$env:PLAYER_IMAGE_BASE_URL="https://your-public-r2-domain/player-images"
+node scripts/regen-csv.js
+```
 
 ## Deployment (Vercel + Supabase)
 

@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 
+import { applyResolvedPlayerPhotoUrls } from "@/lib/player-images";
 import { toLooseSupabaseClient } from "@/lib/supabase/loose-client";
 import { createServiceClient } from "@/lib/supabase/server";
 import type {
@@ -63,7 +64,8 @@ function sortPlayersForQueue(players: Player[]) {
 }
 
 function stripPlayerRating(player: Player): TeamVisiblePlayer {
-  const { rating: _ignored, ...safePlayer } = player;
+  const { rating, ...safePlayer } = player;
+  void rating;
   return safePlayer;
 }
 
@@ -114,7 +116,9 @@ async function getBaseAuctionData() {
 
   const auctionState =
     (auctionStateResult.data as AuctionState | null) ?? defaultAuctionState;
-  const players = (playersResult.data as Player[] | null) ?? [];
+  const players = await applyResolvedPlayerPhotoUrls(
+    (playersResult.data as Player[] | null) ?? []
+  );
   const teams = (teamsResult.data as Team[] | null) ?? [];
   const credentials = (credentialsResult.data as TeamCredential[] | null) ?? [];
   const teamSummary = buildTeamSummary(teams, players, credentials);

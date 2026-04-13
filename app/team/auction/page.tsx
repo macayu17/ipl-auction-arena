@@ -4,6 +4,7 @@ import { RadioTower, Shield, TimerReset, Trophy, ChevronDown, ChevronUp } from "
 import { useState } from "react";
 
 import { OverseasBadge } from "@/components/auction/overseas-badge";
+import { PlayerHeadshot } from "@/components/auction/player-headshot";
 import { TeamLogo } from "@/components/auction/team-logo";
 import { TimerDisplay } from "@/components/auction/timer-display";
 import { useLiveAuctionSync } from "@/components/auction/use-live-auction-sync";
@@ -172,16 +173,25 @@ export default function TeamAuctionPage() {
                     <OverseasBadge nationality={currentPlayer.nationality} />
                   </div>
 
-                  <div className="mt-4 lg:mt-8">
-                    <p className="text-[10px] lg:text-xs font-bold uppercase tracking-widest" style={{ color: accentColor }}>
-                      Live nomination
-                    </p>
-                    <h2 className="mt-1 lg:mt-2 display-font text-3xl lg:text-5xl xl:text-6xl text-white">
-                      {currentPlayer.name}
-                    </h2>
-                    <p className="mt-2 lg:mt-3 text-xs lg:text-sm leading-5 lg:leading-6 text-white/50">
-                      Base {formatPrice(currentPlayer.base_price)}. Current leader {leadingTeam?.name ?? "not set yet"}.
-                    </p>
+                  <div className="mt-4 lg:mt-8 grid gap-3 lg:gap-5 md:grid-cols-[150px_minmax(0,1fr)] md:items-start">
+                    <PlayerHeadshot
+                      name={currentPlayer.name}
+                      photoUrl={currentPlayer.photo_url}
+                      className="aspect-[4/5] w-full max-w-[220px] justify-self-center md:max-w-none"
+                      sizes="(max-width: 768px) 62vw, (max-width: 1280px) 150px, 180px"
+                    />
+
+                    <div className="min-w-0">
+                      <p className="text-[10px] lg:text-xs font-bold uppercase tracking-widest" style={{ color: accentColor }}>
+                        Live nomination
+                      </p>
+                      <h2 className="mt-1 lg:mt-2 display-font text-3xl lg:text-5xl xl:text-6xl text-white">
+                        {currentPlayer.name}
+                      </h2>
+                      <p className="mt-2 lg:mt-3 text-xs lg:text-sm leading-5 lg:leading-6 text-white/50">
+                        Base {formatPrice(currentPlayer.base_price)}. Current leader {leadingTeam?.name ?? "not set yet"}.
+                      </p>
+                    </div>
                   </div>
 
                   <div className="mt-4 lg:mt-6 grid gap-2 lg:gap-3 grid-cols-3">

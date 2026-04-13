@@ -18,6 +18,7 @@ import {
 } from "@/app/actions/auction";
 import { NominationQueueManager } from "@/components/auction/nomination-queue-manager";
 import { OverseasBadge } from "@/components/auction/overseas-badge";
+import { PlayerHeadshot } from "@/components/auction/player-headshot";
 import { TeamLogo } from "@/components/auction/team-logo";
 import { TimerDisplay } from "@/components/auction/timer-display";
 import { useLiveAuctionSync } from "@/components/auction/use-live-auction-sync";
@@ -591,17 +592,26 @@ export default function AdminAuctionPage() {
                     </span>
                   </div>
 
-                  <div className="mt-3 lg:mt-5">
-                    <p className="text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-[var(--gold)]">
-                      Live nomination
-                    </p>
-                    <h3 className="mt-1 lg:mt-1.5 display-font text-2xl lg:text-3xl xl:text-4xl font-bold tracking-tight text-white glow-text leading-none">
-                      {currentPlayer.name}
-                    </h3>
-                    <p className="mt-2 lg:mt-3 text-[11px] lg:text-[13px] leading-relaxed text-white/60">
-                      Rating {currentPlayer.rating}. Leader{" "}
-                      {leadingTeam?.name ?? "not set yet"}.
-                    </p>
+                  <div className="mt-3 lg:mt-5 grid gap-3 lg:gap-4 md:grid-cols-[140px_minmax(0,1fr)] md:items-start">
+                    <PlayerHeadshot
+                      name={currentPlayer.name}
+                      photoUrl={currentPlayer.photo_url}
+                      className="aspect-[4/5] w-full max-w-[190px] justify-self-center md:max-w-none"
+                      sizes="(max-width: 768px) 58vw, 140px"
+                    />
+
+                    <div className="min-w-0">
+                      <p className="text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-[var(--gold)]">
+                        Live nomination
+                      </p>
+                      <h3 className="mt-1 lg:mt-1.5 display-font text-2xl lg:text-3xl xl:text-4xl font-bold tracking-tight text-white glow-text leading-none">
+                        {currentPlayer.name}
+                      </h3>
+                      <p className="mt-2 lg:mt-3 text-[11px] lg:text-[13px] leading-relaxed text-white/60">
+                        Rating {currentPlayer.rating}. Leader{" "}
+                        {leadingTeam?.name ?? "not set yet"}.
+                      </p>
+                    </div>
                   </div>
 
                   <div className="mt-3 lg:mt-5 grid gap-1.5 lg:gap-2 grid-cols-2">

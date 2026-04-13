@@ -35,6 +35,11 @@ yarn-error.log*
 .codex-logs/
 .codex-shots/
 
+# local player image cache (R2 is source of truth)
+public/player-images/*
+!public/player-images/
+!public/player-images/player_images.csv
+
 # vercel
 .vercel
 
