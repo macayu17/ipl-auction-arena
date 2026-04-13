@@ -23,16 +23,16 @@ export function SectionCard({
     <section className={cn("glass-panel-elevated rounded-2xl overflow-hidden relative", className)}>
       <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       
-      <div className="flex flex-col gap-2 border-b border-white/5 px-4 py-3 lg:flex-row lg:items-center lg:justify-between lg:px-5">
+      <div className="flex flex-col gap-1.5 border-b border-white/5 px-3 py-2.5 lg:flex-row lg:items-center lg:justify-between lg:px-5 lg:py-3 lg:gap-2">
         <div className="min-w-0">
-          <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--gold)]">
+          <p className="text-[8px] lg:text-[9px] font-bold uppercase tracking-wider text-[var(--gold)]">
             Command module
           </p>
-          <h2 className="mt-0.5 display-font text-lg font-bold tracking-tight text-white">
+          <h2 className="mt-0.5 display-font text-base lg:text-lg font-bold tracking-tight text-white">
             {title}
           </h2>
           {description ? (
-            <p className="mt-0.5 max-w-2xl text-[11px] leading-relaxed text-white/50">
+            <p className="mt-0.5 max-w-2xl text-[10px] lg:text-[11px] leading-relaxed text-white/50 hidden lg:block">
               {description}
             </p>
           ) : null}
@@ -40,7 +40,7 @@ export function SectionCard({
         {action && <div className="shrink-0">{action}</div>}
       </div>
 
-      <div className="px-4 py-4 lg:px-5">{children}</div>
+      <div className="px-3 py-3 lg:px-5 lg:py-4">{children}</div>
     </section>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { RadioTower, Shield, TimerReset, Trophy } from "lucide-react";
+import { RadioTower, Shield, TimerReset, Trophy, ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
 
 import { OverseasBadge } from "@/components/auction/overseas-badge";
 import { TeamLogo } from "@/components/auction/team-logo";
@@ -25,6 +26,8 @@ import type {
 
 type TeamVisiblePlayer = Omit<Player, "rating">;
 
+const MOBILE_SQUAD_COUNT = 3;
+
 const emptyAuctionState: AuctionState = {
   id: 1,
   phase: "setup",
@@ -39,6 +42,8 @@ const emptyAuctionState: AuctionState = {
 };
 
 export default function TeamAuctionPage() {
+  const [squadExpanded, setSquadExpanded] = useState(false);
+
   const { data, isRefreshing } = useLiveAuctionSync<{
     auctionState: AuctionState;
     currentPlayer: TeamVisiblePlayer | null;
@@ -98,14 +103,16 @@ export default function TeamAuctionPage() {
     ? auctionState.current_bid_amount || currentPlayer.base_price
     : 0;
 
+  const timerDisabled = auctionState.timer_seconds === 0 && !auctionState.timer_active;
+
   return (
     <>
       {activeSlide ? (
         <ActiveSlideOverlay slide={activeSlide} audienceLabel="team consoles" />
       ) : null}
 
-      {/* Team-themed metric bar */}
-      <div className="grid gap-3 xl:grid-cols-4">
+      {/* Team-themed metric bar — 2x2 on mobile, 4-col on xl */}
+      <div className="grid grid-cols-2 gap-2 xl:grid-cols-4 xl:gap-3">
         <MetricCard
           label="Connection"
           value={isRefreshing ? "Syncing" : "Ready"}
@@ -132,17 +139,18 @@ export default function TeamAuctionPage() {
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-        <div className="space-y-4">
+      <div className="flex flex-col gap-2 xl:grid xl:grid-cols-[1.05fr_0.95fr] xl:gap-4">
+        {/* ── Column 1: Live Auction Board ── */}
+        <div className="space-y-2 lg:space-y-4">
           <SectionCard
             title="Live Auction Board"
             description="Watch the bidding unfold in real-time. Bids are placed by the auctioneer."
           >
             {currentPlayer ? (
-              <div className="space-y-4">
+              <div className="space-y-3 lg:space-y-4">
                 {/* Player info panel with team-specific themed accents */}
                 <div
-                  className="relative overflow-hidden rounded-xl p-5 lg:p-6"
+                  className="relative overflow-hidden rounded-xl p-3 lg:p-5 xl:p-6"
                   style={{
                     background: `radial-gradient(circle at top right, ${bgTint}, transparent 35%), linear-gradient(180deg, rgba(31,31,37,0.96), rgba(14,14,19,0.98))`,
                     border: `1.5px solid ${borderColor}`,
@@ -155,60 +163,64 @@ export default function TeamAuctionPage() {
                     style={{ background: `linear-gradient(90deg, ${primaryColor}, ${tc?.accent ?? primaryColor}, transparent)` }}
                   />
 
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mt-1">
                     <span
-                      className={`inline-flex rounded-lg border px-3 py-1 text-xs font-medium ${getRoleBadgeColor(currentPlayer.role)}`}
+                      className={`inline-flex rounded-lg border px-2 py-0.5 lg:px-3 lg:py-1 text-[10px] lg:text-xs font-medium ${getRoleBadgeColor(currentPlayer.role)}`}
                     >
                       {currentPlayer.role}
                     </span>
                     <OverseasBadge nationality={currentPlayer.nationality} />
                   </div>
 
-                  <div className="mt-8">
-                    <p className="text-xs font-bold uppercase tracking-widest" style={{ color: accentColor }}>
+                  <div className="mt-4 lg:mt-8">
+                    <p className="text-[10px] lg:text-xs font-bold uppercase tracking-widest" style={{ color: accentColor }}>
                       Live nomination
                     </p>
-                    <h2 className="mt-2 display-font text-5xl text-white lg:text-6xl">
+                    <h2 className="mt-1 lg:mt-2 display-font text-3xl lg:text-5xl xl:text-6xl text-white">
                       {currentPlayer.name}
                     </h2>
-                    <p className="mt-3 text-sm leading-6 text-white/50">
+                    <p className="mt-2 lg:mt-3 text-xs lg:text-sm leading-5 lg:leading-6 text-white/50">
                       Base {formatPrice(currentPlayer.base_price)}. Current leader {leadingTeam?.name ?? "not set yet"}.
                     </p>
                   </div>
 
-                  <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                  <div className="mt-4 lg:mt-6 grid gap-2 lg:gap-3 grid-cols-3">
                     {/* Current Bid — highlighted with team color */}
                     <div
-                      className="rounded-lg p-4 relative overflow-hidden"
+                      className="rounded-lg p-2.5 lg:p-4 relative overflow-hidden"
                       style={{ border: `1.5px solid ${borderColor}`, backgroundColor: bgTint }}
                     >
                       <div className="absolute inset-x-0 bottom-0 h-0.5" style={{ backgroundColor: primaryColor }} />
-                      <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: accentColor }}>
+                      <div className="text-[8px] lg:text-[10px] font-bold uppercase tracking-widest" style={{ color: accentColor }}>
                         Current Bid
                       </div>
-                      <div className="mt-2 text-2xl font-bold text-white mono-font">
+                      <div className="mt-1 lg:mt-2 text-lg lg:text-2xl font-bold text-white mono-font">
                         {formatPrice(currentBid)}
                       </div>
                     </div>
                     {/* Timer */}
-                    <div className="rounded-lg border border-white/8 bg-black/20 p-4">
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">
+                    <div className="rounded-lg border border-white/8 bg-black/20 p-2.5 lg:p-4">
+                      <div className="text-[8px] lg:text-[10px] font-bold uppercase tracking-widest text-white/40">
                         Timer
                       </div>
-                      <div className="mt-2 text-2xl font-bold text-white mono-font">
-                        <TimerDisplay
-                          seconds={auctionState.timer_seconds}
-                          timerActive={auctionState.timer_active}
-                          updatedAt={auctionState.updated_at}
-                        />
+                      <div className="mt-1 lg:mt-2 text-lg lg:text-2xl font-bold text-white mono-font">
+                        {timerDisabled ? (
+                          <span className="text-white/30">OFF</span>
+                        ) : (
+                          <TimerDisplay
+                            seconds={auctionState.timer_seconds}
+                            timerActive={auctionState.timer_active}
+                            updatedAt={auctionState.updated_at}
+                          />
+                        )}
                       </div>
                     </div>
                     {/* Phase */}
-                    <div className="rounded-lg border border-white/8 bg-black/20 p-4">
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">
+                    <div className="rounded-lg border border-white/8 bg-black/20 p-2.5 lg:p-4">
+                      <div className="text-[8px] lg:text-[10px] font-bold uppercase tracking-widest text-white/40">
                         Phase
                       </div>
-                      <div className="mt-2 text-2xl font-bold text-white uppercase">
+                      <div className="mt-1 lg:mt-2 text-lg lg:text-2xl font-bold text-white uppercase">
                         {auctionState.phase}
                       </div>
                     </div>
@@ -217,7 +229,7 @@ export default function TeamAuctionPage() {
 
                 {/* Leading team display with team color */}
                 <div
-                  className="rounded-xl p-5 relative overflow-hidden"
+                  className="rounded-xl p-3 lg:p-5 relative overflow-hidden"
                   style={{
                     border: `1.5px solid ${borderColor}`,
                     backgroundColor: bgTint,
@@ -229,20 +241,20 @@ export default function TeamAuctionPage() {
                     style={{ backgroundColor: primaryColor }}
                   />
 
-                  <div className="flex items-start justify-between gap-4 pl-3">
+                  <div className="flex items-start justify-between gap-3 lg:gap-4 pl-2 lg:pl-3">
                     <div>
-                      <div className="text-xs font-bold uppercase tracking-widest" style={{ color: accentColor }}>
+                      <div className="text-[10px] lg:text-xs font-bold uppercase tracking-widest" style={{ color: accentColor }}>
                         Leading team
                       </div>
-                      <div className="flex items-center gap-3 mt-1.5">
-                        {leadingTeam ? <TeamLogo shortCode={leadingTeam.short_code} size={36} /> : null}
-                        <div className="text-2xl font-semibold text-white">
+                      <div className="flex items-center gap-2 lg:gap-3 mt-1 lg:mt-1.5">
+                        {leadingTeam ? <TeamLogo shortCode={leadingTeam.short_code} size={28} className="lg:w-9 lg:h-9" /> : null}
+                        <div className="text-lg lg:text-2xl font-semibold text-white">
                           {leadingTeam?.name ?? "No active bidder"}
                         </div>
                       </div>
                     </div>
                     <div
-                      className="rounded-lg px-3 py-2 text-[10px] font-bold uppercase tracking-widest"
+                      className="rounded-lg px-2 py-1.5 lg:px-3 lg:py-2 text-[9px] lg:text-[10px] font-bold uppercase tracking-widest"
                       style={{
                         border: `1px solid ${borderColor}`,
                         backgroundColor: bgTint,
@@ -253,28 +265,28 @@ export default function TeamAuctionPage() {
                     </div>
                   </div>
 
-                  <p className="mt-3 pl-3 text-sm leading-6 text-white/50">
+                  <p className="mt-2 lg:mt-3 pl-2 lg:pl-3 text-xs lg:text-sm leading-5 lg:leading-6 text-white/50">
                     Watch the live auction. The auctioneer places bids on behalf of teams.
                   </p>
                 </div>
               </div>
             ) : (
               <div
-                className="grid min-h-[420px] place-items-center rounded-xl p-8 text-center"
+                className="grid min-h-[280px] lg:min-h-[420px] place-items-center rounded-xl p-6 lg:p-8 text-center"
                 style={{
                   border: `1.5px dashed ${borderColor}`,
                   backgroundColor: bgTint,
                 }}
               >
-                <div className="max-w-lg space-y-4">
+                <div className="max-w-lg space-y-3 lg:space-y-4">
                   <div className="flex items-center justify-center gap-4">
-                    <TeamLogo shortCode={myTeam.short_code} size={80} />
+                    <TeamLogo shortCode={myTeam.short_code} size={60} className="lg:w-20 lg:h-20" />
                   </div>
-                  <p className="display-font text-5xl font-medium" style={{ color: accentColor }}>LIVE VIEW</p>
-                  <h2 className="text-3xl font-semibold text-white">
+                  <p className="display-font text-3xl lg:text-5xl font-medium" style={{ color: accentColor }}>LIVE VIEW</p>
+                  <h2 className="text-xl lg:text-3xl font-semibold text-white">
                     No player has been nominated yet
                   </h2>
-                  <p className="text-sm leading-6 text-white/50">
+                  <p className="text-xs lg:text-sm leading-5 lg:leading-6 text-white/50">
                     Stay ready. As soon as the auctioneer puts a player on the block,
                     this panel updates automatically.
                   </p>
@@ -284,14 +296,15 @@ export default function TeamAuctionPage() {
           </SectionCard>
         </div>
 
-        <div className="space-y-4">
+        {/* ── Column 2: Bid History + Squad ── */}
+        <div className="space-y-2 lg:space-y-4">
           <SectionCard
             title="Bid History"
             description="Momentum on the current player, newest call first."
           >
-            <div className="space-y-2">
+            <div className="space-y-1.5 lg:space-y-2">
               {bidHistory.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-white/10 bg-white/4 px-4 py-4 text-sm text-slate-300">
+                <div className="rounded-lg border border-dashed border-white/10 bg-white/4 px-3 py-3 lg:px-4 lg:py-4 text-xs lg:text-sm text-slate-300">
                   No bids yet for this player.
                 </div>
               ) : (
@@ -301,7 +314,7 @@ export default function TeamAuctionPage() {
                   return (
                     <div
                       key={bid.id}
-                      className="rounded-lg px-3 py-2 text-sm relative overflow-hidden"
+                      className="rounded-lg px-2.5 py-1.5 lg:px-3 lg:py-2 text-xs lg:text-sm relative overflow-hidden"
                       style={{
                         border: `1px solid ${bidTc?.border ?? "rgba(255,255,255,0.05)"}`,
                         backgroundColor: bidTc?.bgTint ?? "transparent",
@@ -314,24 +327,24 @@ export default function TeamAuctionPage() {
                           style={{ backgroundColor: bidTc?.primary ?? "white" }}
                         />
                       )}
-                      <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center justify-between gap-3 lg:gap-4">
                         <div className="pl-1">
-                          <div className="flex items-center gap-2">
-                            {bid.team ? <TeamLogo shortCode={bid.team.short_code} size={24} /> : null}
-                            <span className="font-medium text-white">
+                          <div className="flex items-center gap-1.5 lg:gap-2">
+                            {bid.team ? <TeamLogo shortCode={bid.team.short_code} size={20} className="lg:w-6 lg:h-6" /> : null}
+                            <span className="font-medium text-white text-xs lg:text-sm">
                               {bid.team?.short_code ?? "Unknown"}
                             </span>
                             {idx === 0 && (
-                              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded" style={{ color: bidTc?.textOnDark ?? "white", backgroundColor: bidTc?.bgTint ?? "transparent" }}>
+                              <span className="text-[8px] lg:text-[9px] font-bold uppercase tracking-wider px-1 lg:px-1.5 py-0.5 rounded" style={{ color: bidTc?.textOnDark ?? "white", backgroundColor: bidTc?.bgTint ?? "transparent" }}>
                                 Latest
                               </span>
                             )}
                           </div>
-                          <div className="mt-0.5 text-[11px] text-white/30">
+                          <div className="mt-0.5 text-[10px] lg:text-[11px] text-white/30">
                             {new Date(bid.timestamp).toLocaleString("en-IN")}
                           </div>
                         </div>
-                        <div className="mono-font text-white font-bold">
+                        <div className="mono-font text-white font-bold text-xs lg:text-sm">
                           {formatPrice(bid.amount)}
                         </div>
                       </div>
@@ -346,34 +359,83 @@ export default function TeamAuctionPage() {
             title="Squad Snapshot"
             description="Your latest additions stay visible while the bidding room keeps moving."
           >
-            <div className="space-y-2">
+            <div className="space-y-1.5 lg:space-y-2">
               {mySquad.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-white/10 bg-white/4 px-4 py-5 text-sm text-slate-300">
+                <div className="rounded-lg border border-dashed border-white/10 bg-white/4 px-3 py-3 lg:px-4 lg:py-5 text-xs lg:text-sm text-slate-300">
                   No players purchased yet.
                 </div>
               ) : (
-                mySquad.slice(0, 6).map((player) => (
-                  <div
-                    key={player.id}
-                    className="rounded-lg px-4 py-3"
-                    style={{
-                      border: `1px solid ${borderColor}`,
-                      backgroundColor: bgTint,
-                    }}
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <div className="font-medium text-white">{player.name}</div>
-                        <div className="mt-0.5 text-xs text-white/40">
-                          {player.role}
+                <>
+                  {mySquad.slice(0, squadExpanded ? undefined : MOBILE_SQUAD_COUNT).map((player, idx) => (
+                    <div
+                      key={player.id}
+                      className={`rounded-lg px-3 py-2 lg:px-4 lg:py-3 ${!squadExpanded && idx >= MOBILE_SQUAD_COUNT ? "hidden lg:block" : ""}`}
+                      style={{
+                        border: `1px solid ${borderColor}`,
+                        backgroundColor: bgTint,
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-3 lg:gap-4">
+                        <div>
+                          <div className="font-medium text-white text-xs lg:text-sm">{player.name}</div>
+                          <div className="mt-0.5 text-[10px] lg:text-xs text-white/40">
+                            {player.role}
+                          </div>
+                        </div>
+                        <div className="mono-font font-bold text-xs lg:text-sm" style={{ color: accentColor }}>
+                          {formatPrice(player.sold_price ?? player.base_price)}
                         </div>
                       </div>
-                      <div className="mono-font font-bold" style={{ color: accentColor }}>
-                        {formatPrice(player.sold_price ?? player.base_price)}
-                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+
+                  {/* Always show all on desktop; on mobile, show toggle if more than MOBILE_SQUAD_COUNT */}
+                  {mySquad.length > MOBILE_SQUAD_COUNT && (
+                    <>
+                      {/* Remaining items visible only on desktop */}
+                      {!squadExpanded && mySquad.slice(MOBILE_SQUAD_COUNT, 6).map((player) => (
+                        <div
+                          key={player.id}
+                          className="hidden lg:block rounded-lg px-4 py-3"
+                          style={{
+                            border: `1px solid ${borderColor}`,
+                            backgroundColor: bgTint,
+                          }}
+                        >
+                          <div className="flex items-center justify-between gap-4">
+                            <div>
+                              <div className="font-medium text-white text-sm">{player.name}</div>
+                              <div className="mt-0.5 text-xs text-white/40">
+                                {player.role}
+                              </div>
+                            </div>
+                            <div className="mono-font font-bold text-sm" style={{ color: accentColor }}>
+                              {formatPrice(player.sold_price ?? player.base_price)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={() => setSquadExpanded(!squadExpanded)}
+                        className="lg:hidden w-full flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                      >
+                        {squadExpanded ? (
+                          <>
+                            <ChevronUp className="w-3 h-3" />
+                            Show less
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-3 h-3" />
+                            Show all ({mySquad.length})
+                          </>
+                        )}
+                      </button>
+                    </>
+                  )}
+                </>
               )}
             </div>
           </SectionCard>

@@ -170,3 +170,15 @@ textarea {
 .glow-text {
   text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
 }
+
+/* ── Mobile-first responsive helpers ── */
+@media (max-width: 1023px) {
+  .mobile-order-1 { order: 1; }
+  .mobile-order-2 { order: 2; }
+  .mobile-order-3 { order: 3; }
+  .mobile-order-4 { order: 4; }
+  .mobile-order-5 { order: 5; }
+  .mobile-order-6 { order: 6; }
+  .mobile-order-7 { order: 7; }
+  .mobile-hide { display: none !important; }
+}

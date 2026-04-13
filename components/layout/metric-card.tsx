@@ -87,22 +87,22 @@ export function MetricCard({
   const Icon = icon ?? (iconName ? iconMap[iconName] : BarChart3);
 
   return (
-    <article className="glass-panel overflow-hidden rounded-xl p-3.5 relative group border border-white/5 bg-black/20 hover:bg-black/30 transition-all">
-      <div className="flex items-start justify-between gap-3">
+    <article className="glass-panel overflow-hidden rounded-xl p-2.5 lg:p-3.5 relative group border border-white/5 bg-black/20 hover:bg-black/30 transition-all">
+      <div className="flex items-start justify-between gap-2 lg:gap-3">
         <div>
-          <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--gold)]">
+          <div className="text-[8px] lg:text-[9px] font-bold uppercase tracking-wider text-[var(--gold)]">
             {label}
           </div>
-          <div className="mt-1.5 display-font text-2xl leading-none text-white font-bold tracking-tight">
+          <div className="mt-1 lg:mt-1.5 display-font text-lg lg:text-2xl leading-none text-white font-bold tracking-tight">
             {value}
           </div>
         </div>
-        <div className="rounded-md border border-[var(--gold)]/20 bg-[var(--gold)]/10 p-2 text-[var(--gold)]">
-          <Icon className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100 transition-opacity" />
+        <div className="rounded-md border border-[var(--gold)]/20 bg-[var(--gold)]/10 p-1.5 lg:p-2 text-[var(--gold)]">
+          <Icon className="w-3 h-3 lg:w-3.5 lg:h-3.5 opacity-80 group-hover:opacity-100 transition-opacity" />
         </div>
       </div>
       {hint ? (
-        <p className="mt-2.5 text-[11px] leading-4 text-white/50">{hint}</p>
+        <p className="mt-1.5 lg:mt-2.5 text-[10px] lg:text-[11px] leading-4 text-white/50 hidden lg:block">{hint}</p>
       ) : null}
     </article>
   );
