@@ -170,6 +170,30 @@ $env:PLAYER_IMAGE_BASE_URL="https://your-public-r2-domain/player-images"
 node scripts/regen-csv.js
 ```
 
+### Manual Overrides For Missing Players
+
+If some auction-sheet names are not available in IPL sitemap data (older/legacy players), edit:
+
+- `scripts/player-image-manual-overrides.json`
+
+Each entry can include any of these fields:
+
+- `player_name` (required)
+- `image_url` (direct URL for that player image)
+- `image_filename` (if you uploaded a local/R2 filename)
+- `headshot_id` (if you know the IPL headshot id)
+
+Then regenerate:
+
+```powershell
+node scripts/regen-csv.js
+```
+
+The script will print:
+
+- names with image source already available
+- names still pending manual image details
+
 ## Deployment (Vercel + Supabase)
 
 This app is ready to deploy on Vercel with Supabase as backend.

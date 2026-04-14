@@ -8,6 +8,7 @@ const OUTPUT_DIR = path.join(ROOT_DIR, 'public', 'player-images');
 const CSV_PATH = path.join(OUTPUT_DIR, 'player_images.csv');
 const PLAYER_GROUND_TRUTH_PATH = path.join(ROOT_DIR, 'scripts', 'player-data-ground-truth.json');
 const AUCTION_SHEET_PATH = path.join(ROOT_DIR, 'IPL AUCTION DATA SHEET.csv');
+const MANUAL_OVERRIDES_PATH = path.join(ROOT_DIR, 'scripts', 'player-image-manual-overrides.json');
 const SITEMAP_URL = 'https://www.iplt20.com/sitemap1.xml';
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 const IMAGE_CDN = 'https://documents.iplt20.com/ipl/IPLHeadshot2026/{id}.png';
@@ -65,6 +66,24 @@ function toCsvSafe(value) {
 
 function stripQuery(url) {
   return String(url || '').split('?')[0];
+}
+
+function buildImageUrl({ imageFilename, headshotId, imageUrl }) {
+  const directImageUrl = stripQuery(String(imageUrl || '').trim());
+
+  if (directImageUrl) {
+    return directImageUrl;
+  }
+
+  if (imageFilename && PLAYER_IMAGE_BASE_URL) {
+    return `${PLAYER_IMAGE_BASE_URL}/${encodeURIComponent(imageFilename)}`;
+  }
+
+  if (headshotId) {
+    return IMAGE_CDN.replace('{id}', headshotId);
+  }
+
+  return '';
 }
 
 function normalizeTokens(value) {
@@ -362,6 +381,73 @@ function buildRowsFromGroundTruth(filenameByHeadshotId) {
     .filter((row) => row.player_name);
 }
 
+function getManualOverrideRows(filenameByHeadshotId) {
+  if (!fs.existsSync(MANUAL_OVERRIDES_PATH)) {
+    return [];
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(fs.readFileSync(MANUAL_OVERRIDES_PATH, 'utf-8'));
+  } catch {
+    return [];
+  }
+
+  if (!Array.isArray(parsed)) {
+    return [];
+  }
+
+  return parsed
+    .map((entry) => {
+      const playerName = String(entry.player_name || '').trim();
+      if (!playerName) {
+        return null;
+      }
+
+      const slug = String(entry.slug || '').trim();
+      const team = String(entry.team || '').trim();
+      const profileId = String(entry.profile_id || '').trim();
+      const headshotId = String(entry.headshot_id || '').trim();
+      let imageFilename = String(entry.image_filename || '').trim();
+
+      if (!imageFilename && headshotId && filenameByHeadshotId.has(headshotId)) {
+        imageFilename = filenameByHeadshotId.get(headshotId) || '';
+      }
+
+      if (headshotId && imageFilename) {
+        filenameByHeadshotId.set(headshotId, imageFilename);
+      }
+
+      const imageUrl = buildImageUrl({
+        imageFilename,
+        headshotId,
+        imageUrl: entry.image_url,
+      });
+
+      const localFilePath = imageFilename ? path.join(OUTPUT_DIR, imageFilename) : '';
+      const localExists = localFilePath && fs.existsSync(localFilePath) && fs.statSync(localFilePath).size > 1000;
+
+      const status =
+        localExists
+          ? 'downloaded'
+          : imageUrl || imageFilename
+            ? 'manual'
+            : 'manual_pending';
+
+      return {
+        player_name: playerName,
+        slug,
+        team,
+        profile_id: profileId,
+        headshot_id: headshotId,
+        image_filename: imageFilename,
+        image_url: imageUrl,
+        status,
+      };
+    })
+    .filter(Boolean);
+}
+
 function getExistingManifestRows() {
   if (!fs.existsSync(CSV_PATH)) {
     return [];
@@ -412,9 +498,14 @@ async function main() {
     mergeRows(rowsByKey, row);
   }
 
+  const manualOverrideRows = getManualOverrideRows(filenameByHeadshotId);
+  for (const row of manualOverrideRows) {
+    mergeRows(rowsByKey, row);
+  }
+
   const auctionSheetNames = getAuctionSheetNames();
   let aliasCount = 0;
-  const stillMissingFromSheet = [];
+  const unresolvedSheetNames = [];
 
   for (const name of auctionSheetNames) {
     const key = normalizeNameKey(name);
@@ -442,7 +533,7 @@ async function main() {
     const match = bestNameMatch(name, Array.from(rowsByKey.values()));
 
     if (!match) {
-      stillMissingFromSheet.push(name);
+      unresolvedSheetNames.push(name);
       continue;
     }
 
@@ -456,6 +547,30 @@ async function main() {
 
   const finalRows = Array.from(rowsByKey.values())
     .sort((left, right) => left.player_name.localeCompare(right.player_name));
+
+  const finalRowsByKey = new Map(
+    finalRows.map((row) => [normalizeNameKey(row.player_name), row])
+  );
+
+  let sheetNamesWithImage = 0;
+  const sheetNamesPendingManual = [];
+
+  for (const sheetName of auctionSheetNames) {
+    const row = finalRowsByKey.get(normalizeNameKey(sheetName));
+
+    if (!row) {
+      continue;
+    }
+
+    const hasImage = Boolean(String(row.image_url || '').trim() || String(row.image_filename || '').trim());
+
+    if (hasImage) {
+      sheetNamesWithImage += 1;
+      continue;
+    }
+
+    sheetNamesPendingManual.push(sheetName);
+  }
 
   const csvRows = finalRows.map((row) => [
     toCsvSafe(row.player_name),
@@ -476,15 +591,20 @@ async function main() {
     totalSize += fs.statSync(path.join(OUTPUT_DIR, fileName)).size;
   });
 
-  const sheetMapped = auctionSheetNames.length - stillMissingFromSheet.length;
-
   console.log('CSV regenerated with sitemap + aliases');
   console.log(`Rows written: ${finalRows.length}`);
+  console.log(`Manual override rows loaded: ${manualOverrideRows.length}`);
   console.log(`Alias rows added: ${aliasCount}`);
-  console.log(`Auction sheet names mapped: ${sheetMapped}/${auctionSheetNames.length}`);
-  if (stillMissingFromSheet.length > 0) {
-    console.log('Still unmatched auction-sheet names:');
-    stillMissingFromSheet.slice(0, 60).forEach((name) => console.log('  - ' + name));
+  console.log(`Auction sheet names with image source: ${sheetNamesWithImage}/${auctionSheetNames.length}`);
+
+  if (sheetNamesPendingManual.length > 0) {
+    console.log('Auction sheet names pending manual image details:');
+    sheetNamesPendingManual.slice(0, 60).forEach((name) => console.log('  - ' + name));
+  }
+
+  if (unresolvedSheetNames.length > 0) {
+    console.log('Still unresolved auction-sheet names (no row at all):');
+    unresolvedSheetNames.slice(0, 60).forEach((name) => console.log('  - ' + name));
   }
   console.log(`Image files: ${imageFiles.length}`);
   console.log('Total local image size: ' + (totalSize / 1024 / 1024).toFixed(1) + ' MB');
