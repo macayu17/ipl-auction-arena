@@ -13,8 +13,8 @@
   },
   {
     "player_name": "Chris Morris",
-    "image_url": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
-    "image_fallback": "default-men"
+    "image_url": "https://a.espncdn.com/i/headshots/cricket/players/full/439952.png",
+    "source_url": "https://www.espncricinfo.com/cricketers/chris-morris-439952"
   },
   {
     "player_name": "Darren Sammy",
@@ -36,8 +36,8 @@
   },
   {
     "player_name": "Kedar Jadhav",
-    "image_url": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
-    "image_fallback": "default-men"
+    "image_url": "https://a.espncdn.com/i/headshots/cricket/players/full/290716.png",
+    "source_url": "https://www.espncricinfo.com/cricketers/kedar-jadhav-290716"
   },
   {
     "player_name": "Moises Henriques",
@@ -149,13 +149,13 @@
   },
   {
     "player_name": "Alzari Joseph",
-    "image_url": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
-    "image_fallback": "default-men"
+    "image_url": "https://a.espncdn.com/combiner/i?img=/media/motion/2024/0208/dm_240208_CIAwards23_mensT20bowling_alzarri/dm_240208_CIAwards23_mensT20bowling_alzarri.jpg&w=305&h=172",
+    "source_url": "https://www.espncricinfo.com/cricketers/alzarri-joseph-670031"
   },
   {
     "player_name": "Corey Anderson",
-    "image_url": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
-    "image_fallback": "default-men"
+    "image_url": "https://a.espncdn.com/i/headshots/cricket/players/full/277662.png",
+    "source_url": "https://www.espncricinfo.com/cricketers/corey-anderson-277662"
   },
   {
     "player_name": "Imran Tahir",
@@ -177,13 +177,13 @@
   },
   {
     "player_name": "Mitchell Mcclenaghan",
-    "image_url": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
-    "image_fallback": "default-men"
+    "image_url": "https://assets.iplt20.com/IPL/photo/2018/03/19/d400af78-340b-425c-8710-4599ed90f71e/Mitchell-McClenaghan.jpg",
+    "source_url": "https://www.iplt20.com/search?term=Mitchell%20McClenaghan"
   },
   {
     "player_name": "Shivil Kaushik",
-    "image_url": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
-    "image_fallback": "default-men"
+    "image_url": "https://assets.iplt20.com/IPL/photo/2017/03/09/9f14d4f4-decb-4594-8190-2aa4394621e2/YtQutTXm.jpg",
+    "source_url": "https://www.iplt20.com/search?term=Shivil%20Kaushik"
   },
   {
     "player_name": "Parthiv Patel",

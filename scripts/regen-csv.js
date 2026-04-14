@@ -69,7 +69,7 @@ function stripQuery(url) {
 }
 
 function buildImageUrl({ imageFilename, headshotId, imageUrl }) {
-  const directImageUrl = stripQuery(String(imageUrl || '').trim());
+  const directImageUrl = String(imageUrl || '').trim();
 
   if (directImageUrl) {
     return directImageUrl;
@@ -469,7 +469,7 @@ function getExistingManifestRows() {
       profile_id: String(row.profile_id || '').trim(),
       headshot_id: String(row.headshot_id || '').trim(),
       image_filename: String(row.image_filename || '').trim(),
-      image_url: stripQuery(String(row.image_url || '').trim()),
+      image_url: String(row.image_url || '').trim(),
       status: String(row.status || '').trim() || 'linked',
     }))
     .filter((row) => row.player_name);

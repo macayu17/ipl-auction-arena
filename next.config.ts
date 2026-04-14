@@ -11,6 +11,16 @@ const remotePatterns: NonNullable<NextConfig["images"]>["remotePatterns"] = [
     hostname: "www.iplt20.com",
     pathname: "/assets/**",
   },
+  {
+    protocol: "https",
+    hostname: "assets.iplt20.com",
+    pathname: "/**",
+  },
+  {
+    protocol: "https",
+    hostname: "a.espncdn.com",
+    pathname: "/**",
+  },
 ];
 
 const playerImageBaseUrl = process.env.PLAYER_IMAGE_BASE_URL?.trim();
