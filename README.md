@@ -182,6 +182,13 @@ Each entry can include any of these fields:
 - `image_url` (direct URL for that player image)
 - `image_filename` (if you uploaded a local/R2 filename)
 - `headshot_id` (if you know the IPL headshot id)
+- `source_url` and `wikipedia_title` (optional metadata for tracking source)
+
+If you do not have a real image yet, set:
+
+- `image_url=https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png`
+
+This keeps all auction views visually complete while you finish manual mapping.
 
 Then regenerate:
 

@@ -1,104 +1,200 @@
 [
   {
-    "player_name": "Angelo Mattews"
+    "player_name": "Angelo Mattews",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Angelo_Mathews_%285338334462%29.jpg/330px-Angelo_Mathews_%285338334462%29.jpg",
+    "wikipedia_title": "Angelo Mathews",
+    "source_url": "https://en.wikipedia.org/wiki/Angelo_Mathews"
   },
   {
-    "player_name": "Ben stokes"
+    "player_name": "Ben stokes",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/3_14_Captain_Ben_%28cropped%29.jpg/330px-3_14_Captain_Ben_%28cropped%29.jpg",
+    "wikipedia_title": "Ben Stokes",
+    "source_url": "https://en.wikipedia.org/wiki/Ben_Stokes"
   },
   {
-    "player_name": "Chris Morris"
+    "player_name": "Chris Morris",
+    "image_url": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
+    "image_fallback": "default-men"
   },
   {
-    "player_name": "Darren Sammy"
+    "player_name": "Darren Sammy",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/DARREN_SAMMY.jpg/330px-DARREN_SAMMY.jpg",
+    "wikipedia_title": "Daren Sammy",
+    "source_url": "https://en.wikipedia.org/wiki/Daren_Sammy"
   },
   {
-    "player_name": "Harbhajan Singh"
+    "player_name": "Harbhajan Singh",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Shri_Harbhajan_Singh_2015.jpg/330px-Shri_Harbhajan_Singh_2015.jpg",
+    "wikipedia_title": "Harbhajan Singh",
+    "source_url": "https://en.wikipedia.org/wiki/Harbhajan_Singh"
   },
   {
-    "player_name": "Jp duminy"
+    "player_name": "Jp duminy",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/JP_DUMINY_%2815681049126%29.jpg/330px-JP_DUMINY_%2815681049126%29.jpg",
+    "wikipedia_title": "JP Duminy",
+    "source_url": "https://en.wikipedia.org/wiki/JP_Duminy"
   },
   {
-    "player_name": "Kedar Jadhav"
+    "player_name": "Kedar Jadhav",
+    "image_url": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
+    "image_fallback": "default-men"
   },
   {
-    "player_name": "Moises Henriques"
+    "player_name": "Moises Henriques",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Moises_Henriques_with_the_Sydney_Sixers.jpg/330px-Moises_Henriques_with_the_Sydney_Sixers.jpg",
+    "wikipedia_title": "Moises Henriques",
+    "source_url": "https://en.wikipedia.org/wiki/Moises_Henriques"
   },
   {
-    "player_name": "Albie Morkel"
+    "player_name": "Albie Morkel",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Albie_Morkel_2.jpg/330px-Albie_Morkel_2.jpg",
+    "wikipedia_title": "Albie Morkel",
+    "source_url": "https://en.wikipedia.org/wiki/Albie_Morkel"
   },
   {
-    "player_name": "Brendon Mcclluum"
+    "player_name": "Brendon Mcclluum",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Brendon_McCullum_ONZM_%28cropped%29.jpg",
+    "wikipedia_title": "Brendon McCullum",
+    "source_url": "https://en.wikipedia.org/wiki/Brendon_McCullum"
   },
   {
-    "player_name": "Chris Lynn"
+    "player_name": "Chris Lynn",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Brisbane_Heat_vs_Melbourne_Stars_T20_7_%28cropped%29.jpg",
+    "wikipedia_title": "Chris Lynn",
+    "source_url": "https://en.wikipedia.org/wiki/Chris_Lynn"
   },
   {
-    "player_name": "Dwayne Smith"
+    "player_name": "Dwayne Smith",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/DWAYNE_SMITH.jpg/330px-DWAYNE_SMITH.jpg",
+    "wikipedia_title": "Dwayne Smith",
+    "source_url": "https://en.wikipedia.org/wiki/Dwayne_Smith"
   },
   {
-    "player_name": "Eoin Morgan"
+    "player_name": "Eoin Morgan",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Eoin_Morgan_2.jpg/330px-Eoin_Morgan_2.jpg",
+    "wikipedia_title": "Eoin Morgan",
+    "source_url": "https://en.wikipedia.org/wiki/Eoin_Morgan"
   },
   {
-    "player_name": "George Bailey"
+    "player_name": "George Bailey",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/GEORGE_BAILEY_%2811704709453%29.jpg/330px-GEORGE_BAILEY_%2811704709453%29.jpg",
+    "wikipedia_title": "George Bailey (cricketer, born 1982)",
+    "source_url": "https://en.wikipedia.org/wiki/George_Bailey_(cricketer%2C_born_1982)"
   },
   {
-    "player_name": "Kane Williamson"
+    "player_name": "Kane Williamson",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Kane_Williamson_in_2019.jpg/330px-Kane_Williamson_in_2019.jpg",
+    "wikipedia_title": "Kane Williamson",
+    "source_url": "https://en.wikipedia.org/wiki/Kane_Williamson"
   },
   {
-    "player_name": "Lindl Simmons"
+    "player_name": "Lindl Simmons",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Lendl_Simmons.jpg/330px-Lendl_Simmons.jpg",
+    "wikipedia_title": "Lendl Simmons",
+    "source_url": "https://en.wikipedia.org/wiki/Lendl_Simmons"
   },
   {
-    "player_name": "Manan Vohra"
+    "player_name": "Manan Vohra",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/MananVohra_Magic_book_of_record.jpg/330px-MananVohra_Magic_book_of_record.jpg",
+    "wikipedia_title": "Manan Vohra",
+    "source_url": "https://en.wikipedia.org/wiki/Manan_Vohra"
   },
   {
-    "player_name": "Morne Morkel"
+    "player_name": "Morne Morkel",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Morne_Morkel.jpg/330px-Morne_Morkel.jpg",
+    "wikipedia_title": "Morné Morkel",
+    "source_url": "https://en.wikipedia.org/wiki/Morn%C3%A9_Morkel"
   },
   {
-    "player_name": "Murali Vijay"
+    "player_name": "Murali Vijay",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Murali_Vijay_1_%28cropped%29.jpg/330px-Murali_Vijay_1_%28cropped%29.jpg",
+    "wikipedia_title": "Murali Vijay",
+    "source_url": "https://en.wikipedia.org/wiki/Murali_Vijay"
   },
   {
-    "player_name": "Stuart Binny"
+    "player_name": "Stuart Binny",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Stuart_Binny_%282019%29.jpg/330px-Stuart_Binny_%282019%29.jpg",
+    "wikipedia_title": "Stuart Binny",
+    "source_url": "https://en.wikipedia.org/wiki/Stuart_Binny"
   },
   {
-    "player_name": "Virender Sehwag"
+    "player_name": "Virender Sehwag",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Virender_Sehwag_at_the_NDTV_Marks_for_Sports_event_13.jpg/330px-Virender_Sehwag_at_the_NDTV_Marks_for_Sports_event_13.jpg",
+    "wikipedia_title": "Virender Sehwag",
+    "source_url": "https://en.wikipedia.org/wiki/Virender_Sehwag"
   },
   {
-    "player_name": "ABD"
+    "player_name": "ABD",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/AB_de_villiers_%28cropped%29.jpg/330px-AB_de_villiers_%28cropped%29.jpg",
+    "wikipedia_title": "AB de Villiers",
+    "source_url": "https://en.wikipedia.org/wiki/AB_de_Villiers"
   },
   {
-    "player_name": "Chris Gayle"
+    "player_name": "Chris Gayle",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Two_views_of_Chris_Gayle_%2848020785077%29.jpg/330px-Two_views_of_Chris_Gayle_%2848020785077%29.jpg",
+    "wikipedia_title": "Chris Gayle",
+    "source_url": "https://en.wikipedia.org/wiki/Chris_Gayle"
   },
   {
-    "player_name": "Harry Brook"
+    "player_name": "Harry Brook",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Harry_Brook_County_cricket_cropped.jpg/330px-Harry_Brook_County_cricket_cropped.jpg",
+    "wikipedia_title": "Harry Brook",
+    "source_url": "https://en.wikipedia.org/wiki/Harry_Brook"
   },
   {
-    "player_name": "Jack Fraser McGurk"
+    "player_name": "Jack Fraser McGurk",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/89/Jake_Fraser_McGurk_2024_clip.png",
+    "wikipedia_title": "Jake Fraser-McGurk",
+    "source_url": "https://en.wikipedia.org/wiki/Jake_Fraser-McGurk"
   },
   {
-    "player_name": "Alzari Joseph"
+    "player_name": "Alzari Joseph",
+    "image_url": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
+    "image_fallback": "default-men"
   },
   {
-    "player_name": "Corey Anderson"
+    "player_name": "Corey Anderson",
+    "image_url": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
+    "image_fallback": "default-men"
   },
   {
-    "player_name": "Imran Tahir"
+    "player_name": "Imran Tahir",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Imran_Tahir.jpg/330px-Imran_Tahir.jpg",
+    "wikipedia_title": "Imran Tahir",
+    "source_url": "https://en.wikipedia.org/wiki/Imran_Tahir"
   },
   {
-    "player_name": "James Faulkner"
+    "player_name": "James Faulkner",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/JAMES_FAULKNER_%2811704434875%29_%28cropped%29.jpg/330px-JAMES_FAULKNER_%2811704434875%29_%28cropped%29.jpg",
+    "wikipedia_title": "James Faulkner (cricketer)",
+    "source_url": "https://en.wikipedia.org/wiki/James_Faulkner_(cricketer)"
   },
   {
-    "player_name": "Mitchell Johnson"
+    "player_name": "Mitchell Johnson",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/MITCHELL_JOHNSON_%2811705174114%29_%28cropped%29.jpg/330px-MITCHELL_JOHNSON_%2811705174114%29_%28cropped%29.jpg",
+    "wikipedia_title": "Mitchell Johnson",
+    "source_url": "https://en.wikipedia.org/wiki/Mitchell_Johnson"
   },
   {
-    "player_name": "Mitchell Mcclenaghan"
+    "player_name": "Mitchell Mcclenaghan",
+    "image_url": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
+    "image_fallback": "default-men"
   },
   {
-    "player_name": "Shivil Kaushik"
+    "player_name": "Shivil Kaushik",
+    "image_url": "https://documents.iplt20.com/ipl/IPLHeadshot2026/Default-Men.png",
+    "image_fallback": "default-men"
   },
   {
-    "player_name": "Parthiv Patel"
+    "player_name": "Parthiv Patel",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Parthiv_Patel.jpg/330px-Parthiv_Patel.jpg",
+    "wikipedia_title": "Parthiv Patel",
+    "source_url": "https://en.wikipedia.org/wiki/Parthiv_Patel"
   },
   {
-    "player_name": "Wriddiman Saha"
+    "player_name": "Wriddiman Saha",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Wriddhiman_Saha.jpg/330px-Wriddhiman_Saha.jpg",
+    "wikipedia_title": "Wriddhiman Saha",
+    "source_url": "https://en.wikipedia.org/wiki/Wriddhiman_Saha"
   }
 ]
