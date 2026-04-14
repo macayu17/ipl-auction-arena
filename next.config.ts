@@ -26,6 +26,11 @@ const remotePatterns: NonNullable<NextConfig["images"]>["remotePatterns"] = [
     hostname: "upload.wikimedia.org",
     pathname: "/wikipedia/**",
   },
+  {
+    protocol: "https",
+    hostname: "brightcove.iplt20.com",
+    pathname: "/**",
+  },
 ];
 
 const playerImageBaseUrl = process.env.PLAYER_IMAGE_BASE_URL?.trim();
