@@ -21,6 +21,11 @@ const remotePatterns: NonNullable<NextConfig["images"]>["remotePatterns"] = [
     hostname: "a.espncdn.com",
     pathname: "/**",
   },
+  {
+    protocol: "https",
+    hostname: "upload.wikimedia.org",
+    pathname: "/wikipedia/**",
+  },
 ];
 
 const playerImageBaseUrl = process.env.PLAYER_IMAGE_BASE_URL?.trim();

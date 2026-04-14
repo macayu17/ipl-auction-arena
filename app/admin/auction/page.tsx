@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock3, Gavel, RadioTower, Trophy, Users, Wallet, TimerOff } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import {
   adjustAllPursesAction,
@@ -45,6 +45,39 @@ const timerPresets = [10, 15, 20, 30, 45, 60, 90];
 /** Standard bid increment amounts in Lakhs */
 const incrementPresets = [5, 10, 25, 50, 100, 200];
 
+function parseBidAmountInputToLakhs(value: string) {
+  const normalized = String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/,/g, "")
+    .replace(/₹/g, "")
+    .replace(/inr/g, "")
+    .replace(/rs\.?/g, "")
+    .trim();
+
+  if (!normalized) {
+    return null;
+  }
+
+  const match = normalized.match(
+    /^(\d+(?:\.\d+)?)\s*(cr|crore|crores|l|lac|lakh|lakhs)?$/
+  );
+
+  if (!match) {
+    return null;
+  }
+
+  const amount = Number(match[1]);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return null;
+  }
+
+  const unit = match[2] ?? "l";
+  const multiplier = ["cr", "crore", "crores"].includes(unit) ? 100 : 1;
+
+  return Math.floor(amount * multiplier);
+}
+
 const emptyAuctionState: AuctionState = {
   id: 1,
   phase: "setup",
@@ -61,6 +94,8 @@ const emptyAuctionState: AuctionState = {
 export default function AdminAuctionPage() {
   const customBidRef = useRef<HTMLInputElement>(null);
   const customBidTeamRef = useRef<HTMLSelectElement>(null);
+  const [quickBidCustomIncrement, setQuickBidCustomIncrement] = useState("");
+  const [quickBidCustomAmount, setQuickBidCustomAmount] = useState("");
 
   const { data, isRefreshing } = useLiveAuctionSync<{
     auctionState: AuctionState;
@@ -106,10 +141,32 @@ export default function AdminAuctionPage() {
   const currentBidAmount = currentPlayer
     ? auctionState.current_bid_amount || currentPlayer.base_price
     : 0;
-  const nextBidAmount = currentPlayer
+  const parsedQuickBidCustomAmount = parseBidAmountInputToLakhs(
+    quickBidCustomAmount
+  );
+  const hasQuickBidCustomAmount = parsedQuickBidCustomAmount !== null;
+  const minimumQuickBidAmount = currentPlayer
     ? auctionState.current_bid_amount > 0
-      ? auctionState.current_bid_amount + auctionState.bid_increment
+      ? auctionState.current_bid_amount + 1
       : currentPlayer.base_price
+    : null;
+  const shouldApplyQuickBidCustomAmount =
+    hasQuickBidCustomAmount &&
+    minimumQuickBidAmount !== null &&
+    parsedQuickBidCustomAmount >= minimumQuickBidAmount;
+  const parsedQuickBidCustomIncrement = Number(quickBidCustomIncrement);
+  const hasQuickBidCustomIncrement =
+    Number.isFinite(parsedQuickBidCustomIncrement) &&
+    parsedQuickBidCustomIncrement > 0;
+  const effectiveQuickBidIncrement = hasQuickBidCustomIncrement
+    ? Math.floor(parsedQuickBidCustomIncrement)
+    : auctionState.bid_increment;
+  const nextBidAmount = currentPlayer
+    ? shouldApplyQuickBidCustomAmount
+      ? parsedQuickBidCustomAmount
+      : auctionState.current_bid_amount > 0
+        ? auctionState.current_bid_amount + effectiveQuickBidIncrement
+        : currentPlayer.base_price
     : 0;
   const topRatedTeam = orderedTeams[0] ?? null;
   const timerDisabled = auctionState.timer_seconds === 0 && !auctionState.timer_active;
@@ -182,6 +239,19 @@ export default function AdminAuctionPage() {
                     await placeBidAction(formData);
                   }}>
                     <input type="hidden" name="teamId" value={team.id} />
+                    {shouldApplyQuickBidCustomAmount ? (
+                      <input
+                        type="hidden"
+                        name="customAmount"
+                        value={String(parsedQuickBidCustomAmount)}
+                      />
+                    ) : hasQuickBidCustomIncrement ? (
+                      <input
+                        type="hidden"
+                        name="customIncrement"
+                        value={String(effectiveQuickBidIncrement)}
+                      />
+                    ) : null}
                     <button
                       type="submit"
                       disabled={disabled}
@@ -201,6 +271,73 @@ export default function AdminAuctionPage() {
               })}
             </div>
 
+            <div className="mt-2 lg:mt-3 rounded-xl border border-white/10 bg-black/30 p-2.5 lg:p-3">
+              <div className="text-[8px] lg:text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
+                Quick bid custom increment (L)
+              </div>
+              <div className="mt-1.5 grid grid-cols-[1fr_auto] gap-1.5 lg:gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  inputMode="numeric"
+                  value={quickBidCustomIncrement}
+                  onChange={(event) => setQuickBidCustomIncrement(event.target.value)}
+                  placeholder={`Default ${auctionState.bid_increment}`}
+                  disabled={shouldApplyQuickBidCustomAmount}
+                  className="w-full rounded-lg border border-white/10 bg-black/50 px-2 py-1.5 text-[11px] lg:text-[12px] font-mono text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all h-7 lg:h-8"
+                />
+                <button
+                  type="button"
+                  onClick={() => setQuickBidCustomIncrement("")}
+                  disabled={!hasQuickBidCustomIncrement || shouldApplyQuickBidCustomAmount}
+                  className="h-7 lg:h-8 px-2.5 lg:px-3 inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-white transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Reset
+                </button>
+              </div>
+              <div className="mt-1.5 text-[9px] lg:text-[10px] text-[var(--text-soft)]">
+                {shouldApplyQuickBidCustomAmount
+                  ? "Custom amount is active. Increment is ignored for Quick Bid logos."
+                  : hasQuickBidCustomIncrement
+                  ? `Quick Bid logos will raise by ${formatPriceShort(effectiveQuickBidIncrement)}.`
+                  : `Quick Bid logos are using room increment ${formatPriceShort(auctionState.bid_increment)}.`}
+              </div>
+            </div>
+
+            <div className="mt-2 lg:mt-3 rounded-xl border border-white/10 bg-black/30 p-2.5 lg:p-3">
+              <div className="text-[8px] lg:text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
+                Quick bid custom amount
+              </div>
+              <div className="mt-1.5 grid grid-cols-[1fr_auto] gap-1.5 lg:gap-2">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={quickBidCustomAmount}
+                  onChange={(event) => setQuickBidCustomAmount(event.target.value)}
+                  placeholder="e.g. 10 cr or 950"
+                  className="w-full rounded-lg border border-white/10 bg-black/50 px-2 py-1.5 text-[11px] lg:text-[12px] font-mono text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all h-7 lg:h-8"
+                />
+                <button
+                  type="button"
+                  onClick={() => setQuickBidCustomAmount("")}
+                  disabled={quickBidCustomAmount.trim().length === 0}
+                  className="h-7 lg:h-8 px-2.5 lg:px-3 inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-white transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="mt-1.5 text-[9px] lg:text-[10px] text-[var(--text-soft)]">
+                {shouldApplyQuickBidCustomAmount
+                  ? `Quick Bid logos will set bid directly to ${formatPrice(parsedQuickBidCustomAmount)}.`
+                  : hasQuickBidCustomAmount
+                    ? `Target amount must be at least ${formatPrice(minimumQuickBidAmount ?? 0)}. Quick Bid logos will continue incrementing until you raise the target.`
+                  : quickBidCustomAmount.trim().length > 0
+                    ? "Invalid amount. Try values like 10 cr, 12.5 cr, or 950."
+                    : "Optional jump-bid mode for direct calls from auctioneer (for example 10 cr)."}
+              </div>
+            </div>
+
             {/* Next bid amount display */}
             <div className="mt-2 lg:mt-3 flex items-center justify-between rounded-xl border border-[var(--gold)]/20 bg-[var(--gold)]/5 px-3 py-2 lg:px-4 lg:py-3">
               <div>
@@ -211,7 +348,7 @@ export default function AdminAuctionPage() {
               </div>
               <div className="text-right">
                 <div className="text-[8px] lg:text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">Increment</div>
-                <div className="text-base lg:text-lg font-bold text-white/70 mono-font mt-0.5">{formatPriceShort(auctionState.bid_increment)}</div>
+                <div className="text-base lg:text-lg font-bold text-white/70 mono-font mt-0.5">{formatPriceShort(effectiveQuickBidIncrement)}</div>
               </div>
             </div>
           </SectionCard>

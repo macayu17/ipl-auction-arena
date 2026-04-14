@@ -463,32 +463,135 @@ export async function placeBidAction(formData: FormData) {
     const teamId = String(formData.get("teamId") ?? "").trim();
     if (!teamId) return { success: false, error: "Missing team ID" };
 
-    const supabase = await createServiceClient();
-    
-    // Execute all 5 db operations in 1 ultra-fast RPC call
-    const result = await (supabase as any).rpc("place_auction_bid", {
-      p_team_id: teamId,
+    const parsedCustomAmount = Number(formData.get("customAmount") ?? 0);
+    const customAmount =
+      Number.isFinite(parsedCustomAmount) && parsedCustomAmount > 0
+        ? Math.floor(parsedCustomAmount)
+        : null;
+
+    const parsedCustomIncrement = Number(formData.get("customIncrement") ?? 0);
+    const customIncrement =
+      Number.isFinite(parsedCustomIncrement) && parsedCustomIncrement > 0
+        ? Math.floor(parsedCustomIncrement)
+        : null;
+
+    // Keep the RPC fast path for normal quick bids.
+    if (!customAmount && !customIncrement) {
+      const supabase = await createServiceClient();
+
+      // Execute all 5 db operations in 1 ultra-fast RPC call
+      const result = await (supabase as any).rpc("place_auction_bid", {
+        p_team_id: teamId,
+      });
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      const data = result.data as {
+        success: boolean;
+        delta?: Record<string, unknown>;
+        error?: string;
+      } | null;
+
+      if (data?.success && data.delta) {
+        await publishAuctionEvent({
+          type: "bid_placed",
+          source: "auction.placeBidAction",
+          delta: data.delta,
+        });
+      }
+
+      return data ?? { success: false };
+    }
+
+    const supabase = toLooseSupabaseClient(await createServiceClient());
+    const [{ auctionState, currentPlayer }, team] = await Promise.all([
+      getCurrentPlayerWithTeamContext(supabase),
+      resolveTeamById(supabase, teamId),
+    ]);
+
+    if (!currentPlayer || !team) {
+      return { success: false, error: "No active player or team" };
+    }
+
+    if (auctionState.current_bid_team_id === team.id) {
+      return { success: false, error: "Team is already leading" };
+    }
+
+    const minimumAllowedAmount =
+      auctionState.current_bid_amount > 0
+        ? auctionState.current_bid_amount + 1
+        : currentPlayer.base_price;
+
+    const shouldUseCustomAmount =
+      customAmount !== null && customAmount >= minimumAllowedAmount;
+    const effectiveCustomIncrement =
+      customIncrement ?? defaultAuctionState.bid_increment;
+
+    const nextBidAmount = shouldUseCustomAmount
+      ? customAmount
+      : auctionState.current_bid_amount > 0
+        ? auctionState.current_bid_amount + effectiveCustomIncrement
+        : currentPlayer.base_price;
+
+    const purseRemaining = team.purse_total - team.purse_spent;
+    if (purseRemaining < nextBidAmount) {
+      return { success: false, error: "Insufficient purse" };
+    }
+
+    const insertBidResult = await supabase.from("bids").insert({
+      player_id: currentPlayer.id,
+      team_id: team.id,
+      amount: nextBidAmount,
     });
 
-    if (result.error) {
-      throw result.error;
+    if (insertBidResult.error) {
+      throw insertBidResult.error;
     }
 
-    const data = result.data as {
-      success: boolean;
-      delta?: Record<string, unknown>;
-      error?: string;
-    } | null;
+    const timerSeconds =
+      auctionState.timer_seconds > 0
+        ? auctionState.timer_seconds
+        : defaultAuctionState.timer_seconds;
 
-    if (data?.success && data.delta) {
-      await publishAuctionEvent({
-        type: "bid_placed",
-        source: "auction.placeBidAction",
-        delta: data.delta,
-      });
+    const updateAuctionStateResult = await supabase
+      .from("auction_state")
+      .update({
+        current_bid_amount: nextBidAmount,
+        current_bid_team_id: team.id,
+        timer_seconds: timerSeconds,
+        timer_active: true,
+        phase: "live",
+      })
+      .eq("id", 1);
+
+    if (updateAuctionStateResult.error) {
+      throw updateAuctionStateResult.error;
     }
 
-    return data ?? { success: false };
+    const delta = {
+      currentBidAmount: nextBidAmount,
+      currentBidTeamId: team.id,
+      currentBidTeamCode: team.short_code,
+      timerSeconds,
+      timerActive: true,
+      ...(customIncrement ? { customIncrement } : {}),
+      ...(shouldUseCustomAmount && customAmount ? { customAmount } : {}),
+    };
+
+    await publishAuctionEvent({
+      type: "bid_placed",
+      source: shouldUseCustomAmount
+        ? "auction.placeBidAction.customAmount"
+        : "auction.placeBidAction.customIncrement",
+      delta,
+    });
+
+    return {
+      success: true,
+      delta,
+    };
   } catch (error) {
     console.error("Failed to place bid", error);
     return { success: false };
