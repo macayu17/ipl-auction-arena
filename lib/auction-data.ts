@@ -5,6 +5,7 @@ import { cache } from "react";
 import { applyResolvedPlayerPhotoUrls } from "@/lib/player-images";
 import { toLooseSupabaseClient } from "@/lib/supabase/loose-client";
 import { createServiceClient } from "@/lib/supabase/server";
+import { isLegendaryRating } from "@/lib/utils";
 import type {
   AuctionState,
   Bid,
@@ -16,7 +17,7 @@ import type {
   TeamWithSummary,
 } from "@/types/app.types";
 
-type TeamVisiblePlayer = Omit<Player, "rating">;
+type TeamVisiblePlayer = Omit<Player, "rating"> & { isLegendary: boolean };
 
 const defaultAuctionState: AuctionState = {
   id: 1,
@@ -65,8 +66,10 @@ function sortPlayersForQueue(players: Player[]) {
 
 function stripPlayerRating(player: Player): TeamVisiblePlayer {
   const { rating, ...safePlayer } = player;
-  void rating;
-  return safePlayer;
+  return {
+    ...safePlayer,
+    isLegendary: isLegendaryRating(rating),
+  };
 }
 
 function buildTeamSummary(

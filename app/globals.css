@@ -171,6 +171,138 @@ textarea {
   text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
 }
 
+.legendary-pill {
+  border: 1px solid rgba(255, 215, 120, 0.55);
+  background: linear-gradient(135deg, rgba(255, 194, 61, 0.25), rgba(145, 98, 14, 0.25));
+  color: #ffe2a1;
+  box-shadow: inset 0 1px 0 rgba(255, 244, 205, 0.25), 0 0 12px rgba(255, 183, 53, 0.2);
+}
+
+.legendary-rating {
+  color: #f5ce7b;
+  text-shadow: 0 0 10px rgba(255, 194, 88, 0.35);
+}
+
+.legendary-frame {
+  border-color: rgba(255, 216, 111, 0.75);
+  box-shadow:
+    0 0 0 1px rgba(255, 216, 111, 0.35),
+    0 0 26px rgba(255, 190, 64, 0.28),
+    inset 0 1px 0 rgba(255, 245, 202, 0.42);
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255, 223, 136, 0.2), transparent 42%),
+    rgba(0, 0, 0, 0.35);
+}
+
+.legendary-alert {
+  border: 1px solid rgba(255, 215, 120, 0.6);
+  background:
+    linear-gradient(110deg, rgba(255, 203, 93, 0.24), rgba(136, 86, 6, 0.18)),
+    rgba(14, 14, 19, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(255, 214, 116, 0.18),
+    0 10px 25px rgba(0, 0, 0, 0.35),
+    0 0 30px rgba(255, 181, 48, 0.18);
+  animation: legendary-alert-enter 280ms ease-out, legendary-alert-pulse 1.9s ease-in-out infinite;
+}
+
+.legendary-name {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  color: transparent;
+  background-image: linear-gradient(
+    110deg,
+    #8f5f09 0%,
+    #e7b852 22%,
+    #fff2bf 48%,
+    #e7b852 72%,
+    #8f5f09 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: 0 0 14px rgba(255, 202, 97, 0.2);
+  animation: legendary-gold-shimmer 2.4s linear infinite, legendary-gold-breathe 1.8s ease-in-out infinite;
+}
+
+.legendary-name::after {
+  content: "";
+  position: absolute;
+  top: -8%;
+  bottom: -8%;
+  left: -45%;
+  width: 34%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  filter: blur(4px);
+  mix-blend-mode: screen;
+  animation: legendary-sparkle-pass 2.2s ease-in-out infinite;
+}
+
+@keyframes legendary-alert-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes legendary-alert-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 214, 116, 0.14),
+      0 10px 25px rgba(0, 0, 0, 0.35),
+      0 0 22px rgba(255, 181, 48, 0.12);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 214, 116, 0.28),
+      0 10px 25px rgba(0, 0, 0, 0.35),
+      0 0 34px rgba(255, 181, 48, 0.3);
+  }
+}
+
+@keyframes legendary-gold-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 220% 50%;
+  }
+}
+
+@keyframes legendary-gold-breathe {
+  0%,
+  100% {
+    filter: brightness(0.95);
+  }
+  50% {
+    filter: brightness(1.08);
+  }
+}
+
+@keyframes legendary-sparkle-pass {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  24% {
+    opacity: 0.95;
+  }
+  65% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateX(440%);
+    opacity: 0;
+  }
+}
+
 /* ── Mobile-first responsive helpers ── */
 @media (max-width: 1023px) {
   .mobile-order-1 { order: 1; }

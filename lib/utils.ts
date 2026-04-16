@@ -5,6 +5,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export const LEGENDARY_RATING = 100;
+
+export function isLegendaryRating(rating: number | null | undefined): boolean {
+  return rating === LEGENDARY_RATING;
+}
+
 /**
  * Format price in Lakhs with ₹ symbol
  * e.g. 150 → "₹1.50 Cr" or "₹150 L"

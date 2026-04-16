@@ -8,6 +8,7 @@ type PlayerHeadshotProps = {
   className?: string;
   sizes?: string;
   priority?: boolean;
+  legendary?: boolean;
 };
 
 function getInitials(name: string) {
@@ -30,11 +31,13 @@ export function PlayerHeadshot({
   className,
   sizes = "(max-width: 768px) 68vw, 220px",
   priority = false,
+  legendary = false,
 }: PlayerHeadshotProps) {
   return (
     <div
       className={cn(
         "relative overflow-hidden rounded-xl border border-white/10 bg-black/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+        legendary && "legendary-frame",
         className
       )}
     >

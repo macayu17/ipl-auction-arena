@@ -17,6 +17,22 @@ export type SignInState = {
   message?: string;
 };
 
+function getLoginErrorMessage(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("fetch failed") ||
+    normalized.includes("timed out") ||
+    normalized.includes("etimedout") ||
+    normalized.includes("econn") ||
+    normalized.includes("network")
+  ) {
+    return "Unable to reach Supabase from the server right now. Check network/firewall access to your Supabase project and try again.";
+  }
+
+  return message;
+}
+
 export async function signInAction(
   _previousState: SignInState,
   formData: FormData
@@ -41,15 +57,37 @@ export async function signInAction(
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: parsed.data.email.toLowerCase(),
-    password: parsed.data.password,
-  });
+  let data:
+    | Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["data"]
+    | null = null;
+  let error:
+    | Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["error"]
+    | null = null;
+
+  try {
+    const result = await supabase.auth.signInWithPassword({
+      email: parsed.data.email.toLowerCase(),
+      password: parsed.data.password,
+    });
+
+    data = result.data;
+    error = result.error;
+  } catch (caughtError) {
+    const fallbackMessage =
+      caughtError instanceof Error
+        ? caughtError.message
+        : "Unable to sign in right now.";
+
+    return {
+      status: "error",
+      message: getLoginErrorMessage(fallbackMessage),
+    };
+  }
 
   if (error) {
     return {
       status: "error",
-      message: error.message,
+      message: getLoginErrorMessage(error.message),
     };
   }
 

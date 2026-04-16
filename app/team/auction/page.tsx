@@ -25,7 +25,7 @@ import type {
   Team,
 } from "@/types/app.types";
 
-type TeamVisiblePlayer = Omit<Player, "rating">;
+type TeamVisiblePlayer = Omit<Player, "rating"> & { isLegendary: boolean };
 
 const MOBILE_SQUAD_COUNT = 3;
 
@@ -65,6 +65,7 @@ export default function TeamAuctionPage() {
   const mySquad = data?.mySquad ?? [];
   const bidHistory = data?.bidHistory ?? [];
   const activeSlide = data?.activeSlide ?? null;
+  const isLegendaryCurrentPlayer = Boolean(currentPlayer?.isLegendary);
 
   if (data === null) {
     return (
@@ -105,6 +106,18 @@ export default function TeamAuctionPage() {
     : 0;
 
   const timerDisabled = auctionState.timer_seconds === 0 && !auctionState.timer_active;
+  const playerPanelBorderColor = isLegendaryCurrentPlayer
+    ? "rgba(255, 216, 111, 0.75)"
+    : borderColor;
+  const playerPanelGlowColor = isLegendaryCurrentPlayer
+    ? "rgba(255, 186, 54, 0.35)"
+    : glowColor;
+  const playerPanelTopStripe = isLegendaryCurrentPlayer
+    ? "#f3c865"
+    : primaryColor;
+  const liveNominationAccent = isLegendaryCurrentPlayer
+    ? "#ffe7a8"
+    : accentColor;
 
   return (
     <>
@@ -149,19 +162,28 @@ export default function TeamAuctionPage() {
           >
             {currentPlayer ? (
               <div className="space-y-3 lg:space-y-4">
+                {isLegendaryCurrentPlayer ? (
+                  <div className="legendary-alert rounded-xl px-3 py-2 lg:px-4 lg:py-2.5">
+                    <div className="text-[9px] lg:text-[10px] font-bold uppercase tracking-[0.14em] text-[#ffe7a8]">Legendary Player Alert</div>
+                    <div className="mt-0.5 text-[12px] lg:text-sm font-semibold text-[#fff3cb]">
+                      {currentPlayer.name} just entered the auction block.
+                    </div>
+                  </div>
+                ) : null}
+
                 {/* Player info panel with team-specific themed accents */}
                 <div
                   className="relative overflow-hidden rounded-xl p-3 lg:p-5 xl:p-6"
                   style={{
                     background: `radial-gradient(circle at top right, ${bgTint}, transparent 35%), linear-gradient(180deg, rgba(31,31,37,0.96), rgba(14,14,19,0.98))`,
-                    border: `1.5px solid ${borderColor}`,
-                    boxShadow: `0 0 50px ${glowColor}, inset 0 1px 0 ${borderColor}`,
+                    border: `1.5px solid ${playerPanelBorderColor}`,
+                    boxShadow: `0 0 50px ${playerPanelGlowColor}, inset 0 1px 0 ${playerPanelBorderColor}`,
                   }}
                 >
                   {/* Decorative team color stripe at top */}
                   <div
                     className="absolute top-0 left-0 right-0 h-1"
-                    style={{ background: `linear-gradient(90deg, ${primaryColor}, ${tc?.accent ?? primaryColor}, transparent)` }}
+                    style={{ background: `linear-gradient(90deg, ${playerPanelTopStripe}, ${tc?.accent ?? playerPanelTopStripe}, transparent)` }}
                   />
 
                   <div className="flex flex-wrap items-center gap-1.5 lg:gap-2 mt-1">
@@ -171,24 +193,35 @@ export default function TeamAuctionPage() {
                       {currentPlayer.role}
                     </span>
                     <OverseasBadge nationality={currentPlayer.nationality} />
+                    {isLegendaryCurrentPlayer ? (
+                      <span className="legendary-pill inline-flex rounded-md px-2 py-0.5 lg:px-3 lg:py-1 text-[10px] lg:text-xs font-bold uppercase tracking-wider">
+                        Legendary
+                      </span>
+                    ) : null}
                   </div>
 
                   <div className="mt-4 lg:mt-8 grid gap-3 lg:gap-5 md:grid-cols-[150px_minmax(0,1fr)] md:items-start">
                     <PlayerHeadshot
                       name={currentPlayer.name}
                       photoUrl={currentPlayer.photo_url}
+                      legendary={isLegendaryCurrentPlayer}
                       className="aspect-[4/5] w-full max-w-[220px] justify-self-center md:max-w-none"
                       sizes="(max-width: 768px) 62vw, (max-width: 1280px) 150px, 180px"
                     />
 
                     <div className="min-w-0">
-                      <p className="text-[10px] lg:text-xs font-bold uppercase tracking-widest" style={{ color: accentColor }}>
+                      <p className="text-[10px] lg:text-xs font-bold uppercase tracking-widest" style={{ color: liveNominationAccent }}>
                         Live nomination
                       </p>
                       <h2 className="mt-1 lg:mt-2 display-font text-3xl lg:text-5xl xl:text-6xl text-white">
-                        {currentPlayer.name}
+                        <span className={isLegendaryCurrentPlayer ? "legendary-name" : ""}>
+                          {currentPlayer.name}
+                        </span>
                       </h2>
                       <p className="mt-2 lg:mt-3 text-xs lg:text-sm leading-5 lg:leading-6 text-white/50">
+                        {isLegendaryCurrentPlayer ? (
+                          <span className="legendary-rating">Legendary profile. </span>
+                        ) : null}
                         Base {formatPrice(currentPlayer.base_price)}. Current leader {leadingTeam?.name ?? "not set yet"}.
                       </p>
                     </div>

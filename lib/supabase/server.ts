@@ -3,6 +3,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 import { getServiceRoleKey, getSupabaseEnv } from "@/lib/supabase/env";
+import { supabaseServerFetch } from "@/lib/supabase/server-fetch";
 import { Database } from "@/types/database.types";
 
 export async function createClient() {
@@ -13,6 +14,9 @@ export async function createClient() {
     url,
     anonKey,
     {
+      global: {
+        fetch: supabaseServerFetch,
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll();
@@ -48,6 +52,9 @@ export async function createServiceClient() {
   const serviceRoleKey = getServiceRoleKey();
 
   _serviceClient = createSupabaseClient<Database>(url, serviceRoleKey, {
+    global: {
+      fetch: supabaseServerFetch,
+    },
     auth: {
       autoRefreshToken: false,
       persistSession: false,

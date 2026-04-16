@@ -12,7 +12,7 @@ import { MetricCard } from "@/components/layout/metric-card";
 import { SectionCard } from "@/components/layout/section-card";
 import { getPlayersPageData } from "@/lib/auction-data";
 import { hasBundledPlayerCsv } from "@/lib/player-csv";
-import { formatPrice, getRoleBadgeColor, getStatusColor } from "@/lib/utils";
+import { formatPrice, getRoleBadgeColor, getStatusColor, isLegendaryRating } from "@/lib/utils";
 import type { PlayerRole } from "@/types/app.types";
 
 const roleOrder: PlayerRole[] = [
@@ -214,6 +214,7 @@ export default async function AdminPlayersPage() {
             players.map((player) => {
               const soldTeam = player.sold_to ? teamById.get(player.sold_to) : null;
               const canDelete = player.status !== "sold" && player.status !== "active";
+              const isLegendary = isLegendaryRating(player.rating);
 
               return (
                 <details
@@ -223,13 +224,18 @@ export default async function AdminPlayersPage() {
                   <summary className="flex cursor-pointer list-none flex-col gap-4 px-6 py-5 lg:flex-row lg:items-center lg:justify-between hover:bg-white/[0.04] transition-colors focus:outline-none focus:bg-white/[0.06]">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className="font-bold text-white text-lg tracking-tight">{player.name}</span>
+                        <span className={isLegendary ? "font-bold text-lg tracking-tight legendary-name" : "font-bold text-white text-lg tracking-tight"}>{player.name}</span>
                         <span
                           className={`inline-flex rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${getRoleBadgeColor(player.role)}`}
                         >
                           {player.role}
                         </span>
                         <OverseasBadge nationality={player.nationality} />
+                        {isLegendary ? (
+                          <span className="legendary-pill inline-flex rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider">
+                            Legendary
+                          </span>
+                        ) : null}
                         <span
                           className={`inline-flex rounded-md border border-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${getStatusColor(player.status)}`}
                         >
@@ -237,7 +243,7 @@ export default async function AdminPlayersPage() {
                         </span>
                       </div>
                       <div className="mt-2.5 text-[13px] font-medium text-[var(--text-soft)] flex flex-wrap items-center gap-2">
-                        <span className="text-[var(--gold)]/80">Rating {player.rating}</span>
+                        <span className={isLegendary ? "legendary-rating" : "text-[var(--gold)]/80"}>Rating {player.rating}</span>
                         <span>•</span>
                         <span className="text-white/60 text-[11px] uppercase tracking-wider">Base</span>
                         <span className="mono-font text-white">{formatPrice(player.base_price)}</span>

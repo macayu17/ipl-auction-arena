@@ -39,9 +39,17 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+
+  try {
+    const {
+      data: { user: sessionUser },
+    } = await supabase.auth.getUser();
+
+    user = sessionUser;
+  } catch (error) {
+    console.error("Supabase session refresh failed in proxy middleware.", error);
+  }
 
   const pathname = request.nextUrl.pathname;
   const publicRoutes = ["/", "/login"];

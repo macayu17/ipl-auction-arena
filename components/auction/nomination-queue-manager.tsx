@@ -8,7 +8,7 @@ import {
   reorderQueueAction,
 } from "@/app/actions/auction";
 import { OverseasBadge } from "@/components/auction/overseas-badge";
-import { formatPrice, getRoleBadgeColor } from "@/lib/utils";
+import { cn, formatPrice, getRoleBadgeColor, isLegendaryRating } from "@/lib/utils";
 import type { Player } from "@/types/app.types";
 
 type NominationQueueManagerProps = {
@@ -103,6 +103,7 @@ export function NominationQueueManager({
           {orderedQueue.map((player, index) => {
             // On mobile, hide players beyond MOBILE_VISIBLE_COUNT unless expanded
             const mobileHidden = !mobileExpanded && index >= MOBILE_VISIBLE_COUNT;
+            const isLegendary = isLegendaryRating(player.rating);
 
             return (
               <div
@@ -127,7 +128,11 @@ export function NominationQueueManager({
                 onDragEnd={() => {
                   dragPlayerIdRef.current = null;
                 }}
-                className={`glass-panel rounded-xl px-3 py-2.5 lg:px-4 lg:py-3.5 cursor-grab active:cursor-grabbing hover:bg-white/[0.04] transition-colors border border-white/5 bg-black/20 ${mobileHidden ? "hidden lg:block" : ""}`}
+                className={cn(
+                  "glass-panel rounded-xl px-3 py-2.5 lg:px-4 lg:py-3.5 cursor-grab active:cursor-grabbing hover:bg-white/[0.04] transition-colors border border-white/5 bg-black/20",
+                  isLegendary && "legendary-frame",
+                  mobileHidden && "hidden lg:block"
+                )}
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full h-full">
                   <div className="min-w-0 flex-1">
@@ -136,16 +141,21 @@ export function NominationQueueManager({
                         <GripVertical className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                         {String(index + 1).padStart(2, "0")}
                       </span>
-                      <span className="font-bold text-white text-sm lg:text-lg tracking-tight truncate min-w-0">{player.name}</span>
+                      <span className={cn("font-bold text-white text-sm lg:text-lg tracking-tight truncate min-w-0", isLegendary && "legendary-name")}>{player.name}</span>
                       <span
                         className={`inline-flex rounded-md px-1.5 lg:px-2 py-0.5 text-[9px] lg:text-[10px] uppercase font-bold tracking-wider shrink-0 ${getRoleBadgeColor(player.role)}`}
                       >
                         {player.role}
                       </span>
                       <OverseasBadge nationality={player.nationality} />
+                      {isLegendary ? (
+                        <span className="legendary-pill inline-flex rounded-md px-1.5 lg:px-2 py-0.5 text-[9px] lg:text-[10px] uppercase font-bold tracking-wider shrink-0">
+                          Legendary
+                        </span>
+                      ) : null}
                     </div>
                     <div className="mt-1 lg:mt-1.5 text-[11px] lg:text-[13px] font-medium text-[var(--text-soft)] whitespace-nowrap overflow-hidden text-ellipsis">
-                      <span className="text-[var(--gold)]/80">Rating {player.rating}</span> • <span className="mono-font text-white">{formatPrice(player.base_price)}</span>
+                      <span className={isLegendary ? "legendary-rating" : "text-[var(--gold)]/80"}>Rating {player.rating}</span> • <span className="mono-font text-white">{formatPrice(player.base_price)}</span>
                     </div>
                   </div>
 

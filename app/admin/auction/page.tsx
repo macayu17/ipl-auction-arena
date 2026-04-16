@@ -31,6 +31,7 @@ import {
   formatPriceShort,
   getRoleBadgeColor,
   getStatusColor,
+  isLegendaryRating,
 } from "@/lib/utils";
 import type {
   AuctionState,
@@ -116,19 +117,6 @@ export default function AdminAuctionPage() {
   const bidHistory = data?.bidHistory ?? [];
   const teamSummary = data?.teamSummary ?? [];
 
-  if (data === null) {
-    return (
-      <SectionCard
-        title="Loading auction room"
-        description="Connecting to the latest control-room snapshot."
-      >
-        <div className="rounded-lg border border-white/10 bg-white/4 p-6 text-sm leading-6 text-slate-300">
-          Pulling the current player, queue order, bid history, and team board.
-        </div>
-      </SectionCard>
-    );
-  }
-
   const soldPlayers = teamSummary.reduce(
     (sum, team) => sum + team.players_acquired,
     0
@@ -170,6 +158,22 @@ export default function AdminAuctionPage() {
     : 0;
   const topRatedTeam = orderedTeams[0] ?? null;
   const timerDisabled = auctionState.timer_seconds === 0 && !auctionState.timer_active;
+  const isLegendaryCurrentPlayer = currentPlayer
+    ? isLegendaryRating(currentPlayer.rating)
+    : false;
+
+  if (data === null) {
+    return (
+      <SectionCard
+        title="Loading auction room"
+        description="Connecting to the latest control-room snapshot."
+      >
+        <div className="rounded-lg border border-white/10 bg-white/4 p-6 text-sm leading-6 text-slate-300">
+          Pulling the current player, queue order, bid history, and team board.
+        </div>
+      </SectionCard>
+    );
+  }
 
   return (
     <>
@@ -714,7 +718,16 @@ export default function AdminAuctionPage() {
           >
             {currentPlayer ? (
               <div className="space-y-3 lg:space-y-4">
-                <div className="glass-panel p-3 lg:p-5 rounded-2xl relative overflow-hidden">
+                {isLegendaryCurrentPlayer ? (
+                  <div className="legendary-alert rounded-xl px-3 py-2 lg:px-4 lg:py-2.5">
+                    <div className="text-[9px] lg:text-[10px] font-bold uppercase tracking-[0.14em] text-[#ffe7a8]">Legendary Player Alert</div>
+                    <div className="mt-0.5 text-[12px] lg:text-sm font-semibold text-[#fff3cb]">
+                      {currentPlayer.name} just entered the auction block.
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className={`glass-panel p-3 lg:p-5 rounded-2xl relative overflow-hidden ${isLegendaryCurrentPlayer ? "legendary-frame" : ""}`}>
                   <div className="flex flex-wrap items-center gap-1.5 lg:gap-2">
                     <span
                       className={`inline-flex rounded-md px-2 py-0.5 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider ${getRoleBadgeColor(currentPlayer.role)}`}
@@ -722,6 +735,11 @@ export default function AdminAuctionPage() {
                       {currentPlayer.role}
                     </span>
                     <OverseasBadge nationality={currentPlayer.nationality} />
+                    {isLegendaryCurrentPlayer ? (
+                      <span className="legendary-pill inline-flex rounded-md px-2 py-0.5 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider">
+                        Legendary
+                      </span>
+                    ) : null}
                     <span
                       className={`inline-flex rounded-md border px-2 py-0.5 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider ${getStatusColor(currentPlayer.status)}`}
                     >
@@ -733,6 +751,7 @@ export default function AdminAuctionPage() {
                     <PlayerHeadshot
                       name={currentPlayer.name}
                       photoUrl={currentPlayer.photo_url}
+                      legendary={isLegendaryCurrentPlayer}
                       className="aspect-[4/5] w-full max-w-[190px] justify-self-center md:max-w-none"
                       sizes="(max-width: 768px) 58vw, 140px"
                     />
@@ -742,10 +761,12 @@ export default function AdminAuctionPage() {
                         Live nomination
                       </p>
                       <h3 className="mt-1 lg:mt-1.5 display-font text-2xl lg:text-3xl xl:text-4xl font-bold tracking-tight text-white glow-text leading-none">
-                        {currentPlayer.name}
+                        <span className={isLegendaryCurrentPlayer ? "legendary-name" : ""}>
+                          {currentPlayer.name}
+                        </span>
                       </h3>
                       <p className="mt-2 lg:mt-3 text-[11px] lg:text-[13px] leading-relaxed text-white/60">
-                        Rating {currentPlayer.rating}. Leader{" "}
+                        <span className={isLegendaryCurrentPlayer ? "legendary-rating" : ""}>Rating {currentPlayer.rating}</span>. Leader{" "}
                         {leadingTeam?.name ?? "not set yet"}.
                       </p>
                     </div>
@@ -792,14 +813,6 @@ export default function AdminAuctionPage() {
                     </SubmitButton>
                   </form>
                 </div>
-                <form action={resetAuctionAction}>
-                  <SubmitButton
-                    pendingLabel="..."
-                    className="w-full h-7 rounded-lg border border-white/10 bg-white/5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] hover:text-white transition"
-                  >
-                    Reset
-                  </SubmitButton>
-                </form>
               </div>
             ) : (
               <div className="glass-panel p-5 lg:p-8 text-center rounded-2xl border border-dashed border-white/10">
@@ -818,6 +831,26 @@ export default function AdminAuctionPage() {
                 </form>
               </div>
             )}
+
+            <form
+              action={resetAuctionAction}
+              onSubmit={(event) => {
+                if (!window.confirm("Reset the whole auction? This clears all bids, resets all players to pool, and resets team spend.")) {
+                  event.preventDefault();
+                }
+              }}
+              className="pt-1 space-y-2"
+            >
+              <p className="text-[10px] lg:text-[11px] font-bold uppercase tracking-wider text-rose-300/75">
+                Danger zone
+              </p>
+              <SubmitButton
+                pendingLabel="Resetting..."
+                className="w-full h-8 rounded-lg border border-rose-500/40 bg-rose-500/10 text-[10px] lg:text-[11px] font-bold uppercase tracking-wider text-rose-200 hover:bg-rose-500/20 hover:text-rose-100 transition"
+              >
+                Reset Whole Auction
+              </SubmitButton>
+            </form>
           </SectionCard>
 
           <SectionCard

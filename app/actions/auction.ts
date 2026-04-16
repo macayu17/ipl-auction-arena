@@ -901,7 +901,7 @@ export async function resetAuctionAction() {
     const supabase = toLooseSupabaseClient(await createServiceClient());
     const [deleteBidsResult, resetPlayersResult, resetTeamsResult] =
       await Promise.all([
-        supabase.from("bids").delete().gt("amount", 0),
+        supabase.from("bids").delete().neq("id", ""),
         supabase.from("players").update({
           status: "pool",
           sold_to: null,

@@ -1,0 +1,1752 @@
+[
+  {
+    "name": "Ruturaj Gaikwad",
+    "slug": "ruturaj-gaikwad",
+    "profileId": "5443",
+    "team": "chennai-super-kings",
+    "headshotId": "102"
+  },
+  {
+    "name": "MS Dhoni",
+    "slug": "ms-dhoni",
+    "profileId": "1",
+    "team": "chennai-super-kings",
+    "headshotId": "57"
+  },
+  {
+    "name": "Sanju Samson",
+    "slug": "sanju-samson",
+    "profileId": "258",
+    "team": "chennai-super-kings",
+    "headshotId": "190"
+  },
+  {
+    "name": "Dewald Brevis",
+    "slug": "dewald-brevis",
+    "profileId": "20593",
+    "team": "chennai-super-kings",
+    "headshotId": "797"
+  },
+  {
+    "name": "Ayush Mhatre",
+    "slug": "ayush-mhatre",
+    "profileId": "22377",
+    "team": "chennai-super-kings",
+    "headshotId": "3497"
+  },
+  {
+    "name": "Kartik Sharma",
+    "slug": "kartik-sharma",
+    "profileId": "23012",
+    "team": "chennai-super-kings",
+    "headshotId": "4540"
+  },
+  {
+    "name": "Sarfaraz Khan",
+    "slug": "sarfaraz-khan",
+    "profileId": "1564",
+    "team": "chennai-super-kings",
+    "headshotId": "139"
+  },
+  {
+    "name": "Urvil Patel",
+    "slug": "urvil-patel",
+    "profileId": "5653",
+    "team": "chennai-super-kings",
+    "headshotId": "1486"
+  },
+  {
+    "name": "Jamie Overton",
+    "slug": "jamie-overton",
+    "profileId": "22109",
+    "team": "chennai-super-kings",
+    "headshotId": "1216"
+  },
+  {
+    "name": "Ramakrishna Ghosh",
+    "slug": "ramakrishna-ghosh",
+    "profileId": "22153",
+    "team": "chennai-super-kings",
+    "headshotId": "3559"
+  },
+  {
+    "name": "Prashant Veer",
+    "slug": "prashant-veer",
+    "profileId": "23008",
+    "team": "chennai-super-kings",
+    "headshotId": "4541"
+  },
+  {
+    "name": "Matthew William Short",
+    "slug": "matthew-william-short",
+    "profileId": "2032",
+    "team": "chennai-super-kings",
+    "headshotId": "2032"
+  },
+  {
+    "name": "Aman Khan",
+    "slug": "aman-khan",
+    "profileId": "20581",
+    "team": "chennai-super-kings",
+    "headshotId": "979"
+  },
+  {
+    "name": "Zak Foulkes",
+    "slug": "zak-foulkes",
+    "profileId": "23022",
+    "team": "chennai-super-kings",
+    "headshotId": "3493"
+  },
+  {
+    "name": "Shivam Dube",
+    "slug": "shivam-dube",
+    "profileId": "5431",
+    "team": "chennai-super-kings",
+    "headshotId": "211"
+  },
+  {
+    "name": "Khaleel Ahmed",
+    "slug": "khaleel-ahmed",
+    "profileId": "2964",
+    "team": "chennai-super-kings",
+    "headshotId": "8"
+  },
+  {
+    "name": "Noor Ahmad",
+    "slug": "noor-ahmad",
+    "profileId": "20590",
+    "team": "chennai-super-kings",
+    "headshotId": "975"
+  },
+  {
+    "name": "Anshul Kamboj",
+    "slug": "anshul-kamboj",
+    "profileId": "20702",
+    "team": "chennai-super-kings",
+    "headshotId": "3106"
+  },
+  {
+    "name": "Mukesh Choudhary",
+    "slug": "mukesh-choudhary",
+    "profileId": "20575",
+    "team": "chennai-super-kings",
+    "headshotId": "970"
+  },
+  {
+    "name": "Shreyas Gopal",
+    "slug": "shreyas-gopal",
+    "profileId": "20696",
+    "team": "chennai-super-kings",
+    "headshotId": "192"
+  },
+  {
+    "name": "Gurjapneet Singh",
+    "slug": "gurjapneet-singh",
+    "profileId": "22032",
+    "team": "chennai-super-kings",
+    "headshotId": "2256"
+  },
+  {
+    "name": "Akeal Hosein",
+    "slug": "akeal-hosein",
+    "profileId": "5608",
+    "team": "chennai-super-kings",
+    "headshotId": "722"
+  },
+  {
+    "name": "Matt Henry",
+    "slug": "matt-henry",
+    "profileId": "1505",
+    "team": "chennai-super-kings",
+    "headshotId": "71"
+  },
+  {
+    "name": "Rahul Chahar",
+    "slug": "rahul-chahar",
+    "profileId": "3763",
+    "team": "chennai-super-kings",
+    "headshotId": "171"
+  },
+  {
+    "name": "Spencer Johnson",
+    "slug": "spencer-johnson",
+    "profileId": "20699",
+    "team": "chennai-super-kings",
+    "headshotId": "2518"
+  },
+  {
+    "name": "KL Rahul",
+    "slug": "kl-rahul",
+    "profileId": "1125",
+    "team": "delhi-capitals",
+    "headshotId": "19"
+  },
+  {
+    "name": "Karun Nair",
+    "slug": "karun-nair",
+    "profileId": "276",
+    "team": "delhi-capitals",
+    "headshotId": "131"
+  },
+  {
+    "name": "David Miller",
+    "slug": "david-miller",
+    "profileId": "187",
+    "team": "delhi-capitals",
+    "headshotId": "128"
+  },
+  {
+    "name": "Ben Duckett",
+    "slug": "ben-duckett",
+    "profileId": "23001",
+    "team": "delhi-capitals",
+    "headshotId": "110"
+  },
+  {
+    "name": "Pathum Nissanka",
+    "slug": "pathum-nissanka",
+    "profileId": "23020",
+    "team": "delhi-capitals",
+    "headshotId": "618"
+  },
+  {
+    "name": "Sahil Parakh",
+    "slug": "sahil-parakh",
+    "profileId": "23063",
+    "team": "delhi-capitals",
+    "headshotId": "4542"
+  },
+  {
+    "name": "Prithvi Shaw",
+    "slug": "prithvi-shaw",
+    "profileId": "3764",
+    "team": "delhi-capitals",
+    "headshotId": "51"
+  },
+  {
+    "name": "Abishek Porel",
+    "slug": "abishek-porel",
+    "profileId": "33333",
+    "team": "delhi-capitals",
+    "headshotId": "1580"
+  },
+  {
+    "name": "Tristan Stubbs",
+    "slug": "tristan-stubbs",
+    "profileId": "20631",
+    "team": "delhi-capitals",
+    "headshotId": "1017"
+  },
+  {
+    "name": "Axar Patel",
+    "slug": "axar-patel",
+    "profileId": "1113",
+    "team": "delhi-capitals",
+    "headshotId": "110"
+  },
+  {
+    "name": "Sameer Rizvi",
+    "slug": "sameer-rizvi",
+    "profileId": "20689",
+    "team": "delhi-capitals",
+    "headshotId": "1229"
+  },
+  {
+    "name": "Ashutosh Sharma",
+    "slug": "ashutosh-sharma",
+    "profileId": "20703",
+    "team": "delhi-capitals",
+    "headshotId": "3109"
+  },
+  {
+    "name": "Vipraj Nigam",
+    "slug": "vipraj-nigam",
+    "profileId": "22053",
+    "team": "delhi-capitals",
+    "headshotId": "3560"
+  },
+  {
+    "name": "Ajay Mandal",
+    "slug": "ajay-mandal",
+    "profileId": "5811",
+    "team": "delhi-capitals",
+    "headshotId": "1931"
+  },
+  {
+    "name": "Tripurana Vijay",
+    "slug": "tripurana-vijay",
+    "profileId": "22252",
+    "team": "delhi-capitals",
+    "headshotId": "3563"
+  },
+  {
+    "name": "Madhav Tiwari",
+    "slug": "madhav-tiwari",
+    "profileId": "22259",
+    "team": "delhi-capitals",
+    "headshotId": "3561"
+  },
+  {
+    "name": "Nitish Rana",
+    "slug": "nitish-rana",
+    "profileId": "2738",
+    "team": "delhi-capitals",
+    "headshotId": "148"
+  },
+  {
+    "name": "Mitchell Starc",
+    "slug": "mitchell-starc",
+    "profileId": "490",
+    "team": "delhi-capitals",
+    "headshotId": "31"
+  },
+  {
+    "name": "T. Natarajan",
+    "slug": "t-natarajan",
+    "profileId": "3831",
+    "team": "delhi-capitals",
+    "headshotId": "224"
+  },
+  {
+    "name": "Mukesh Kumar",
+    "slug": "mukesh-kumar",
+    "profileId": "5622",
+    "team": "delhi-capitals",
+    "headshotId": "1462"
+  },
+  {
+    "name": "Dushmantha Chameera",
+    "slug": "dushmantha-chameera",
+    "profileId": "817",
+    "team": "delhi-capitals",
+    "headshotId": "608"
+  },
+  {
+    "name": "Auqib Nabi",
+    "slug": "auqib-nabi",
+    "profileId": "23005",
+    "team": "delhi-capitals",
+    "headshotId": "4543"
+  },
+  {
+    "name": "Lungisani Ngidi",
+    "slug": "lungisani-ngidi",
+    "profileId": "3746",
+    "team": "delhi-capitals",
+    "headshotId": "99"
+  },
+  {
+    "name": "Kyle Jamieson",
+    "slug": "kyle-jamieson",
+    "profileId": "1616",
+    "team": "delhi-capitals",
+    "headshotId": "382"
+  },
+  {
+    "name": "Kuldeep Yadav",
+    "slug": "kuldeep-yadav",
+    "profileId": "261",
+    "team": "delhi-capitals",
+    "headshotId": "14"
+  },
+  {
+    "name": "Shubman Gill",
+    "slug": "shubman-gill",
+    "profileId": "3761",
+    "team": "gujarat-titans",
+    "headshotId": "62"
+  },
+  {
+    "name": "Jos Buttler",
+    "slug": "jos-buttler",
+    "profileId": "509",
+    "team": "gujarat-titans",
+    "headshotId": "182"
+  },
+  {
+    "name": "Kumar Kushagra",
+    "slug": "kumar-kushagra",
+    "profileId": "20694",
+    "team": "gujarat-titans",
+    "headshotId": "3101"
+  },
+  {
+    "name": "Anuj Rawat",
+    "slug": "anuj-rawat",
+    "profileId": "10788",
+    "team": "gujarat-titans",
+    "headshotId": "534"
+  },
+  {
+    "name": "Tom Banton",
+    "slug": "tom-banton",
+    "profileId": "3770",
+    "team": "gujarat-titans",
+    "headshotId": "530"
+  },
+  {
+    "name": "Glenn Phillips",
+    "slug": "glenn-phillips",
+    "profileId": "3027",
+    "team": "gujarat-titans",
+    "headshotId": "635"
+  },
+  {
+    "name": "Sai Sudharsan",
+    "slug": "sai-sudharsan",
+    "profileId": "20592",
+    "team": "gujarat-titans",
+    "headshotId": "976"
+  },
+  {
+    "name": "Nishant Sindhu",
+    "slug": "nishant-sindhu",
+    "profileId": "5615",
+    "team": "gujarat-titans",
+    "headshotId": "791"
+  },
+  {
+    "name": "Washington Sundar",
+    "slug": "washington-sundar",
+    "profileId": "2973",
+    "team": "gujarat-titans",
+    "headshotId": "20"
+  },
+  {
+    "name": "Mohd. Arshad Khan",
+    "slug": "mohd-arshad-khan",
+    "profileId": "20599",
+    "team": "gujarat-titans",
+    "headshotId": "988"
+  },
+  {
+    "name": "Sai Kishore",
+    "slug": "sai-kishore",
+    "profileId": "7123",
+    "team": "gujarat-titans",
+    "headshotId": "544"
+  },
+  {
+    "name": "Jayant Yadav",
+    "slug": "jayant-yadav",
+    "profileId": "1740",
+    "team": "gujarat-titans",
+    "headshotId": "165"
+  },
+  {
+    "name": "Jason Holder",
+    "slug": "jason-holder",
+    "profileId": "1075",
+    "team": "gujarat-titans",
+    "headshotId": "263"
+  },
+  {
+    "name": "Rahul Tewatia",
+    "slug": "rahul-tewatia",
+    "profileId": "1749",
+    "team": "gujarat-titans",
+    "headshotId": "120"
+  },
+  {
+    "name": "Shahrukh Khan",
+    "slug": "shahrukh-khan",
+    "profileId": "7779",
+    "team": "gujarat-titans",
+    "headshotId": "590"
+  },
+  {
+    "name": "Kagiso Rabada",
+    "slug": "kagiso-rabada",
+    "profileId": "1664",
+    "team": "gujarat-titans",
+    "headshotId": "116"
+  },
+  {
+    "name": "Mohammed Siraj",
+    "slug": "mohammed-siraj",
+    "profileId": "3840",
+    "team": "gujarat-titans",
+    "headshotId": "63"
+  },
+  {
+    "name": "Prasidh Krishna",
+    "slug": "prasidh-krishna",
+    "profileId": "5105",
+    "team": "gujarat-titans",
+    "headshotId": "150"
+  },
+  {
+    "name": "Manav Suthar",
+    "slug": "manav-suthar",
+    "profileId": "20692",
+    "team": "gujarat-titans",
+    "headshotId": "2443"
+  },
+  {
+    "name": "Gurnoor Singh Brar",
+    "slug": "gurnoor-singh-brar",
+    "profileId": "1094",
+    "team": "gujarat-titans",
+    "headshotId": "1231"
+  },
+  {
+    "name": "Ishant Sharma",
+    "slug": "ishant-sharma",
+    "profileId": "38",
+    "team": "gujarat-titans",
+    "headshotId": "50"
+  },
+  {
+    "name": "Ashok Sharma",
+    "slug": "ashok-sharma",
+    "profileId": "20584",
+    "team": "gujarat-titans",
+    "headshotId": "980"
+  },
+  {
+    "name": "Luke Wood",
+    "slug": "luke-wood",
+    "profileId": "20721",
+    "team": "gujarat-titans",
+    "headshotId": "3116"
+  },
+  {
+    "name": "Kulwant Khejroliya",
+    "slug": "kulwant-khejroliya",
+    "profileId": "3835",
+    "team": "gujarat-titans",
+    "headshotId": "204"
+  },
+  {
+    "name": "Rashid Khan",
+    "slug": "rashid-khan",
+    "profileId": "2885",
+    "team": "gujarat-titans",
+    "headshotId": "218"
+  },
+  {
+    "name": "Ajinkya Rahane",
+    "slug": "ajinkya-rahane",
+    "profileId": "135",
+    "team": "kolkata-knight-riders",
+    "headshotId": "44"
+  },
+  {
+    "name": "Rinku Singh",
+    "slug": "rinku-singh",
+    "profileId": "3830",
+    "team": "kolkata-knight-riders",
+    "headshotId": "152"
+  },
+  {
+    "name": "Angkrish Raghuvanshi",
+    "slug": "angkrish-raghuvanshi",
+    "profileId": "20690",
+    "team": "kolkata-knight-riders",
+    "headshotId": "787"
+  },
+  {
+    "name": "Manish Pandey",
+    "slug": "manish-pandey",
+    "profileId": "123",
+    "team": "kolkata-knight-riders",
+    "headshotId": "16"
+  },
+  {
+    "name": "Finn Allen",
+    "slug": "finn-allen",
+    "profileId": "3020",
+    "team": "kolkata-knight-riders",
+    "headshotId": "595"
+  },
+  {
+    "name": "Tejasvi Singh",
+    "slug": "tejasvi-singh",
+    "profileId": "23013",
+    "team": "kolkata-knight-riders",
+    "headshotId": "4281"
+  },
+  {
+    "name": "Rahul Tripathi",
+    "slug": "rahul-tripathi",
+    "profileId": "3838",
+    "team": "kolkata-knight-riders",
+    "headshotId": "188"
+  },
+  {
+    "name": "Tim Seifert",
+    "slug": "tim-seifert",
+    "profileId": "1619",
+    "team": "kolkata-knight-riders",
+    "headshotId": "82"
+  },
+  {
+    "name": "Rovman Powell",
+    "slug": "rovman-powell",
+    "profileId": "3333",
+    "team": "kolkata-knight-riders",
+    "headshotId": "329"
+  },
+  {
+    "name": "Anukul Roy",
+    "slug": "anukul-roy",
+    "profileId": "3774",
+    "team": "kolkata-knight-riders",
+    "headshotId": "160"
+  },
+  {
+    "name": "Cameron Green",
+    "slug": "cameron-green",
+    "profileId": "5602",
+    "team": "kolkata-knight-riders",
+    "headshotId": "550"
+  },
+  {
+    "name": "Sarthak Ranjan",
+    "slug": "sarthak-ranjan",
+    "profileId": "23154",
+    "team": "kolkata-knight-riders",
+    "headshotId": "4203"
+  },
+  {
+    "name": "Daksh Kamra",
+    "slug": "daksh-kamra",
+    "profileId": "23177",
+    "team": "kolkata-knight-riders",
+    "headshotId": "4548"
+  },
+  {
+    "name": "Rachin Ravindra",
+    "slug": "rachin-ravindra",
+    "profileId": "20684",
+    "team": "kolkata-knight-riders",
+    "headshotId": "724"
+  },
+  {
+    "name": "Ramandeep Singh",
+    "slug": "ramandeep-singh",
+    "profileId": "20595",
+    "team": "kolkata-knight-riders",
+    "headshotId": "991"
+  },
+  {
+    "name": "Sunil Narine",
+    "slug": "sunil-narine",
+    "profileId": "203",
+    "team": "kolkata-knight-riders",
+    "headshotId": "156"
+  },
+  {
+    "name": "Blessing Muzarabani",
+    "slug": "blessing-muzarabani",
+    "profileId": "22387",
+    "team": "kolkata-knight-riders",
+    "headshotId": "827"
+  },
+  {
+    "name": "Vaibhav Arora",
+    "slug": "vaibhav-arora",
+    "profileId": "14859",
+    "team": "kolkata-knight-riders",
+    "headshotId": "583"
+  },
+  {
+    "name": "Matheesha Pathirana",
+    "slug": "matheesha-pathirana",
+    "profileId": "20627",
+    "team": "kolkata-knight-riders",
+    "headshotId": "1014"
+  },
+  {
+    "name": "Kartik Tyagi",
+    "slug": "kartik-tyagi",
+    "profileId": "10059",
+    "team": "kolkata-knight-riders",
+    "headshotId": "536"
+  },
+  {
+    "name": "Prashant Solanki",
+    "slug": "prashant-solanki",
+    "profileId": "20576",
+    "team": "kolkata-knight-riders",
+    "headshotId": "972"
+  },
+  {
+    "name": "Saurabh Dubey",
+    "slug": "saurabh-dubey",
+    "profileId": "20612",
+    "team": "kolkata-knight-riders",
+    "headshotId": "1010"
+  },
+  {
+    "name": "Navdeep Saini",
+    "slug": "navdeep-saini",
+    "profileId": "3824",
+    "team": "kolkata-knight-riders",
+    "headshotId": "207"
+  },
+  {
+    "name": "Umran Malik",
+    "slug": "umran-malik",
+    "profileId": "15154",
+    "team": "kolkata-knight-riders",
+    "headshotId": "637"
+  },
+  {
+    "name": "Varun Chakaravarthy",
+    "slug": "varun-chakaravarthy",
+    "profileId": "5432",
+    "team": "kolkata-knight-riders",
+    "headshotId": "140"
+  },
+  {
+    "name": "Rishabh Pant",
+    "slug": "rishabh-pant",
+    "profileId": "2972",
+    "team": "lucknow-super-giants",
+    "headshotId": "18"
+  },
+  {
+    "name": "Aiden Markram",
+    "slug": "aiden-markram",
+    "profileId": "1667",
+    "team": "lucknow-super-giants",
+    "headshotId": "287"
+  },
+  {
+    "name": "Himmat Singh",
+    "slug": "himmat-singh",
+    "profileId": "5434",
+    "team": "lucknow-super-giants",
+    "headshotId": "203"
+  },
+  {
+    "name": "Matthew Breetzke",
+    "slug": "matthew-breetzke",
+    "profileId": "22375",
+    "team": "lucknow-super-giants",
+    "headshotId": "2805"
+  },
+  {
+    "name": "Mukul Choudhary",
+    "slug": "mukul-choudhary",
+    "profileId": "23010",
+    "team": "lucknow-super-giants",
+    "headshotId": "4549"
+  },
+  {
+    "name": "Akshat Raghuwanshi",
+    "slug": "akshat-raghuwanshi",
+    "profileId": "23035",
+    "team": "lucknow-super-giants",
+    "headshotId": "1487"
+  },
+  {
+    "name": "Josh Inglis",
+    "slug": "josh-inglis",
+    "profileId": "22372",
+    "team": "lucknow-super-giants",
+    "headshotId": "647"
+  },
+  {
+    "name": "Nicholas Pooran",
+    "slug": "nicholas-pooran",
+    "profileId": "1703",
+    "team": "lucknow-super-giants",
+    "headshotId": "136"
+  },
+  {
+    "name": "Mitchell Marsh",
+    "slug": "mitchell-marsh",
+    "profileId": "221",
+    "team": "lucknow-super-giants",
+    "headshotId": "40"
+  },
+  {
+    "name": "Abdul Samad",
+    "slug": "abdul-samad",
+    "profileId": "19352",
+    "team": "lucknow-super-giants",
+    "headshotId": "525"
+  },
+  {
+    "name": "Shahbaz Ahamad",
+    "slug": "shahbaz-ahamad",
+    "profileId": "13803",
+    "team": "lucknow-super-giants",
+    "headshotId": "523"
+  },
+  {
+    "name": "Arshin Kulkarni",
+    "slug": "arshin-kulkarni",
+    "profileId": "20691",
+    "team": "lucknow-super-giants",
+    "headshotId": "2788"
+  },
+  {
+    "name": "Ayush Badoni",
+    "slug": "ayush-badoni",
+    "profileId": "20586",
+    "team": "lucknow-super-giants",
+    "headshotId": "985"
+  },
+  {
+    "name": "Mohammad Shami",
+    "slug": "mohammad-shami",
+    "profileId": "94",
+    "team": "lucknow-super-giants",
+    "headshotId": "47"
+  },
+  {
+    "name": "Avesh Khan",
+    "slug": "avesh-khan",
+    "profileId": "1561",
+    "team": "lucknow-super-giants",
+    "headshotId": "109"
+  },
+  {
+    "name": "M. Siddharth",
+    "slug": "m-siddharth",
+    "profileId": "7119",
+    "team": "lucknow-super-giants",
+    "headshotId": "532"
+  },
+  {
+    "name": "Digvesh Singh",
+    "slug": "digvesh-singh",
+    "profileId": "5847",
+    "team": "lucknow-super-giants",
+    "headshotId": "3565"
+  },
+  {
+    "name": "Akash Singh",
+    "slug": "akash-singh",
+    "profileId": "12585",
+    "team": "lucknow-super-giants",
+    "headshotId": "535"
+  },
+  {
+    "name": "Prince Yadav",
+    "slug": "prince-yadav",
+    "profileId": "22097",
+    "team": "lucknow-super-giants",
+    "headshotId": "1225"
+  },
+  {
+    "name": "Arjun Tendulkar",
+    "slug": "arjun-tendulkar",
+    "profileId": "10244",
+    "team": "lucknow-super-giants",
+    "headshotId": "585"
+  },
+  {
+    "name": "Anrich Nortje",
+    "slug": "anrich-nortje",
+    "profileId": "5433",
+    "team": "lucknow-super-giants",
+    "headshotId": "142"
+  },
+  {
+    "name": "Naman Tiwari",
+    "slug": "naman-tiwari",
+    "profileId": "23015",
+    "team": "lucknow-super-giants",
+    "headshotId": "2801"
+  },
+  {
+    "name": "George Linde",
+    "slug": "george-linde",
+    "profileId": "33336",
+    "team": "lucknow-super-giants",
+    "headshotId": "340"
+  },
+  {
+    "name": "Mayank Yadav",
+    "slug": "mayank-yadav",
+    "profileId": "20585",
+    "team": "lucknow-super-giants",
+    "headshotId": "987"
+  },
+  {
+    "name": "Mohsin Khan",
+    "slug": "mohsin-khan",
+    "profileId": "4952",
+    "team": "lucknow-super-giants",
+    "headshotId": "541"
+  },
+  {
+    "name": "Rohit Sharma",
+    "slug": "rohit-sharma",
+    "profileId": "107",
+    "team": "mumbai-indians",
+    "headshotId": "6"
+  },
+  {
+    "name": "Surya Kumar Yadav",
+    "slug": "surya-kumar-yadav",
+    "profileId": "108",
+    "team": "mumbai-indians",
+    "headshotId": "174"
+  },
+  {
+    "name": "Robin Minz",
+    "slug": "robin-minz",
+    "profileId": "20707",
+    "team": "mumbai-indians",
+    "headshotId": "3103"
+  },
+  {
+    "name": "Sherfane Rutherford",
+    "slug": "sherfane-rutherford",
+    "profileId": "5396",
+    "team": "mumbai-indians",
+    "headshotId": "122"
+  },
+  {
+    "name": "Ryan Rickelton",
+    "slug": "ryan-rickelton",
+    "profileId": "22003",
+    "team": "mumbai-indians",
+    "headshotId": "743"
+  },
+  {
+    "name": "Quinton de Kock",
+    "slug": "quinton-de-kock",
+    "profileId": "834",
+    "team": "mumbai-indians",
+    "headshotId": "170"
+  },
+  {
+    "name": "Danish Malewar",
+    "slug": "danish-malewar",
+    "profileId": "23031",
+    "team": "mumbai-indians",
+    "headshotId": "4546"
+  },
+  {
+    "name": "N. Tilak Varma",
+    "slug": "n-tilak-varma",
+    "profileId": "20594",
+    "team": "mumbai-indians",
+    "headshotId": "993"
+  },
+  {
+    "name": "Hardik Pandya",
+    "slug": "hardik-pandya",
+    "profileId": "2740",
+    "team": "mumbai-indians",
+    "headshotId": "54"
+  },
+  {
+    "name": "Naman Dhir",
+    "slug": "naman-dhir",
+    "profileId": "20701",
+    "team": "mumbai-indians",
+    "headshotId": "3107"
+  },
+  {
+    "name": "Mitchell Santner",
+    "slug": "mitchell-santner",
+    "profileId": "1903",
+    "team": "mumbai-indians",
+    "headshotId": "75"
+  },
+  {
+    "name": "Raj Angad Bawa",
+    "slug": "raj-angad-bawa",
+    "profileId": "20601",
+    "team": "mumbai-indians",
+    "headshotId": "781"
+  },
+  {
+    "name": "Atharva Ankolekar",
+    "slug": "atharva-ankolekar",
+    "profileId": "23108",
+    "team": "mumbai-indians",
+    "headshotId": "4544"
+  },
+  {
+    "name": "Mayank Rawat",
+    "slug": "mayank-rawat",
+    "profileId": "23038",
+    "team": "mumbai-indians",
+    "headshotId": "1228"
+  },
+  {
+    "name": "Corbin Bosch",
+    "slug": "corbin-bosch",
+    "profileId": "20680",
+    "team": "mumbai-indians",
+    "headshotId": "1041"
+  },
+  {
+    "name": "Will Jacks",
+    "slug": "will-jacks",
+    "profileId": "5629",
+    "team": "mumbai-indians",
+    "headshotId": "1941"
+  },
+  {
+    "name": "Shardul Thakur",
+    "slug": "shardul-thakur",
+    "profileId": "1745",
+    "team": "mumbai-indians",
+    "headshotId": "105"
+  },
+  {
+    "name": "Trent Boult",
+    "slug": "trent-boult",
+    "profileId": "969",
+    "team": "mumbai-indians",
+    "headshotId": "66"
+  },
+  {
+    "name": "Mayank Markande",
+    "slug": "mayank-markande",
+    "profileId": "4951",
+    "team": "mumbai-indians",
+    "headshotId": "87"
+  },
+  {
+    "name": "Deepak Chahar",
+    "slug": "deepak-chahar",
+    "profileId": "140",
+    "team": "mumbai-indians",
+    "headshotId": "91"
+  },
+  {
+    "name": "Ashwani Kumar",
+    "slug": "ashwani-kumar",
+    "profileId": "22030",
+    "team": "mumbai-indians",
+    "headshotId": "3569"
+  },
+  {
+    "name": "Raghu Sharma",
+    "slug": "raghu-sharma",
+    "profileId": "22379",
+    "team": "mumbai-indians",
+    "headshotId": "3869"
+  },
+  {
+    "name": "Mohammad Izhar",
+    "slug": "mohammad-izhar",
+    "profileId": "23045",
+    "team": "mumbai-indians",
+    "headshotId": "4545"
+  },
+  {
+    "name": "Allah Ghazanfar",
+    "slug": "allah-ghazanfar",
+    "profileId": "20725",
+    "team": "mumbai-indians",
+    "headshotId": "2761"
+  },
+  {
+    "name": "Jasprit Bumrah",
+    "slug": "jasprit-bumrah",
+    "profileId": "1124",
+    "team": "mumbai-indians",
+    "headshotId": "9"
+  },
+  {
+    "name": "Shreyas Iyer",
+    "slug": "shreyas-iyer",
+    "profileId": "1563",
+    "team": "punjab-kings",
+    "headshotId": "12"
+  },
+  {
+    "name": "Nehal Wadhera",
+    "slug": "nehal-wadhera",
+    "profileId": "5859",
+    "team": "punjab-kings",
+    "headshotId": "1541"
+  },
+  {
+    "name": "Vishnu Vinod",
+    "slug": "vishnu-vinod",
+    "profileId": "4305",
+    "team": "punjab-kings",
+    "headshotId": "581"
+  },
+  {
+    "name": "Harnoor Pannu",
+    "slug": "harnoor-pannu",
+    "profileId": "22019",
+    "team": "punjab-kings",
+    "headshotId": "784"
+  },
+  {
+    "name": "Pyla Avinash",
+    "slug": "pyla-avinash",
+    "profileId": "22145",
+    "team": "punjab-kings",
+    "headshotId": "3573"
+  },
+  {
+    "name": "Prabhsimran Singh",
+    "slug": "prabhsimran-singh",
+    "profileId": "5436",
+    "team": "punjab-kings",
+    "headshotId": "137"
+  },
+  {
+    "name": "Shashank Singh",
+    "slug": "shashank-singh",
+    "profileId": "3261",
+    "team": "punjab-kings",
+    "headshotId": "191"
+  },
+  {
+    "name": "Marcus Stoinis",
+    "slug": "marcus-stoinis",
+    "profileId": "964",
+    "team": "punjab-kings",
+    "headshotId": "23"
+  },
+  {
+    "name": "Harpreet Brar",
+    "slug": "harpreet-brar",
+    "profileId": "5441",
+    "team": "punjab-kings",
+    "headshotId": "130"
+  },
+  {
+    "name": "Marco Jansen",
+    "slug": "marco-jansen",
+    "profileId": "17068",
+    "team": "punjab-kings",
+    "headshotId": "586"
+  },
+  {
+    "name": "Azmatullah Omarzai",
+    "slug": "azmatullah-omarzai",
+    "profileId": "20685",
+    "team": "punjab-kings",
+    "headshotId": "1354"
+  },
+  {
+    "name": "Priyansh Arya",
+    "slug": "priyansh-arya",
+    "profileId": "22052",
+    "team": "punjab-kings",
+    "headshotId": "3571"
+  },
+  {
+    "name": "Musheer Khan",
+    "slug": "musheer-khan",
+    "profileId": "22085",
+    "team": "punjab-kings",
+    "headshotId": "2813"
+  },
+  {
+    "name": "Suryansh Shedge",
+    "slug": "suryansh-shedge",
+    "profileId": "20683",
+    "team": "punjab-kings",
+    "headshotId": "2146"
+  },
+  {
+    "name": "Mitch Owen",
+    "slug": "mitch-owen",
+    "profileId": "22380",
+    "team": "punjab-kings",
+    "headshotId": "3870"
+  },
+  {
+    "name": "Cooper Connolly",
+    "slug": "cooper-connolly",
+    "profileId": "23052",
+    "team": "punjab-kings",
+    "headshotId": "848"
+  },
+  {
+    "name": "Ben Dwarshuis",
+    "slug": "ben-dwarshuis",
+    "profileId": "1478",
+    "team": "punjab-kings",
+    "headshotId": "632"
+  },
+  {
+    "name": "Arshdeep Singh",
+    "slug": "arshdeep-singh",
+    "profileId": "4698",
+    "team": "punjab-kings",
+    "headshotId": "125"
+  },
+  {
+    "name": "Yuzvendra Chahal",
+    "slug": "yuzvendra-chahal",
+    "profileId": "111",
+    "team": "punjab-kings",
+    "headshotId": "10"
+  },
+  {
+    "name": "Vyshak Vijaykumar",
+    "slug": "vyshak-vijaykumar",
+    "profileId": "1097",
+    "team": "punjab-kings",
+    "headshotId": "2034"
+  },
+  {
+    "name": "Yash Thakur",
+    "slug": "yash-thakur",
+    "profileId": "5624",
+    "team": "punjab-kings",
+    "headshotId": "1550"
+  },
+  {
+    "name": "Xavier Bartlett",
+    "slug": "xavier-bartlett",
+    "profileId": "22112",
+    "team": "punjab-kings",
+    "headshotId": "3572"
+  },
+  {
+    "name": "Pravin Dubey",
+    "slug": "pravin-dubey",
+    "profileId": "3188",
+    "team": "punjab-kings",
+    "headshotId": "548"
+  },
+  {
+    "name": "Vishal Nishad",
+    "slug": "vishal-nishad",
+    "profileId": "23088",
+    "team": "punjab-kings",
+    "headshotId": "4547"
+  },
+  {
+    "name": "Lockie Ferguson",
+    "slug": "lockie-ferguson",
+    "profileId": "3729",
+    "team": "punjab-kings",
+    "headshotId": "69"
+  },
+  {
+    "name": "Shubham Dubey",
+    "slug": "shubham-dubey",
+    "profileId": "20688",
+    "team": "rajasthan-royals",
+    "headshotId": "3112"
+  },
+  {
+    "name": "Vaibhav Sooryavanshi",
+    "slug": "vaibhav-sooryavanshi",
+    "profileId": "22203",
+    "team": "rajasthan-royals",
+    "headshotId": "3498"
+  },
+  {
+    "name": "Donovan Ferreira",
+    "slug": "donovan-ferreira",
+    "profileId": "5652",
+    "team": "rajasthan-royals",
+    "headshotId": "2033"
+  },
+  {
+    "name": "Lhuan-dre Pretorious",
+    "slug": "lhuan-dre-pretorious",
+    "profileId": "22383",
+    "team": "rajasthan-royals",
+    "headshotId": "2827"
+  },
+  {
+    "name": "Ravi Singh",
+    "slug": "ravi-singh",
+    "profileId": "23044",
+    "team": "rajasthan-royals",
+    "headshotId": "4550"
+  },
+  {
+    "name": "Aman Rao Perala",
+    "slug": "aman-rao-perala",
+    "profileId": "23034",
+    "team": "rajasthan-royals",
+    "headshotId": "4552"
+  },
+  {
+    "name": "Shimron Hetmyer",
+    "slug": "shimron-hetmyer",
+    "profileId": "1705",
+    "team": "rajasthan-royals",
+    "headshotId": "210"
+  },
+  {
+    "name": "Yashasvi Jaiswal",
+    "slug": "yashasvi-jaiswal",
+    "profileId": "13538",
+    "team": "rajasthan-royals",
+    "headshotId": "533"
+  },
+  {
+    "name": "Dhruv Jurel",
+    "slug": "dhruv-jurel",
+    "profileId": "20620",
+    "team": "rajasthan-royals",
+    "headshotId": "1004"
+  },
+  {
+    "name": "Riyan Parag",
+    "slug": "riyan-parag",
+    "profileId": "4445",
+    "team": "rajasthan-royals",
+    "headshotId": "189"
+  },
+  {
+    "name": "Yudhvir Singh Charak",
+    "slug": "yudhvir-singh-charak",
+    "profileId": "10842",
+    "team": "rajasthan-royals",
+    "headshotId": "587"
+  },
+  {
+    "name": "Ravindra Jadeja",
+    "slug": "ravindra-jadeja",
+    "profileId": "9",
+    "team": "rajasthan-royals",
+    "headshotId": "46"
+  },
+  {
+    "name": "Dasun Shanaka",
+    "slug": "dasun-shanaka",
+    "profileId": "1095",
+    "team": "rajasthan-royals",
+    "headshotId": "375"
+  },
+  {
+    "name": "Jofra Archer",
+    "slug": "jofra-archer",
+    "profileId": "3502",
+    "team": "rajasthan-royals",
+    "headshotId": "181"
+  },
+  {
+    "name": "Tushar Deshpande",
+    "slug": "tushar-deshpande",
+    "profileId": "3257",
+    "team": "rajasthan-royals",
+    "headshotId": "539"
+  },
+  {
+    "name": "Kwena Maphaka",
+    "slug": "kwena-maphaka",
+    "profileId": "20724",
+    "team": "rajasthan-royals",
+    "headshotId": "801"
+  },
+  {
+    "name": "Ravi Bishnoi",
+    "slug": "ravi-bishnoi",
+    "profileId": "19351",
+    "team": "rajasthan-royals",
+    "headshotId": "520"
+  },
+  {
+    "name": "Sushant Mishra",
+    "slug": "sushant-mishra",
+    "profileId": "20695",
+    "team": "rajasthan-royals",
+    "headshotId": "1016"
+  },
+  {
+    "name": "Yash Raj Punja",
+    "slug": "yash-raj-punja",
+    "profileId": "23016",
+    "team": "rajasthan-royals",
+    "headshotId": "4553"
+  },
+  {
+    "name": "Vignesh Puthur",
+    "slug": "vignesh-puthur",
+    "profileId": "22266",
+    "team": "rajasthan-royals",
+    "headshotId": "3566"
+  },
+  {
+    "name": "Brijesh Sharma",
+    "slug": "brijesh-sharma",
+    "profileId": "23164",
+    "team": "rajasthan-royals",
+    "headshotId": "4551"
+  },
+  {
+    "name": "Adam Milne",
+    "slug": "adam-milne",
+    "profileId": "434",
+    "team": "rajasthan-royals",
+    "headshotId": "157"
+  },
+  {
+    "name": "Kuldeep Sen",
+    "slug": "kuldeep-sen",
+    "profileId": "20616",
+    "team": "rajasthan-royals",
+    "headshotId": "1005"
+  },
+  {
+    "name": "Sandeep Sharma",
+    "slug": "sandeep-sharma",
+    "profileId": "1112",
+    "team": "rajasthan-royals",
+    "headshotId": "220"
+  },
+  {
+    "name": "Nandre Burger",
+    "slug": "nandre-burger",
+    "profileId": "20716",
+    "team": "rajasthan-royals",
+    "headshotId": "2806"
+  },
+  {
+    "name": "Rajat Patidar",
+    "slug": "rajat-patidar",
+    "profileId": "5471",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "597"
+  },
+  {
+    "name": "Devdutt Padikkal",
+    "slug": "devdutt-padikkal",
+    "profileId": "5430",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "200"
+  },
+  {
+    "name": "Virat Kohli",
+    "slug": "virat-kohli",
+    "profileId": "164",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "2"
+  },
+  {
+    "name": "Phil Salt",
+    "slug": "phil-salt",
+    "profileId": "5606",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "1220"
+  },
+  {
+    "name": "Jitesh Sharma",
+    "slug": "jitesh-sharma",
+    "profileId": "3185",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "1000"
+  },
+  {
+    "name": "Jordan Cox",
+    "slug": "jordan-cox",
+    "profileId": "23023",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "3372"
+  },
+  {
+    "name": "Krunal Pandya",
+    "slug": "krunal-pandya",
+    "profileId": "3183",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "17"
+  },
+  {
+    "name": "Swapnil Singh",
+    "slug": "swapnil-singh",
+    "profileId": "3180",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "1483"
+  },
+  {
+    "name": "Tim David",
+    "slug": "tim-david",
+    "profileId": "4524",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "636"
+  },
+  {
+    "name": "Romario Shepherd",
+    "slug": "romario-shepherd",
+    "profileId": "20609",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "371"
+  },
+  {
+    "name": "Jacob Bethell",
+    "slug": "jacob-bethell",
+    "profileId": "22074",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "869"
+  },
+  {
+    "name": "Venkatesh Iyer",
+    "slug": "venkatesh-iyer",
+    "profileId": "8540",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "584"
+  },
+  {
+    "name": "Satvik Deswal",
+    "slug": "satvik-deswal",
+    "profileId": "23036",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "4555"
+  },
+  {
+    "name": "Mangesh Yadav",
+    "slug": "mangesh-yadav",
+    "profileId": "23040",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "4554"
+  },
+  {
+    "name": "Vicky Ostwal",
+    "slug": "vicky-ostwal",
+    "profileId": "20624",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "786"
+  },
+  {
+    "name": "Vihaan Malhotra",
+    "slug": "vihaan-malhotra",
+    "profileId": "23150",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "4012"
+  },
+  {
+    "name": "Kanishk Chouhan",
+    "slug": "kanishk-chouhan",
+    "profileId": "23168",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "4016"
+  },
+  {
+    "name": "Josh Hazlewood",
+    "slug": "josh-hazlewood",
+    "profileId": "857",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "36"
+  },
+  {
+    "name": "Rasikh Dar",
+    "slug": "rasikh-dar",
+    "profileId": "20577",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "172"
+  },
+  {
+    "name": "Suyash Sharma",
+    "slug": "suyash-sharma",
+    "profileId": "5668",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "1932"
+  },
+  {
+    "name": "Bhuvneshwar Kumar",
+    "slug": "bhuvneshwar-kumar",
+    "profileId": "116",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "15"
+  },
+  {
+    "name": "Nuwan Thushara",
+    "slug": "nuwan-thushara",
+    "profileId": "20700",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "813"
+  },
+  {
+    "name": "Abhinandan Singh",
+    "slug": "abhinandan-singh",
+    "profileId": "22136",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "3574"
+  },
+  {
+    "name": "Jacob Duffy",
+    "slug": "jacob-duffy",
+    "profileId": "23003",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "1701"
+  },
+  {
+    "name": "Yash Dayal",
+    "slug": "yash-dayal",
+    "profileId": "20591",
+    "team": "royal-challengers-bengaluru",
+    "headshotId": "978"
+  },
+  {
+    "name": "Ishan Kishan",
+    "slug": "ishan-kishan",
+    "profileId": "2975",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "164"
+  },
+  {
+    "name": "Aniket Verma",
+    "slug": "aniket-verma",
+    "profileId": "22082",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "3576"
+  },
+  {
+    "name": "Smaran Ravichandran",
+    "slug": "smaran-ravichandran",
+    "profileId": "22378",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "3752"
+  },
+  {
+    "name": "Salil Arora",
+    "slug": "salil-arora",
+    "profileId": "23041",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "4556"
+  },
+  {
+    "name": "Heinrich Klaasen",
+    "slug": "heinrich-klaasen",
+    "profileId": "3869",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "202"
+  },
+  {
+    "name": "Travis Head",
+    "slug": "travis-head",
+    "profileId": "1020",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "37"
+  },
+  {
+    "name": "Harshal Patel",
+    "slug": "harshal-patel",
+    "profileId": "157",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "114"
+  },
+  {
+    "name": "Kamindu Mendis",
+    "slug": "kamindu-mendis",
+    "profileId": "22077",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "627"
+  },
+  {
+    "name": "Harsh Dubey",
+    "slug": "harsh-dubey",
+    "profileId": "22381",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "1494"
+  },
+  {
+    "name": "Brydon Carse",
+    "slug": "brydon-carse",
+    "profileId": "22075",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "1221"
+  },
+  {
+    "name": "Shivang Kumar",
+    "slug": "shivang-kumar",
+    "profileId": "23006",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "4561"
+  },
+  {
+    "name": "Krains Fuletra",
+    "slug": "krains-fuletra",
+    "profileId": "23132",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "4557"
+  },
+  {
+    "name": "Liam Livingstone",
+    "slug": "liam-livingstone",
+    "profileId": "3644",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "183"
+  },
+  {
+    "name": "David Payne",
+    "slug": "david-payne",
+    "profileId": "33335",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "5007"
+  },
+  {
+    "name": "Abhishek Sharma",
+    "slug": "abhishek-sharma",
+    "profileId": "3760",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "212"
+  },
+  {
+    "name": "Nitish Kumar Reddy",
+    "slug": "nitish-kumar-reddy",
+    "profileId": "5711",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "1944"
+  },
+  {
+    "name": "Pat Cummins",
+    "slug": "pat-cummins",
+    "profileId": "488",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "33"
+  },
+  {
+    "name": "Zeeshan Ansari",
+    "slug": "zeeshan-ansari",
+    "profileId": "22007",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "3575"
+  },
+  {
+    "name": "Jaydev Unadkat",
+    "slug": "jaydev-unadkat",
+    "profileId": "86",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "180"
+  },
+  {
+    "name": "Eshan Malinga",
+    "slug": "eshan-malinga",
+    "profileId": "22228",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "3339"
+  },
+  {
+    "name": "Sakib Hussain",
+    "slug": "sakib-hussain",
+    "profileId": "20717",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "3104"
+  },
+  {
+    "name": "Onkar Tarmale",
+    "slug": "onkar-tarmale",
+    "profileId": "23048",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "4560"
+  },
+  {
+    "name": "Amit Kumar",
+    "slug": "amit-kumar",
+    "profileId": "23087",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "4559"
+  },
+  {
+    "name": "Praful Hinge",
+    "slug": "praful-hinge",
+    "profileId": "23114",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "4558"
+  },
+  {
+    "name": "Shivam Mavi",
+    "slug": "shivam-mavi",
+    "profileId": "3779",
+    "team": "sunrisers-hyderabad",
+    "headshotId": "154"
+  }
+]

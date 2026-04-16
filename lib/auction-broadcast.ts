@@ -2,6 +2,8 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 
+import { supabaseServerFetch } from "@/lib/supabase/server-fetch";
+
 let _broadcastClient: ReturnType<typeof createClient> | null = null;
 let _broadcastChannel:
   | ReturnType<ReturnType<typeof createClient>["channel"]>
@@ -20,6 +22,9 @@ function getBroadcastClient() {
   }
 
   _broadcastClient = createClient(url, key, {
+    global: {
+      fetch: supabaseServerFetch,
+    },
     auth: { persistSession: false },
   });
 
