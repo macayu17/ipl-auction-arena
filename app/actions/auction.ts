@@ -934,6 +934,7 @@ export async function resetAuctionAction() {
     }
 
     await invalidateAllCaches();
+    revalidateNonAuctionViews();
     await publishAuctionEvent({
       type: "auction_reset",
       source: "auction.resetAuctionAction",

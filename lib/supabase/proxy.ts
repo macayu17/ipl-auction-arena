@@ -4,6 +4,35 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getRoleHome, getUserRoleFromUser } from "@/lib/auth-roles";
 import { getSupabaseEnv, hasSupabaseEnv } from "@/lib/supabase/env";
 
+function getAuthErrorCode(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return "";
+  }
+
+  const candidate = (error as { code?: unknown }).code;
+  return typeof candidate === "string" ? candidate : "";
+}
+
+function getAuthErrorMessage(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return "";
+  }
+
+  const candidate = (error as { message?: unknown }).message;
+  return typeof candidate === "string" ? candidate : "";
+}
+
+function isRefreshTokenFailure(error: unknown) {
+  const code = getAuthErrorCode(error);
+  const message = getAuthErrorMessage(error).toLowerCase();
+
+  return (
+    code === "refresh_token_not_found" ||
+    message.includes("invalid refresh token") ||
+    message.includes("refresh token not found")
+  );
+}
+
 function matchesRoute(pathname: string, route: string) {
   if (route === "/") {
     return pathname === "/";
@@ -48,7 +77,9 @@ export async function updateSession(request: NextRequest) {
 
     user = sessionUser;
   } catch (error) {
-    console.error("Supabase session refresh failed in proxy middleware.", error);
+    if (!isRefreshTokenFailure(error)) {
+      console.error("Supabase session refresh failed in proxy middleware.", error);
+    }
   }
 
   const pathname = request.nextUrl.pathname;

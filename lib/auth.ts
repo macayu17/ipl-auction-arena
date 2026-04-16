@@ -9,6 +9,35 @@ import { createClient } from "@/lib/supabase/server";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import type { Team, UserRole } from "@/types/app.types";
 
+function getAuthErrorCode(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return "";
+  }
+
+  const candidate = (error as { code?: unknown }).code;
+  return typeof candidate === "string" ? candidate : "";
+}
+
+function getAuthErrorMessage(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return "";
+  }
+
+  const candidate = (error as { message?: unknown }).message;
+  return typeof candidate === "string" ? candidate : "";
+}
+
+function isRefreshTokenFailure(error: unknown) {
+  const code = getAuthErrorCode(error);
+  const message = getAuthErrorMessage(error).toLowerCase();
+
+  return (
+    code === "refresh_token_not_found" ||
+    message.includes("invalid refresh token") ||
+    message.includes("refresh token not found")
+  );
+}
+
 export type SessionContext =
   | { status: "missing_env"; user: null; role: null }
   | { status: "anonymous"; user: null; role: null }
@@ -20,9 +49,32 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: User | null = null;
+
+  try {
+    const {
+      data: { user: authUser },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error) {
+      if (!isRefreshTokenFailure(error)) {
+        console.error("Failed to fetch authenticated user.", error);
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      user = session?.user ?? null;
+    } else {
+      user = authUser;
+    }
+  } catch (error) {
+    if (!isRefreshTokenFailure(error)) {
+      console.error("Failed to resolve session context.", error);
+    }
+  }
 
   if (!user) {
     return { status: "anonymous", user: null, role: null };

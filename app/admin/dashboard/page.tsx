@@ -1,3 +1,4 @@
+import { ResetWholeAuctionPanel } from "@/components/admin/reset-whole-auction-panel";
 import { TeamLogo } from "@/components/auction/team-logo";
 import { MetricCard } from "@/components/layout/metric-card";
 import { SectionCard } from "@/components/layout/section-card";
@@ -50,6 +51,15 @@ export default async function AdminDashboardPage() {
           iconName="bar-chart-3"
         />
       </div>
+
+      <SectionCard
+        title="Auction Controls"
+        description="Critical room-level controls. Use carefully."
+      >
+        <div className="max-w-sm">
+          <ResetWholeAuctionPanel />
+        </div>
+      </SectionCard>
 
       <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
         <SectionCard

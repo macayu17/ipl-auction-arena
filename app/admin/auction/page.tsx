@@ -8,7 +8,6 @@ import {
   markUnsoldAction,
   nominateNextPlayerAction,
   placeBidAction,
-  resetAuctionAction,
   sellCurrentPlayerAction,
   setTimerStateAction,
   setBidIncrementAction,
@@ -832,25 +831,6 @@ export default function AdminAuctionPage() {
               </div>
             )}
 
-            <form
-              action={resetAuctionAction}
-              onSubmit={(event) => {
-                if (!window.confirm("Reset the whole auction? This clears all bids, resets all players to pool, and resets team spend.")) {
-                  event.preventDefault();
-                }
-              }}
-              className="pt-1 space-y-2"
-            >
-              <p className="text-[10px] lg:text-[11px] font-bold uppercase tracking-wider text-rose-300/75">
-                Danger zone
-              </p>
-              <SubmitButton
-                pendingLabel="Resetting..."
-                className="w-full h-8 rounded-lg border border-rose-500/40 bg-rose-500/10 text-[10px] lg:text-[11px] font-bold uppercase tracking-wider text-rose-200 hover:bg-rose-500/20 hover:text-rose-100 transition"
-              >
-                Reset Whole Auction
-              </SubmitButton>
-            </form>
           </SectionCard>
 
           <SectionCard
