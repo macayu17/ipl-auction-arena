@@ -7,6 +7,7 @@ export interface LooseQuery<T = unknown>
   extends PromiseLike<LooseQueryResult<T>> {
   select(...args: unknown[]): LooseQuery<T>;
   insert(...args: unknown[]): LooseQuery<T>;
+  upsert(...args: unknown[]): LooseQuery<T>;
   update(...args: unknown[]): LooseQuery<T>;
   delete(...args: unknown[]): LooseQuery<T>;
   eq(...args: unknown[]): LooseQuery<T>;
