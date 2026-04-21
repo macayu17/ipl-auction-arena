@@ -2,7 +2,6 @@ import "server-only";
 
 import type { User } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
-import { cache } from "react";
 
 import { getRoleHome, getUserRoleFromUser } from "@/lib/auth-roles";
 import { createClient } from "@/lib/supabase/server";
@@ -43,7 +42,7 @@ export type SessionContext =
   | { status: "anonymous"; user: null; role: null }
   | { status: "authenticated"; user: User; role: UserRole | null };
 
-export const getSessionContext = cache(async (): Promise<SessionContext> => {
+export async function getSessionContext(): Promise<SessionContext> {
   if (!hasSupabaseEnv()) {
     return { status: "missing_env", user: null, role: null };
   }
@@ -83,7 +82,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
   const role = getUserRoleFromUser(user);
 
   return { status: "authenticated", user, role };
-});
+}
 
 export async function requireRole(expectedRole: UserRole) {
   const session = await getSessionContext();
@@ -103,7 +102,7 @@ export async function requireRole(expectedRole: UserRole) {
   return session;
 }
 
-export const getTeamForCurrentUser = cache(async (): Promise<Team | null> => {
+export async function getTeamForCurrentUser(): Promise<Team | null> {
   const session = await getSessionContext();
 
   if (
@@ -122,4 +121,4 @@ export const getTeamForCurrentUser = cache(async (): Promise<Team | null> => {
     .maybeSingle();
 
   return data ?? null;
-});
+}

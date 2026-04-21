@@ -3,14 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { getSessionContext } from "@/lib/auth";
+import { getUserRoleFromUser } from "@/lib/auth-roles";
 import { invalidateAllCaches } from "@/lib/auction-cache";
 import { publishAuctionEvent } from "@/lib/redis";
 import {
   toLooseSupabaseClient,
   type LooseSupabaseClient,
 } from "@/lib/supabase/loose-client";
-import { createServiceClient } from "@/lib/supabase/server";
+import {
+  createClient as createAuthClient,
+  createServiceClient,
+} from "@/lib/supabase/server";
 import { isLegendaryRating } from "@/lib/utils";
 import type {
   AuctionPhase,
@@ -288,13 +291,37 @@ type AuctionBidRpcResponse = {
 };
 
 async function ensureAdmin() {
-  const session = await getSessionContext();
+  const supabase = await createAuthClient();
+  let user: Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"] = null;
 
-  if (session.status !== "authenticated" || session.role !== "admin") {
+  try {
+    const {
+      data: { user: authUser },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      user = session?.user ?? null;
+    } else {
+      user = authUser;
+    }
+  } catch {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    user = session?.user ?? null;
+  }
+
+  if (!user || getUserRoleFromUser(user) !== "admin") {
     return null;
   }
 
-  return session.user;
+  return user;
 }
 
 async function getAuctionState(supabase: LooseSupabaseClient) {
@@ -1127,6 +1154,7 @@ export async function markUnsoldAction() {
 export async function resetAuctionAction() {
   try {
     if (!(await ensureAdmin())) {
+      console.error("resetAuctionAction denied: missing admin session.");
       return;
     }
 
