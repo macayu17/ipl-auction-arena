@@ -11,10 +11,12 @@ import {
   type LooseSupabaseClient,
 } from "@/lib/supabase/loose-client";
 import { createServiceClient } from "@/lib/supabase/server";
+import { isLegendaryRating } from "@/lib/utils";
 import type {
   AuctionPhase,
   AuctionState,
   Player,
+  PlayerRole,
   Team,
 } from "@/types/app.types";
 
@@ -41,6 +43,185 @@ const reorderQueueSchema = z.object({
       "Queue order must contain at least one player id."
     ),
 });
+
+const ROUND_ROLE_ORDER: PlayerRole[] = [
+  "Batsman",
+  "Wicket-Keeper",
+  "All-Rounder",
+  "Bowler",
+];
+
+type RoundQueueState = {
+  players: Player[];
+  legendaryCount: number;
+  roleCounts: Record<PlayerRole, number>;
+};
+
+function createRoundQueueState(): RoundQueueState {
+  return {
+    players: [],
+    legendaryCount: 0,
+    roleCounts: {
+      Batsman: 0,
+      "Wicket-Keeper": 0,
+      "All-Rounder": 0,
+      Bowler: 0,
+    },
+  };
+}
+
+function compareQueuePriority(left: Player, right: Player) {
+  const queueDiff = (left.queue_order ?? Number.MAX_SAFE_INTEGER) -
+    (right.queue_order ?? Number.MAX_SAFE_INTEGER);
+
+  if (queueDiff !== 0) {
+    return queueDiff;
+  }
+
+  const ratingDiff = (right.rating ?? 0) - (left.rating ?? 0);
+
+  if (ratingDiff !== 0) {
+    return ratingDiff;
+  }
+
+  const priceDiff = right.base_price - left.base_price;
+
+  if (priceDiff !== 0) {
+    return priceDiff;
+  }
+
+  return left.name.localeCompare(right.name);
+}
+
+function addPlayerToRound(round: RoundQueueState, player: Player, role: PlayerRole) {
+  round.players.push(player);
+  round.roleCounts[role] += 1;
+
+  if (isLegendaryRating(player.rating)) {
+    round.legendaryCount += 1;
+  }
+}
+
+function pickRoundForRole(
+  roundOne: RoundQueueState,
+  roundTwo: RoundQueueState,
+  role: PlayerRole,
+  prioritizeLegendaryBalance: boolean
+) {
+  const roleDiff = roundOne.roleCounts[role] - roundTwo.roleCounts[role];
+
+  if (roleDiff !== 0) {
+    return roleDiff < 0 ? roundOne : roundTwo;
+  }
+
+  if (prioritizeLegendaryBalance) {
+    const legendaryDiff = roundOne.legendaryCount - roundTwo.legendaryCount;
+
+    if (legendaryDiff !== 0) {
+      return legendaryDiff < 0 ? roundOne : roundTwo;
+    }
+  }
+
+  const sizeDiff = roundOne.players.length - roundTwo.players.length;
+
+  if (sizeDiff !== 0) {
+    return sizeDiff < 0 ? roundOne : roundTwo;
+  }
+
+  return roundOne;
+}
+
+function interleaveRoundByRole(players: Player[]) {
+  const roleBuckets: Record<PlayerRole, Player[]> = {
+    Batsman: [],
+    "Wicket-Keeper": [],
+    "All-Rounder": [],
+    Bowler: [],
+  };
+
+  for (const player of players) {
+    const role = player.role as PlayerRole;
+
+    if (!ROUND_ROLE_ORDER.includes(role)) {
+      continue;
+    }
+
+    roleBuckets[role].push(player);
+  }
+
+  const ordered: Player[] = [];
+
+  while (true) {
+    let pushed = false;
+
+    for (const role of ROUND_ROLE_ORDER) {
+      const nextPlayer = roleBuckets[role].shift();
+
+      if (!nextPlayer) {
+        continue;
+      }
+
+      ordered.push(nextPlayer);
+      pushed = true;
+    }
+
+    if (!pushed) {
+      break;
+    }
+  }
+
+  return ordered;
+}
+
+function buildTwoRoundQueue(poolPlayers: Player[]) {
+  const roleBuckets: Record<PlayerRole, Player[]> = {
+    Batsman: [],
+    "Wicket-Keeper": [],
+    "All-Rounder": [],
+    Bowler: [],
+  };
+  const fallbackPlayers: Player[] = [];
+
+  for (const player of [...poolPlayers].sort(compareQueuePriority)) {
+    const role = player.role as PlayerRole;
+
+    if (!ROUND_ROLE_ORDER.includes(role)) {
+      fallbackPlayers.push(player);
+      continue;
+    }
+
+    roleBuckets[role].push(player);
+  }
+
+  const roundOne = createRoundQueueState();
+  const roundTwo = createRoundQueueState();
+
+  for (const role of ROUND_ROLE_ORDER) {
+    const rolePlayers = roleBuckets[role];
+    const legendaryPlayers = rolePlayers.filter((player) =>
+      isLegendaryRating(player.rating)
+    );
+    const standardPlayers = rolePlayers.filter(
+      (player) => !isLegendaryRating(player.rating)
+    );
+
+    for (const player of legendaryPlayers) {
+      const targetRound = pickRoundForRole(roundOne, roundTwo, role, true);
+      addPlayerToRound(targetRound, player, role);
+    }
+
+    for (const player of standardPlayers) {
+      const targetRound = pickRoundForRole(roundOne, roundTwo, role, false);
+      addPlayerToRound(targetRound, player, role);
+    }
+  }
+
+  return [
+    ...interleaveRoundByRole(roundOne.players),
+    ...interleaveRoundByRole(roundTwo.players),
+    ...fallbackPlayers,
+  ];
+}
 
 /**
  * Revalidate non-auction views (dashboard, players, teams).
@@ -99,6 +280,12 @@ function sortQueue(players: Player[]) {
     return left.name.localeCompare(right.name);
   });
 }
+
+type AuctionBidRpcResponse = {
+  success: boolean;
+  delta?: Record<string, unknown>;
+  error?: string;
+};
 
 async function ensureAdmin() {
   const session = await getSessionContext();
@@ -236,12 +423,6 @@ async function getCurrentPlayerWithTeamContext(
     auctionState,
     currentPlayer: playerResult.data as Player | null,
   };
-}
-
-function getNextBidAmount(auctionState: AuctionState, currentPlayer: Player) {
-  return auctionState.current_bid_amount > 0
-    ? auctionState.current_bid_amount + auctionState.bid_increment
-    : currentPlayer.base_price;
 }
 
 async function resolveTeamById(
@@ -389,6 +570,55 @@ export async function reorderQueueAction(formData: FormData) {
   }
 }
 
+export async function balanceQueueIntoTwoRoundsAction() {
+  try {
+    if (!(await ensureAdmin())) {
+      return;
+    }
+
+    const supabase = toLooseSupabaseClient(await createServiceClient());
+    const playersResult = await supabase
+      .from("players")
+      .select("*")
+      .in("status", ["pool", "unsold"]);
+
+    if (playersResult.error) {
+      throw playersResult.error;
+    }
+
+    const queuePlayers = (playersResult.data as Player[] | null) ?? [];
+    const poolPlayers = queuePlayers.filter((player) => player.status === "pool");
+    const unsoldPlayers = queuePlayers
+      .filter((player) => player.status === "unsold")
+      .sort(compareQueuePriority);
+
+    const balancedQueue = [
+      ...buildTwoRoundQueue(poolPlayers),
+      ...unsoldPlayers,
+    ];
+
+    for (const [index, player] of balancedQueue.entries()) {
+      const result = await supabase
+        .from("players")
+        .update({ queue_order: index + 1 })
+        .eq("id", player.id);
+
+      if (result.error) {
+        throw result.error;
+      }
+    }
+
+    await publishAuctionEvent({
+      type: "queue_reordered",
+      source: "auction.balanceQueueIntoTwoRoundsAction",
+      delta: { rounds: 2 },
+    });
+    revalidateNonAuctionViews();
+  } catch (error) {
+    console.error("Failed to balance queue into two rounds", error);
+  }
+}
+
 export async function setBidIncrementAction(formData: FormData) {
   try {
     if (!(await ensureAdmin())) {
@@ -478,9 +708,15 @@ export async function placeBidAction(formData: FormData) {
     // Keep the RPC fast path for normal quick bids.
     if (!customAmount && !customIncrement) {
       const supabase = await createServiceClient();
+      const rpcClient = supabase as unknown as {
+        rpc: (
+          functionName: "place_auction_bid",
+          args: { p_team_id: string }
+        ) => Promise<{ data: AuctionBidRpcResponse | null; error: Error | null }>;
+      };
 
       // Execute all 5 db operations in 1 ultra-fast RPC call
-      const result = await (supabase as any).rpc("place_auction_bid", {
+      const result = await rpcClient.rpc("place_auction_bid", {
         p_team_id: teamId,
       });
 
@@ -488,11 +724,7 @@ export async function placeBidAction(formData: FormData) {
         throw result.error;
       }
 
-      const data = result.data as {
-        success: boolean;
-        delta?: Record<string, unknown>;
-        error?: string;
-      } | null;
+      const data = result.data;
 
       if (data?.success && data.delta) {
         await publishAuctionEvent({
@@ -899,35 +1131,74 @@ export async function resetAuctionAction() {
     }
 
     const supabase = toLooseSupabaseClient(await createServiceClient());
-    const [deleteBidsResult, resetPlayersResult, resetTeamsResult] =
-      await Promise.all([
-        supabase.from("bids").delete().not("id", "is", null),
-        supabase.from("players").update({
+    const [bidsResult, playersResult, teamsResult] = await Promise.all([
+      supabase.from("bids").select("id"),
+      supabase.from("players").select("id"),
+      supabase.from("teams").select("id"),
+    ]);
+
+    if (bidsResult.error) {
+      throw bidsResult.error;
+    }
+
+    if (playersResult.error) {
+      throw playersResult.error;
+    }
+
+    if (teamsResult.error) {
+      throw teamsResult.error;
+    }
+
+    const bidIds = ((bidsResult.data ?? []) as { id: string }[]).map(
+      (bid) => bid.id
+    );
+    const playerIds = ((playersResult.data ?? []) as { id: string }[]).map(
+      (player) => player.id
+    );
+    const teamIds = ((teamsResult.data ?? []) as { id: string }[]).map(
+      (team) => team.id
+    );
+
+    if (bidIds.length > 0) {
+      const deleteBidsResult = await supabase
+        .from("bids")
+        .delete()
+        .in("id", bidIds);
+
+      if (deleteBidsResult.error) {
+        throw deleteBidsResult.error;
+      }
+    }
+
+    if (playerIds.length > 0) {
+      const resetPlayersResult = await supabase
+        .from("players")
+        .update({
           status: "pool",
           sold_to: null,
           sold_price: null,
-        }).not("id", "is", null),
-        supabase.from("teams").update({ purse_spent: 0 }).not("id", "is", null),
-      ]);
+        })
+        .in("id", playerIds);
 
-    if (deleteBidsResult.error) {
-      throw deleteBidsResult.error;
+      if (resetPlayersResult.error) {
+        throw resetPlayersResult.error;
+      }
     }
 
-    if (resetPlayersResult.error) {
-      throw resetPlayersResult.error;
-    }
+    if (teamIds.length > 0) {
+      const resetTeamsResult = await supabase
+        .from("teams")
+        .update({ purse_spent: 0 })
+        .in("id", teamIds);
 
-    if (resetTeamsResult.error) {
-      throw resetTeamsResult.error;
+      if (resetTeamsResult.error) {
+        throw resetTeamsResult.error;
+      }
     }
-
-    await getAuctionState(supabase);
 
     const resetAuctionStateResult = await supabase
       .from("auction_state")
-      .update(defaultAuctionState)
-      .eq("id", 1);
+      .upsert(defaultAuctionState, { onConflict: "id" });
 
     if (resetAuctionStateResult.error) {
       throw resetAuctionStateResult.error;
@@ -935,10 +1206,20 @@ export async function resetAuctionAction() {
 
     await invalidateAllCaches();
     revalidateNonAuctionViews();
-    await publishAuctionEvent({
-      type: "auction_reset",
-      source: "auction.resetAuctionAction",
-    });
+    revalidatePath("/admin/auction");
+    revalidatePath("/team/auction");
+
+    try {
+      await publishAuctionEvent({
+        type: "auction_reset",
+        source: "auction.resetAuctionAction",
+      });
+    } catch (broadcastError) {
+      console.error(
+        "Auction reset completed, but live broadcast failed.",
+        broadcastError
+      );
+    }
   } catch (error) {
     console.error("Failed to reset auction", error);
   }
