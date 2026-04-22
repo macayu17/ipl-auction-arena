@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { OverseasBadge } from "@/components/auction/overseas-badge";
 import { PlayerHeadshot } from "@/components/auction/player-headshot";
+import { SoldNotificationToast } from "@/components/auction/sold-notification-toast";
 import { TeamLogo } from "@/components/auction/team-logo";
 import { TimerDisplay } from "@/components/auction/timer-display";
 import { useLiveAuctionSync } from "@/components/auction/use-live-auction-sync";
@@ -45,7 +46,7 @@ const emptyAuctionState: AuctionState = {
 export default function TeamAuctionPage() {
   const [squadExpanded, setSquadExpanded] = useState(false);
 
-  const { data, isRefreshing } = useLiveAuctionSync<{
+  const { data, isRefreshing, soldNotification } = useLiveAuctionSync<{
     auctionState: AuctionState;
     currentPlayer: TeamVisiblePlayer | null;
     leadingTeam: Team | null;
@@ -121,6 +122,10 @@ export default function TeamAuctionPage() {
 
   return (
     <>
+      {soldNotification ? (
+        <SoldNotificationToast notification={soldNotification} />
+      ) : null}
+
       {activeSlide ? (
         <ActiveSlideOverlay slide={activeSlide} audienceLabel="team consoles" />
       ) : null}

@@ -20,6 +20,7 @@ import { OverseasBadge } from "@/components/auction/overseas-badge";
 import { PlayerHeadshot } from "@/components/auction/player-headshot";
 import { TeamLogo } from "@/components/auction/team-logo";
 import { TimerDisplay } from "@/components/auction/timer-display";
+import { SoldNotificationToast } from "@/components/auction/sold-notification-toast";
 import { useLiveAuctionSync } from "@/components/auction/use-live-auction-sync";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { MetricCard } from "@/components/layout/metric-card";
@@ -97,7 +98,7 @@ export default function AdminAuctionPage() {
   const [quickBidCustomIncrement, setQuickBidCustomIncrement] = useState("");
   const [quickBidCustomAmount, setQuickBidCustomAmount] = useState("");
 
-  const { data, isRefreshing } = useLiveAuctionSync<{
+  const { data, soldNotification } = useLiveAuctionSync<{
     auctionState: AuctionState;
     currentPlayer: Player | null;
     leadingTeam: Team | null;
@@ -176,6 +177,10 @@ export default function AdminAuctionPage() {
 
   return (
     <>
+      {soldNotification ? (
+        <SoldNotificationToast notification={soldNotification} />
+      ) : null}
+
       {/* ── Metric Cards: 2x2 on mobile, 4-col on xl ── */}
       <div className="grid grid-cols-2 gap-2 xl:grid-cols-4 xl:gap-3">
         <MetricCard
@@ -208,15 +213,9 @@ export default function AdminAuctionPage() {
         />
       </div>
 
-      <div className="flex justify-end">
-        <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 lg:px-4 lg:py-2 text-[10px] lg:text-xs tracking-normal text-[var(--text-soft)]">
-          {isRefreshing ? "Syncing live state" : "Live state synced"}
-        </div>
-      </div>
-
       {/* ── MOBILE: Flex column with reordered sections ── */}
       {/* ── DESKTOP: 3-column grid (Player+Queue | BidEngine | TeamPulse) ── */}
-      <div className="flex flex-col gap-2 xl:grid xl:grid-cols-[1fr_1.5fr_0.8fr] xl:gap-3">
+      <div className="flex flex-col gap-1.5 xl:grid xl:grid-cols-[1fr_1.5fr_0.8fr] xl:gap-2">
 
         {/* ============================================================ */}
         {/* SECTION: Auction Engine — shows FIRST on mobile (order-1)    */}

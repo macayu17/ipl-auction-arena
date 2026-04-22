@@ -18,6 +18,14 @@ type SyncPayloadBase = {
   [key: string]: unknown;
 };
 
+export type SoldNotification = {
+  id: number;
+  playerName: string;
+  teamName: string;
+  teamCode?: string;
+  amount: number;
+};
+
 const MAX_FRONTEND_DELAY_MS = 200;
 const FALLBACK_POLL_INTERVAL_MS = 1000;
 const RECENT_FETCH_WINDOW_MS = 900;
@@ -45,9 +53,11 @@ export function useLiveAuctionSync<T extends SyncPayloadBase>({
 }) {
   const [data, setData] = useState(initialData);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [soldNotification, setSoldNotification] = useState<SoldNotification | null>(null);
   const fetchInFlightRef = useRef(false);
   const pendingRefreshRef = useRef(false);
   const lastFetchTimeRef = useRef(0);
+  const soldNotificationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setData(initialData);
@@ -157,6 +167,37 @@ export function useLiveAuctionSync<T extends SyncPayloadBase>({
         }
 
         // Non-bid updates (phase/timer/sold/etc.) should sync quickly, but can still be coalesced.
+        if (eventPayload && eventPayload.type === "player_sold" && eventPayload.delta) {
+          const soldDelta = eventPayload.delta as Partial<{
+            playerName: string;
+            teamName: string;
+            teamCode: string;
+            amount: number;
+          }>;
+
+          if (
+            typeof soldDelta.playerName === "string" &&
+            typeof soldDelta.teamName === "string" &&
+            typeof soldDelta.amount === "number"
+          ) {
+            if (soldNotificationTimeoutRef.current) {
+              clearTimeout(soldNotificationTimeoutRef.current);
+            }
+
+            setSoldNotification({
+              id: Date.now(),
+              playerName: soldDelta.playerName,
+              teamName: soldDelta.teamName,
+              teamCode: typeof soldDelta.teamCode === "string" ? soldDelta.teamCode : undefined,
+              amount: soldDelta.amount,
+            });
+
+            soldNotificationTimeoutRef.current = setTimeout(() => {
+              setSoldNotification(null);
+            }, 4200);
+          }
+        }
+
         scheduleSnapshotRefresh(BROADCAST_SYNC_DEBOUNCE_MS);
       })
       .subscribe();
@@ -181,11 +222,16 @@ export function useLiveAuctionSync<T extends SyncPayloadBase>({
       void supabase.removeChannel(channel);
       if (pollInterval) clearInterval(pollInterval);
       if (scheduledRefresh) clearTimeout(scheduledRefresh);
+      if (soldNotificationTimeoutRef.current) {
+        clearTimeout(soldNotificationTimeoutRef.current);
+        soldNotificationTimeoutRef.current = null;
+      }
     };
   }, [expectedRole, refreshSnapshot]);
 
   return {
     data,
     isRefreshing,
+    soldNotification,
   };
 }

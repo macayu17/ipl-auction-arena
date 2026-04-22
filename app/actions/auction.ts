@@ -1092,9 +1092,19 @@ export async function sellCurrentPlayerAction() {
       throw updateAuctionStateResult.error;
     }
 
+    const soldAmount = auctionState.current_bid_amount;
+    const nextPurseSpent = team.purse_spent + soldAmount;
+
     await publishAuctionEvent({
       type: "player_sold",
       source: "auction.sellCurrentPlayerAction",
+      delta: {
+        playerName: currentPlayer.name,
+        teamName: team.name,
+        teamCode: team.short_code,
+        amount: soldAmount,
+        purseLeft: Math.max(team.purse_total - nextPurseSpent, 0),
+      },
     });
   } catch (error) {
     console.error("Failed to sell current player", error);

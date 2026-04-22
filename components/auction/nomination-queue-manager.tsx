@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, GripVertical } from "lucide-react";
 
 import {
+  balanceQueueIntoTwoRoundsAction,
   nominatePlayerAction,
   reorderQueueAction,
 } from "@/app/actions/auction";
@@ -92,6 +93,28 @@ export function NominationQueueManager({
           defaultValue={JSON.stringify(orderedIds)}
           type="hidden"
         />
+      </form>
+
+      <form
+        action={balanceQueueIntoTwoRoundsAction}
+        onSubmit={(event) => {
+          if (
+            !window.confirm(
+              "Rebuild queue into two rounds with role coverage and balanced legendary players?"
+            )
+          ) {
+            event.preventDefault();
+          }
+        }}
+        className="flex justify-end"
+      >
+        <button
+          type="submit"
+          disabled={orderedQueue.length === 0}
+          className="rounded-lg border border-[var(--gold)]/35 bg-[var(--gold)]/12 px-3 py-1.5 text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--gold)] transition hover:bg-[var(--gold)]/20 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Balance 2 Rounds
+        </button>
       </form>
 
       {orderedQueue.length === 0 ? (

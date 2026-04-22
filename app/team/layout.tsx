@@ -6,7 +6,6 @@ import { TeamLayoutSlideGate } from "@/components/slides/team-layout-slide-gate"
 import { getTeamForCurrentUser, requireRole } from "@/lib/auth";
 import { getActiveSlide } from "@/lib/auction-data";
 import { hasSupabaseEnv, SUPABASE_ENV_HINT } from "@/lib/supabase/env";
-import { formatPurse } from "@/lib/utils";
 import { IPL_TEAMS } from "@/types/app.types";
 
 const navItems = [
@@ -37,8 +36,6 @@ export default async function TeamLayout({
 
   const teamName = linkedTeam?.name ?? previewTeam.name;
   const teamCode = linkedTeam?.short_code ?? previewTeam.short_code;
-  const purseTotal = linkedTeam?.purse_total ?? previewTeam.purse_total;
-  const purseSpent = linkedTeam?.purse_spent ?? 0;
 
   let banner: React.ReactNode = null;
 
@@ -68,7 +65,6 @@ export default async function TeamLayout({
       navItems={[...navItems]}
       stats={[
         { label: "Team", value: teamName },
-        { label: "Purse left", value: formatPurse(purseTotal, purseSpent) },
         { label: "Auction mode", value: "Live-ready" },
       ]}
       userLabel={
