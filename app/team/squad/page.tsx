@@ -4,6 +4,13 @@ import { SectionCard } from "@/components/layout/section-card";
 import { requireRole } from "@/lib/auth";
 import { getTeamSquadPageData } from "@/lib/auction-data";
 import {
+  countPlayersByRole,
+  formatRoleRequirement,
+  getEffectiveBatsmanCount,
+  getSquadRuleStatus,
+  SQUAD_ROLE_LIMITS,
+} from "@/lib/squad-rules";
+import {
   formatPrice,
   formatPurse,
   getRoleBadgeColor,
@@ -52,6 +59,8 @@ export default async function TeamSquadPage() {
   const overseasCount = squad.filter(
     (player) => player.nationality === "Overseas"
   ).length;
+  const roleCounts = countPlayersByRole(squad);
+  const squadRuleStatus = getSquadRuleStatus(roleCounts);
 
   return (
     <>
@@ -84,11 +93,47 @@ export default async function TeamSquadPage() {
 
       <SectionCard
         title="Squad composition"
-        description="Purchased players are grouped by role so the team can assess balance at a glance."
+        description="Rules: Batsman 2-3 (All-Rounders count for batting minimum), Wicket-Keeper exactly 1, All-Rounder min 3, Bowler 3-4."
       >
+        <div
+          className={`mb-4 rounded-lg border px-4 py-3 text-sm ${
+            squadRuleStatus.isCompliant
+              ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-100"
+              : "border-amber-400/25 bg-amber-500/10 text-amber-100"
+          }`}
+        >
+          <p className="font-semibold">
+            {squadRuleStatus.isCompliant
+              ? "Squad composition is currently compliant."
+              : "Squad composition is not complete yet."}
+          </p>
+          <p className="mt-1 text-xs text-current/90">
+            Effective batting options (Batsman + All-Rounder):{" "}
+            {getEffectiveBatsmanCount(roleCounts)}
+          </p>
+          {!squadRuleStatus.isCompliant ? (
+            <p className="mt-1 text-xs text-current/90">
+              {[...squadRuleStatus.minViolations, ...squadRuleStatus.maxViolations].join(" ")}
+            </p>
+          ) : null}
+        </div>
+
         <div className="grid gap-4 xl:grid-cols-4">
           {roleBuckets.map((role) => {
             const players = squad.filter((player) => player.role === role);
+            const roleLimits = SQUAD_ROLE_LIMITS[role];
+            const roleCountForMinimum =
+              role === "Batsman"
+                ? getEffectiveBatsmanCount(roleCounts)
+                : roleCounts[role];
+            const meetsMinimum = roleCountForMinimum >= roleLimits.min;
+            const meetsMaximum =
+              roleLimits.max === null || roleCounts[role] <= roleLimits.max;
+            const roleHealthy = meetsMinimum && meetsMaximum;
+            const countLabel =
+              role === "Batsman"
+                ? `${roleCounts.Batsman} (+${roleCounts["All-Rounder"]})`
+                : String(players.length);
 
             return (
               <article
@@ -96,11 +141,16 @@ export default async function TeamSquadPage() {
                 className="rounded-lg border border-white/5 bg-transparent shadow-none rounded-lg p-5"
               >
                 <div className="flex items-center justify-between gap-4">
-                  <h2 className="text-lg font-semibold text-white">{role}</h2>
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">{role}</h2>
+                    <p className="mt-0.5 text-[11px] text-white/50">
+                      {formatRoleRequirement(role)}
+                    </p>
+                  </div>
                   <span
-                    className={`inline-flex rounded-lg border px-3 py-1 text-xs font-medium ${getRoleBadgeColor(role)}`}
+                    className={`inline-flex rounded-lg border px-3 py-1 text-xs font-medium ${roleHealthy ? getRoleBadgeColor(role) : "border-amber-300/40 bg-amber-400/10 text-amber-200"}`}
                   >
-                    {players.length}
+                    {countLabel}
                   </span>
                 </div>
                 <div className="mt-4 space-y-3">

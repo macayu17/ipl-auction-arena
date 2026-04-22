@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 
 import { applyResolvedPlayerPhotoUrls } from "@/lib/player-images";
+import { countPlayersByRole, getSquadRuleStatus } from "@/lib/squad-rules";
 import { toLooseSupabaseClient } from "@/lib/supabase/loose-client";
 import { createServiceClient } from "@/lib/supabase/server";
 import { isLegendaryRating } from "@/lib/utils";
@@ -82,6 +83,8 @@ function buildTeamSummary(
   return teams
     .map((team) => {
       const squad = players.filter((player) => player.sold_to === team.id);
+      const roleCounts = countPlayersByRole(squad);
+      const squadRuleStatus = getSquadRuleStatus(roleCounts);
 
       return {
         ...team,
@@ -91,6 +94,8 @@ function buildTeamSummary(
           (sum, player) => sum + (player.rating ?? 0),
           0
         ),
+        role_counts: roleCounts,
+        squad_rule_status: squadRuleStatus,
         credentials: credentialByTeamId.get(team.id) ?? null,
       };
     })
@@ -308,14 +313,20 @@ export const getTeamAuctionPageData = cache(async (userId: string) => {
     }))) as BidWithTeam[];
   }
 
+  const mySquad = players
+    .filter((player) => player.sold_to === myTeam?.id)
+    .map(stripPlayerRating);
+  const mySquadRoleCounts = countPlayersByRole(mySquad);
+  const mySquadRuleStatus = getSquadRuleStatus(mySquadRoleCounts);
+
   return {
     auctionState,
     currentPlayer: currentPlayer ? stripPlayerRating(currentPlayer) : null,
     leadingTeam,
     myTeam,
-    mySquad: players
-      .filter((player) => player.sold_to === myTeam?.id)
-      .map(stripPlayerRating),
+    mySquad,
+    mySquadRoleCounts,
+    mySquadRuleStatus,
     bidHistory,
   };
 });

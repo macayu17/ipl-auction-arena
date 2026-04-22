@@ -34,6 +34,18 @@ export type AuctionPhase = "setup" | "live" | "paused" | "ended";
 
 export type UserRole = "admin" | "team";
 
+export type SquadRoleCounts = Record<PlayerRole, number>;
+
+export type SquadRuleStatus = {
+  counts: SquadRoleCounts;
+  effectiveBatsmanCount: number;
+  minViolations: string[];
+  maxViolations: string[];
+  isMinSatisfied: boolean;
+  isMaxSatisfied: boolean;
+  isCompliant: boolean;
+};
+
 // Extended types with relations
 export interface BidWithTeam extends Bid {
   team?: Team;
@@ -47,6 +59,8 @@ export interface TeamWithSummary extends Team {
   players_acquired: number;
   purse_remaining: number;
   squad_rating_total: number;
+  role_counts: SquadRoleCounts;
+  squad_rule_status: SquadRuleStatus;
   credentials: TeamCredential | null;
 }
 

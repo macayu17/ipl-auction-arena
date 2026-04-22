@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getUserRoleFromUser } from "@/lib/auth-roles";
 import { invalidateAllCaches } from "@/lib/auction-cache";
 import { publishAuctionEvent } from "@/lib/redis";
+import { canAddPlayerToSquad, countPlayersByRole } from "@/lib/squad-rules";
 import {
   toLooseSupabaseClient,
   type LooseSupabaseClient,
@@ -1079,6 +1080,31 @@ export async function sellCurrentPlayerAction() {
     const purseRemaining = team.purse_total - team.purse_spent;
 
     if (purseRemaining < auctionState.current_bid_amount) {
+      return;
+    }
+
+    const teamSquadResult = await supabase
+      .from("players")
+      .select("role")
+      .eq("sold_to", team.id)
+      .eq("status", "sold");
+
+    if (teamSquadResult.error) {
+      throw teamSquadResult.error;
+    }
+
+    const teamRoleCounts = countPlayersByRole(
+      (teamSquadResult.data as { role: PlayerRole }[] | null) ?? []
+    );
+    const roleCheck = canAddPlayerToSquad(
+      teamRoleCounts,
+      currentPlayer.role as PlayerRole
+    );
+
+    if (!roleCheck.allowed) {
+      console.warn(
+        `Sell blocked for ${team.short_code}: ${roleCheck.reason ?? "role cap reached"}`
+      );
       return;
     }
 

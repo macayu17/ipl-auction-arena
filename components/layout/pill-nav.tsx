@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { gsap } from 'gsap';
 
 export type PillNavItem = {
@@ -44,7 +45,7 @@ const PillNav: React.FC<PillNavProps> = ({
   const circleRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const tlRefs = useRef<Array<gsap.core.Timeline | null>>([]);
   const activeTweenRefs = useRef<Array<gsap.core.Tween | null>>([]);
-  const logoImgRef = useRef<HTMLImageElement | null>(null);
+  const logoImgRef = useRef<HTMLDivElement | null>(null);
   const logoTweenRef = useRef<gsap.core.Tween | null>(null);
   const hamburgerRef = useRef<HTMLButtonElement | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
@@ -264,14 +265,22 @@ const PillNav: React.FC<PillNavProps> = ({
             ref={el => {
               logoRef.current = el as HTMLElement;
             }}
-            className="rounded-full p-2 inline-flex items-center justify-center overflow-hidden border border-white/5"
+            className="rounded-full p-1.5 inline-flex items-center justify-center overflow-hidden border border-white/5"
             style={{
               width: 'var(--nav-h)',
               height: 'var(--nav-h)',
               background: 'var(--pill-bg, #000)'
             }}
           >
-            <img src={logo} alt={logoAlt} ref={logoImgRef} className="w-full h-full object-cover block" />
+            <div ref={logoImgRef} className="relative w-full h-full">
+              <Image
+                src={logo}
+                alt={logoAlt}
+                fill
+                sizes="36px"
+                className="object-contain scale-[0.94] block select-none"
+              />
+            </div>
           </Link>
         ) : (
           <a
@@ -281,14 +290,22 @@ const PillNav: React.FC<PillNavProps> = ({
             ref={el => {
               logoRef.current = el;
             }}
-            className="rounded-full p-2 inline-flex items-center justify-center overflow-hidden border border-white/5"
+            className="rounded-full p-1.5 inline-flex items-center justify-center overflow-hidden border border-white/5"
             style={{
               width: 'var(--nav-h)',
               height: 'var(--nav-h)',
               background: 'var(--pill-bg, #000)'
             }}
           >
-            <img src={logo} alt={logoAlt} ref={logoImgRef} className="w-full h-full object-cover block" />
+            <div ref={logoImgRef} className="relative w-full h-full">
+              <Image
+                src={logo}
+                alt={logoAlt}
+                fill
+                sizes="36px"
+                className="object-contain scale-[0.94] block select-none"
+              />
+            </div>
           </a>
         )}
 

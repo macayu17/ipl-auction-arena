@@ -25,6 +25,7 @@ import { useLiveAuctionSync } from "@/components/auction/use-live-auction-sync";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { MetricCard } from "@/components/layout/metric-card";
 import { SectionCard } from "@/components/layout/section-card";
+import { canAddPlayerToSquad } from "@/lib/squad-rules";
 import { TEAM_COLORS } from "@/lib/team-colors";
 import {
   formatPrice,
@@ -161,6 +162,16 @@ export default function AdminAuctionPage() {
   const isLegendaryCurrentPlayer = currentPlayer
     ? isLegendaryRating(currentPlayer.rating)
     : false;
+  const leadingTeamSummary = leadingTeam
+    ? teamSummary.find((team) => team.id === leadingTeam.id) ?? null
+    : null;
+  const leadingTeamRoleCheck =
+    currentPlayer && leadingTeamSummary
+      ? canAddPlayerToSquad(leadingTeamSummary.role_counts, currentPlayer.role)
+      : { allowed: true, reason: null };
+  const sellBlockedByRoleCap = Boolean(
+    currentPlayer && leadingTeamSummary && !leadingTeamRoleCheck.allowed
+  );
 
   if (data === null) {
     return (
@@ -268,7 +279,10 @@ export default function AdminAuctionPage() {
                 const purseLeft = team.purse_remaining;
                 const canAfford = purseLeft >= nextBidAmount;
                 const isSameTeam = auctionState.current_bid_team_id === team.id;
-                const disabled = !currentPlayer || auctionState.phase !== "live" || isSameTeam || !canAfford;
+                const roleCapCheck = currentPlayer
+                  ? canAddPlayerToSquad(team.role_counts, currentPlayer.role)
+                  : { allowed: true, reason: null };
+                const disabled = !currentPlayer || auctionState.phase !== "live" || isSameTeam || !canAfford || !roleCapCheck.allowed;
 
                 return (
                   <form key={team.id} action={async (formData) => {
@@ -300,7 +314,11 @@ export default function AdminAuctionPage() {
                     >
                       <TeamLogo shortCode={team.short_code} size={32} className="lg:w-10 lg:h-10" />
                       <span className="text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-white">{team.short_code}</span>
-                      <span className="text-[8px] lg:text-[9px] font-medium text-white/40 mono-font">{formatPriceShort(purseLeft)}</span>
+                      <span
+                        className={`text-[8px] lg:text-[9px] font-medium ${roleCapCheck.allowed ? "text-white/40 mono-font" : "text-red-300/90 text-center leading-tight"}`}
+                      >
+                        {roleCapCheck.allowed ? formatPriceShort(purseLeft) : roleCapCheck.reason}
+                      </span>
                     </button>
                   </form>
                 );
@@ -406,7 +424,7 @@ export default function AdminAuctionPage() {
                     <SubmitButton
                       pendingLabel="Selling..."
                       className="glass-button-primary h-11 lg:h-12 rounded-xl text-sm lg:text-base font-bold uppercase tracking-wider col-span-1"
-                      disabled={!leadingTeam}
+                      disabled={!leadingTeam || sellBlockedByRoleCap}
                     >
                       🔨 Sell
                     </SubmitButton>
@@ -421,6 +439,11 @@ export default function AdminAuctionPage() {
                   </form>
                 </div>
               )}
+              {sellBlockedByRoleCap ? (
+                <p className="relative mt-2 text-[10px] lg:text-[11px] font-medium text-amber-200/90">
+                  Sell blocked: {leadingTeam?.short_code} has reached {leadingTeamRoleCheck.reason}.
+                </p>
+              ) : null}
 
               <div className="relative mt-4 lg:mt-6 grid gap-2 lg:gap-3 lg:grid-cols-2 items-start">
                 {/* Timer state */}
@@ -591,74 +614,76 @@ export default function AdminAuctionPage() {
                   </form>
                 </div>
 
-                <div className="glass-panel rounded-xl p-3 lg:p-4 border border-white/5 bg-black/30">
-                  <div className="text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
-                    Increment scale
-                  </div>
-                  <div className="mt-2 lg:mt-3 grid grid-cols-3 gap-1 lg:gap-1.5">
-                    {incrementPresets.map((increment) => (
-                      <form key={increment} action={setBidIncrementAction}>
-                        <input
-                          type="hidden"
-                          name="bidIncrement"
-                          value={String(increment)}
-                        />
-                        <SubmitButton
-                          pendingLabel="..."
-                          className={`w-full h-7 lg:h-8 rounded-md border text-[11px] lg:text-[12px] font-bold transition-all ${auctionState.bid_increment === increment ? "border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--gold)]" : "border-white/10 bg-black/40 text-[var(--text-soft)] hover:text-white hover:bg-white/10 hover:border-white/20"}`}
-                        >
-                          {formatPriceShort(increment)}
-                        </SubmitButton>
-                      </form>
-                    ))}
-                  </div>
-                  <form
-                    action={setBidIncrementAction}
-                    className="mt-2 lg:mt-3 grid grid-cols-[1fr_auto] gap-1 lg:gap-1.5"
-                  >
-                    <input
-                      name="bidIncrement"
-                      type="number"
-                      min="1"
-                      step="1"
-                      defaultValue={auctionState.bid_increment}
-                      className="w-full rounded-md border border-white/10 bg-black/50 px-2 py-1.5 text-[11px] lg:text-[12px] font-mono text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all h-7 lg:h-8"
-                    />
-                    <SubmitButton
-                      pendingLabel="..."
-                      className="h-7 lg:h-8 px-2.5 lg:px-3 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-white hover:bg-white/10 transition-all"
+                <div className="space-y-2 lg:space-y-3">
+                  <div className="glass-panel rounded-xl p-3 lg:p-4 border border-white/5 bg-black/30">
+                    <div className="text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
+                      Increment scale
+                    </div>
+                    <div className="mt-2 lg:mt-3 grid grid-cols-3 gap-1 lg:gap-1.5">
+                      {incrementPresets.map((increment) => (
+                        <form key={increment} action={setBidIncrementAction}>
+                          <input
+                            type="hidden"
+                            name="bidIncrement"
+                            value={String(increment)}
+                          />
+                          <SubmitButton
+                            pendingLabel="..."
+                            className={`w-full h-7 lg:h-8 rounded-md border text-[11px] lg:text-[12px] font-bold transition-all ${auctionState.bid_increment === increment ? "border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--gold)]" : "border-white/10 bg-black/40 text-[var(--text-soft)] hover:text-white hover:bg-white/10 hover:border-white/20"}`}
+                          >
+                            {formatPriceShort(increment)}
+                          </SubmitButton>
+                        </form>
+                      ))}
+                    </div>
+                    <form
+                      action={setBidIncrementAction}
+                      className="mt-2 lg:mt-3 grid grid-cols-[1fr_auto] gap-1 lg:gap-1.5"
                     >
-                      Save
-                    </SubmitButton>
+                      <input
+                        name="bidIncrement"
+                        type="number"
+                        min="1"
+                        step="1"
+                        defaultValue={auctionState.bid_increment}
+                        className="w-full rounded-md border border-white/10 bg-black/50 px-2 py-1.5 text-[11px] lg:text-[12px] font-mono text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all h-7 lg:h-8"
+                      />
+                      <SubmitButton
+                        pendingLabel="..."
+                        className="h-7 lg:h-8 px-2.5 lg:px-3 inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-white hover:bg-white/10 transition-all"
+                      >
+                        Save
+                      </SubmitButton>
+                    </form>
+                  </div>
+
+                  {/* All-teams purse adjustment */}
+                  <form action={adjustAllPursesAction} className="glass-panel rounded-xl p-3 lg:p-4 border border-white/5 bg-black/30">
+                    <div className="flex items-center gap-2 mb-2 lg:mb-3">
+                      <Wallet className="w-3.5 h-3.5 text-[var(--text-soft)]" />
+                      <div className="text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
+                        Set all teams purse (L)
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-[1fr_auto] gap-1.5 lg:gap-2">
+                      <input
+                        name="purseTotal"
+                        type="number"
+                        min="1"
+                        step="1"
+                        defaultValue="1000"
+                        className="w-full rounded-md border border-white/10 bg-black/50 px-2 py-1.5 text-[11px] lg:text-[12px] font-mono text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all h-7 lg:h-8"
+                      />
+                      <SubmitButton
+                        pendingLabel="..."
+                        className="h-7 lg:h-8 px-3 lg:px-4 inline-flex items-center justify-center rounded-md border border-[var(--gold)]/30 bg-[var(--gold)]/10 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-[var(--gold)] hover:bg-[var(--gold)]/20 transition-all"
+                      >
+                        Apply
+                      </SubmitButton>
+                    </div>
                   </form>
                 </div>
               </div>
-
-              {/* All-teams purse adjustment */}
-              <form action={adjustAllPursesAction} className="glass-panel rounded-xl p-3 lg:p-4 border border-white/5 bg-black/30">
-                <div className="flex items-center gap-2 mb-2 lg:mb-3">
-                  <Wallet className="w-3.5 h-3.5 text-[var(--text-soft)]" />
-                  <div className="text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
-                    Set all teams purse (L)
-                  </div>
-                </div>
-                <div className="grid grid-cols-[1fr_auto] gap-1.5 lg:gap-2">
-                  <input
-                    name="purseTotal"
-                    type="number"
-                    min="1"
-                    step="1"
-                    defaultValue="1000"
-                    className="w-full rounded-md border border-white/10 bg-black/50 px-2 py-1.5 text-[11px] lg:text-[12px] font-mono text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all h-7 lg:h-8"
-                  />
-                  <SubmitButton
-                    pendingLabel="..."
-                    className="h-7 lg:h-8 px-3 lg:px-4 inline-flex items-center justify-center rounded-md border border-[var(--gold)]/30 bg-[var(--gold)]/10 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-[var(--gold)] hover:bg-[var(--gold)]/20 transition-all"
-                  >
-                    Apply
-                  </SubmitButton>
-                </div>
-              </form>
             </div>
           </SectionCard>
 
