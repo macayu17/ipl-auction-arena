@@ -27,7 +27,7 @@ const defaultAuctionState: AuctionState = {
   current_bid_team_id: null,
   timer_seconds: 10,
   timer_active: false,
-  bid_increment: 5,
+  bid_increment: 50,
   created_at: new Date(0).toISOString(),
   updated_at: new Date(0).toISOString(),
 };

@@ -87,7 +87,7 @@ const emptyAuctionState: AuctionState = {
   current_bid_team_id: null,
   timer_seconds: 10,
   timer_active: false,
-  bid_increment: 5,
+  bid_increment: 50,
   created_at: new Date(0).toISOString(),
   updated_at: new Date(0).toISOString(),
 };
@@ -227,7 +227,41 @@ export default function AdminAuctionPage() {
             title="Quick Bid"
             description="Tap a team logo to place the next bid instantly."
           >
-            <div className="grid grid-cols-5 gap-1.5 lg:gap-2">
+            <div className="rounded-xl border border-white/10 bg-black/30 p-2.5 lg:p-3">
+              <div className="text-[8px] lg:text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
+                Quick bid custom increment (L)
+              </div>
+              <div className="mt-1.5 grid grid-cols-[1fr_auto] gap-1.5 lg:gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  inputMode="numeric"
+                  value={quickBidCustomIncrement}
+                  onChange={(event) => setQuickBidCustomIncrement(event.target.value)}
+                  placeholder={`Default ${auctionState.bid_increment}`}
+                  disabled={shouldApplyQuickBidCustomAmount}
+                  className="w-full rounded-lg border border-white/10 bg-black/50 px-2 py-1.5 text-[11px] lg:text-[12px] font-mono text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all h-7 lg:h-8"
+                />
+                <button
+                  type="button"
+                  onClick={() => setQuickBidCustomIncrement("")}
+                  disabled={!hasQuickBidCustomIncrement || shouldApplyQuickBidCustomAmount}
+                  className="h-7 lg:h-8 px-2.5 lg:px-3 inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-white transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Reset
+                </button>
+              </div>
+              <div className="mt-1.5 text-[9px] lg:text-[10px] text-[var(--text-soft)]">
+                {shouldApplyQuickBidCustomAmount
+                  ? "Custom amount is active. Increment is ignored for Quick Bid logos."
+                  : hasQuickBidCustomIncrement
+                  ? `Quick Bid logos will raise by ${formatPriceShort(effectiveQuickBidIncrement)}.`
+                  : `Quick Bid logos are using room increment ${formatPriceShort(auctionState.bid_increment)}.`}
+              </div>
+            </div>
+
+            <div className="mt-2 lg:mt-3 grid grid-cols-5 gap-1.5 lg:gap-2">
               {teamSummary.map((team) => {
                 const colors = TEAM_COLORS[team.short_code];
                 const isLeading = leadingTeam?.id === team.id;
@@ -271,40 +305,6 @@ export default function AdminAuctionPage() {
                   </form>
                 );
               })}
-            </div>
-
-            <div className="mt-2 lg:mt-3 rounded-xl border border-white/10 bg-black/30 p-2.5 lg:p-3">
-              <div className="text-[8px] lg:text-[9px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
-                Quick bid custom increment (L)
-              </div>
-              <div className="mt-1.5 grid grid-cols-[1fr_auto] gap-1.5 lg:gap-2">
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  inputMode="numeric"
-                  value={quickBidCustomIncrement}
-                  onChange={(event) => setQuickBidCustomIncrement(event.target.value)}
-                  placeholder={`Default ${auctionState.bid_increment}`}
-                  disabled={shouldApplyQuickBidCustomAmount}
-                  className="w-full rounded-lg border border-white/10 bg-black/50 px-2 py-1.5 text-[11px] lg:text-[12px] font-mono text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all h-7 lg:h-8"
-                />
-                <button
-                  type="button"
-                  onClick={() => setQuickBidCustomIncrement("")}
-                  disabled={!hasQuickBidCustomIncrement || shouldApplyQuickBidCustomAmount}
-                  className="h-7 lg:h-8 px-2.5 lg:px-3 inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-white transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Reset
-                </button>
-              </div>
-              <div className="mt-1.5 text-[9px] lg:text-[10px] text-[var(--text-soft)]">
-                {shouldApplyQuickBidCustomAmount
-                  ? "Custom amount is active. Increment is ignored for Quick Bid logos."
-                  : hasQuickBidCustomIncrement
-                  ? `Quick Bid logos will raise by ${formatPriceShort(effectiveQuickBidIncrement)}.`
-                  : `Quick Bid logos are using room increment ${formatPriceShort(auctionState.bid_increment)}.`}
-              </div>
             </div>
 
             <div className="mt-2 lg:mt-3 rounded-xl border border-white/10 bg-black/30 p-2.5 lg:p-3">

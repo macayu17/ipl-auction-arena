@@ -15,6 +15,7 @@ import { ActiveSlideOverlay } from "@/components/slides/active-slide-overlay";
 import { TEAM_COLORS } from "@/lib/team-colors";
 import {
   formatPrice,
+  formatPriceShort,
   formatPurse,
   getRoleBadgeColor,
 } from "@/lib/utils";
@@ -38,7 +39,7 @@ const emptyAuctionState: AuctionState = {
   current_bid_team_id: null,
   timer_seconds: 10,
   timer_active: false,
-  bid_increment: 5,
+  bid_increment: 50,
   created_at: new Date(0).toISOString(),
   updated_at: new Date(0).toISOString(),
 };
@@ -131,12 +132,18 @@ export default function TeamAuctionPage() {
       ) : null}
 
       {/* Team-themed metric bar — 2x2 on mobile, 4-col on xl */}
-      <div className="grid grid-cols-2 gap-2 xl:grid-cols-4 xl:gap-3">
+      <div className="grid grid-cols-2 gap-2 xl:grid-cols-5 xl:gap-3">
         <MetricCard
           label="Connection"
           value={isRefreshing ? "Syncing" : "Ready"}
           hint="Subscribed to the same live room state."
           icon={RadioTower}
+        />
+        <MetricCard
+          label="Increment scale"
+          value={formatPriceShort(auctionState.bid_increment)}
+          hint="Shared with the admin room for next bid jumps."
+          icon={TimerReset}
         />
         <MetricCard
           label="Purse left"

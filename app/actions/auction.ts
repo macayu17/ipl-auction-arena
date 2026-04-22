@@ -31,7 +31,7 @@ const defaultAuctionState = {
   current_bid_team_id: null,
   timer_seconds: 10,
   timer_active: false,
-  bid_increment: 5,
+  bid_increment: 50,
 };
 
 const reorderQueueSchema = z.object({
@@ -109,7 +109,8 @@ function pickRoundForRole(
   roundOne: RoundQueueState,
   roundTwo: RoundQueueState,
   role: PlayerRole,
-  prioritizeLegendaryBalance: boolean
+  prioritizeLegendaryBalance: boolean,
+  targetLegendaryPerRound?: number
 ) {
   const roleDiff = roundOne.roleCounts[role] - roundTwo.roleCounts[role];
 
@@ -118,6 +119,19 @@ function pickRoundForRole(
   }
 
   if (prioritizeLegendaryBalance) {
+    if (typeof targetLegendaryPerRound === "number") {
+      const scoreOne =
+        Math.abs(roundOne.legendaryCount + 1 - targetLegendaryPerRound) +
+        Math.abs(roundTwo.legendaryCount - targetLegendaryPerRound);
+      const scoreTwo =
+        Math.abs(roundOne.legendaryCount - targetLegendaryPerRound) +
+        Math.abs(roundTwo.legendaryCount + 1 - targetLegendaryPerRound);
+
+      if (scoreOne !== scoreTwo) {
+        return scoreOne < scoreTwo ? roundOne : roundTwo;
+      }
+    }
+
     const legendaryDiff = roundOne.legendaryCount - roundTwo.legendaryCount;
 
     if (legendaryDiff !== 0) {
@@ -141,11 +155,13 @@ function interleaveRoundByRole(players: Player[]) {
     "All-Rounder": [],
     Bowler: [],
   };
+  const fallbackPlayers: Player[] = [];
 
   for (const player of players) {
     const role = player.role as PlayerRole;
 
     if (!ROUND_ROLE_ORDER.includes(role)) {
+      fallbackPlayers.push(player);
       continue;
     }
 
@@ -173,10 +189,13 @@ function interleaveRoundByRole(players: Player[]) {
     }
   }
 
-  return ordered;
+  return [...ordered, ...fallbackPlayers];
 }
 
-function buildTwoRoundQueue(poolPlayers: Player[]) {
+function buildTwoRoundQueue(
+  poolPlayers: Player[],
+  targetLegendaryPerRound?: number
+) {
   const roleBuckets: Record<PlayerRole, Player[]> = {
     Batsman: [],
     "Wicket-Keeper": [],
@@ -209,7 +228,13 @@ function buildTwoRoundQueue(poolPlayers: Player[]) {
     );
 
     for (const player of legendaryPlayers) {
-      const targetRound = pickRoundForRole(roundOne, roundTwo, role, true);
+      const targetRound = pickRoundForRole(
+        roundOne,
+        roundTwo,
+        role,
+        true,
+        targetLegendaryPerRound
+      );
       addPlayerToRound(targetRound, player, role);
     }
 
@@ -597,7 +622,7 @@ export async function reorderQueueAction(formData: FormData) {
   }
 }
 
-export async function balanceQueueIntoTwoRoundsAction() {
+export async function balanceQueueIntoThreeRoundsAction() {
   try {
     if (!(await ensureAdmin())) {
       return;
@@ -618,10 +643,14 @@ export async function balanceQueueIntoTwoRoundsAction() {
     const unsoldPlayers = queuePlayers
       .filter((player) => player.status === "unsold")
       .sort(compareQueuePriority);
+    const unsoldLegendaryCount = unsoldPlayers.filter((player) =>
+      isLegendaryRating(player.rating)
+    ).length;
+    const unsoldRound = interleaveRoundByRole(unsoldPlayers);
 
     const balancedQueue = [
-      ...buildTwoRoundQueue(poolPlayers),
-      ...unsoldPlayers,
+      ...buildTwoRoundQueue(poolPlayers, unsoldLegendaryCount),
+      ...unsoldRound,
     ];
 
     for (const [index, player] of balancedQueue.entries()) {
@@ -637,12 +666,12 @@ export async function balanceQueueIntoTwoRoundsAction() {
 
     await publishAuctionEvent({
       type: "queue_reordered",
-      source: "auction.balanceQueueIntoTwoRoundsAction",
-      delta: { rounds: 2 },
+      source: "auction.balanceQueueIntoThreeRoundsAction",
+      delta: { rounds: 3, layout: "two-pool-rounds-plus-unsold" },
     });
     revalidateNonAuctionViews();
   } catch (error) {
-    console.error("Failed to balance queue into two rounds", error);
+    console.error("Failed to balance queue into three rounds", error);
   }
 }
 

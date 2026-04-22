@@ -206,7 +206,7 @@ async function main() {
 
   const { error: auctionStateError } = await supabase
     .from("auction_state")
-    .upsert({ id: 1 }, { onConflict: "id" });
+    .upsert({ id: 1, bid_increment: 50 }, { onConflict: "id" });
 
   if (auctionStateError) {
     throw auctionStateError;
