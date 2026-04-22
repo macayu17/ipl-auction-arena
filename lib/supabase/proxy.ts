@@ -47,7 +47,20 @@ export async function updateSession(request: NextRequest) {
   }
 
   let supabaseResponse = NextResponse.next({ request });
-  const { url, anonKey } = getSupabaseEnv();
+  let url = "";
+  let anonKey = "";
+
+  try {
+    const resolvedEnv = getSupabaseEnv();
+    url = resolvedEnv.url;
+    anonKey = resolvedEnv.anonKey;
+  } catch (error) {
+    console.error(
+      "Supabase env is configured but invalid in middleware. Continuing without auth enforcement.",
+      error
+    );
+    return supabaseResponse;
+  }
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {
