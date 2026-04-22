@@ -13,6 +13,8 @@ import { SectionCard } from "@/components/layout/section-card";
 import { getSlidesPageData } from "@/lib/auction-data";
 import { hasSupabaseEnv, SUPABASE_ENV_HINT } from "@/lib/supabase/env";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminSlidesPage() {
   if (!hasSupabaseEnv()) {
     return (

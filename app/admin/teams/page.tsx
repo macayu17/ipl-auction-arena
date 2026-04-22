@@ -7,6 +7,8 @@ import { SectionCard } from "@/components/layout/section-card";
 import { getTeamsPageData } from "@/lib/auction-data";
 import { formatPrice } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminTeamsPage() {
   const { teams, auctionState } = await getTeamsPageData();
   const linkedCaptains = teams.filter((team) => team.user_id).length;

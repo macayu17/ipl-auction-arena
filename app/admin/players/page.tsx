@@ -15,6 +15,8 @@ import { hasBundledPlayerCsv } from "@/lib/player-csv";
 import { formatPrice, getRoleBadgeColor, getStatusColor, isLegendaryRating } from "@/lib/utils";
 import type { PlayerRole } from "@/types/app.types";
 
+export const dynamic = "force-dynamic";
+
 const roleOrder: PlayerRole[] = [
   "Batsman",
   "Bowler",

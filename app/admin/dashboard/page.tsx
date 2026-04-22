@@ -5,6 +5,8 @@ import { SectionCard } from "@/components/layout/section-card";
 import { getDashboardPageData } from "@/lib/auction-data";
 import { formatPrice } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboardPage() {
   const { summary, teamSummary, recentSales } = await getDashboardPageData();
   const teamById = new Map(teamSummary.map((team) => [team.id, team]));
