@@ -27,7 +27,10 @@ const supabase = createClient(
   }
 );
 
-const csvPath = path.join(process.cwd(), "IPL AUCTION DATA SHEET.csv");
+const csvPathCandidates = [
+  path.join(process.cwd(), "ipl  PLAYER DETAILS.csv"),
+  path.join(process.cwd(), "IPL AUCTION DATA SHEET.csv"),
+];
 
 const overseasPlayers = new Set(
   [
@@ -173,9 +176,21 @@ function inferIplCaps(rating) {
   return 0;
 }
 
-async function main() {
-  const csv = await fs.readFile(csvPath, "utf8");
-  const parsed = Papa.parse(csv, {
+async function resolveCsvPath() {
+  for (const candidatePath of csvPathCandidates) {
+    try {
+      await fs.access(candidatePath);
+      return candidatePath;
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
+function parseCsvRows(csv) {
+  const parsedWithHeader = Papa.parse(csv, {
     header: true,
     skipEmptyLines: true,
     transformHeader(header) {
@@ -183,25 +198,95 @@ async function main() {
     },
   });
 
-  if (parsed.errors.length > 0) {
-    throw new Error(parsed.errors[0]?.message ?? "Failed to parse player CSV.");
+  if (parsedWithHeader.errors.length > 0) {
+    throw new Error(parsedWithHeader.errors[0]?.message ?? "Failed to parse player CSV.");
   }
 
-  const existingPlayersResult = await supabase.from("players").select("name");
+  const hasValidHeaderRows = parsedWithHeader.data.some((row) => {
+    const rawName = row["Player's Name"]?.trim();
+    const rawCategory = row.Category?.trim();
+    const rawRating = Number(row.Rating);
+
+    return !!rawName && !!rawCategory && !Number.isNaN(rawRating);
+  });
+
+  if (hasValidHeaderRows) {
+    return parsedWithHeader.data;
+  }
+
+  const parsedWithoutHeader = Papa.parse(csv, {
+    header: false,
+    skipEmptyLines: true,
+  });
+
+  if (parsedWithoutHeader.errors.length > 0) {
+    throw new Error(parsedWithoutHeader.errors[0]?.message ?? "Failed to parse player CSV.");
+  }
+
+  return parsedWithoutHeader.data.map((row) => ({
+    "Player's Name": String(row[0] ?? ""),
+    Category: String(row[1] ?? ""),
+    Rating: String(row[2] ?? ""),
+  }));
+}
+
+function isQueueEligibleStatus(status) {
+  return status === "pool" || status === "unsold";
+}
+
+function compareQueueOrder(left, right) {
+  const queueDiff = (left.queue_order ?? Number.MAX_SAFE_INTEGER) -
+    (right.queue_order ?? Number.MAX_SAFE_INTEGER);
+
+  if (queueDiff !== 0) {
+    return queueDiff;
+  }
+
+  return left.name.localeCompare(right.name);
+}
+
+async function main() {
+  const csvPath = await resolveCsvPath();
+
+  if (!csvPath) {
+    throw new Error("No bundled player CSV found. Expected ipl  PLAYER DETAILS.csv or IPL AUCTION DATA SHEET.csv");
+  }
+
+  const csv = await fs.readFile(csvPath, "utf8");
+  const parsedRows = parseCsvRows(csv);
+
+  const existingPlayersResult = await supabase
+    .from("players")
+    .select("id, name, status, queue_order");
 
   if (existingPlayersResult.error) {
     throw existingPlayersResult.error;
   }
 
-  const existingNames = new Set(
-    (existingPlayersResult.data ?? []).map((player) =>
-      normalizeNameKey(player.name)
-    )
-  );
-  const seen = new Set();
-  const playersToInsert = [];
+  const existingPlayers = existingPlayersResult.data ?? [];
+  const existingByName = new Map();
 
-  for (const row of parsed.data) {
+  for (const player of existingPlayers) {
+    const key = normalizeNameKey(player.name);
+    const current = existingByName.get(key);
+
+    if (
+      !current ||
+      (!isQueueEligibleStatus(current.status) && isQueueEligibleStatus(player.status))
+    ) {
+      existingByName.set(key, player);
+    }
+  }
+
+  const remainingQueuePlayers = existingPlayers
+    .filter((player) => isQueueEligibleStatus(player.status))
+    .sort(compareQueueOrder);
+
+  const seenCsvNames = new Set();
+  const consumedExistingIds = new Set();
+  const orderedQueueEntries = [];
+
+  for (const row of parsedRows) {
     const rawName = row["Player's Name"]?.trim();
     const rawCategory = row.Category?.trim();
     const rawRating = Number(row.Rating);
@@ -212,26 +297,74 @@ async function main() {
 
     const key = normalizeNameKey(rawName);
 
-    if (seen.has(key) || existingNames.has(key)) {
+    if (seenCsvNames.has(key)) {
       continue;
     }
 
-    seen.add(key);
+    seenCsvNames.add(key);
 
-    playersToInsert.push({
-      name: rawName,
-      role: normalizeRole(rawCategory),
-      nationality: inferNationality(rawName),
-      base_price: inferBasePrice(rawRating),
-      rating: rawRating,
-      batting_style: null,
-      bowling_style: null,
-      ipl_caps: inferIplCaps(rawRating),
-      photo_url: null,
-      status: "pool",
-      sold_to: null,
-      sold_price: null,
+    const existingPlayer = existingByName.get(key);
+
+    if (existingPlayer) {
+      if (
+        isQueueEligibleStatus(existingPlayer.status) &&
+        !consumedExistingIds.has(existingPlayer.id)
+      ) {
+        orderedQueueEntries.push({ kind: "existing", player: existingPlayer });
+        consumedExistingIds.add(existingPlayer.id);
+      }
+
+      continue;
+    }
+
+    orderedQueueEntries.push({
+      kind: "new",
+      player: {
+        name: rawName,
+        role: normalizeRole(rawCategory),
+        nationality: inferNationality(rawName),
+        base_price: inferBasePrice(rawRating),
+        rating: rawRating,
+        batting_style: null,
+        bowling_style: null,
+        ipl_caps: inferIplCaps(rawRating),
+        photo_url: null,
+        status: "pool",
+        sold_to: null,
+        sold_price: null,
+      },
     });
+  }
+
+  for (const player of remainingQueuePlayers) {
+    if (consumedExistingIds.has(player.id)) {
+      continue;
+    }
+
+    orderedQueueEntries.push({ kind: "existing", player });
+    consumedExistingIds.add(player.id);
+  }
+
+  const playersToInsert = [];
+  const queueOrderUpdates = [];
+
+  for (const [index, entry] of orderedQueueEntries.entries()) {
+    const queueOrder = index + 1;
+
+    if (entry.kind === "new") {
+      playersToInsert.push({
+        ...entry.player,
+        queue_order: queueOrder,
+      });
+      continue;
+    }
+
+    if ((entry.player.queue_order ?? null) !== queueOrder) {
+      queueOrderUpdates.push({
+        id: entry.player.id,
+        queue_order: queueOrder,
+      });
+    }
   }
 
   if (playersToInsert.length > 0) {
@@ -242,11 +375,24 @@ async function main() {
     }
   }
 
+  if (queueOrderUpdates.length > 0) {
+    for (const update of queueOrderUpdates) {
+      const updateResult = await supabase
+        .from("players")
+        .update({ queue_order: update.queue_order })
+        .eq("id", update.id);
+
+      if (updateResult.error) {
+        throw updateResult.error;
+      }
+    }
+  }
+
   console.log(`CSV parsed from ${csvPath}`);
   console.log(`Inserted players: ${playersToInsert.length}`);
-  console.log(
-    `Skipped existing or duplicate names: ${parsed.data.length - playersToInsert.length}`
-  );
+  console.log(`Reordered existing queue players: ${queueOrderUpdates.length}`);
+  console.log(`Total CSV players considered: ${seenCsvNames.size}`);
+  console.log(`Skipped invalid/duplicate rows: ${parsedRows.length - seenCsvNames.size}`);
 }
 
 main().catch((error) => {

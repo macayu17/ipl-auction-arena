@@ -31,7 +31,10 @@ export type ImportedPlayerRecord = Pick<
   source_category: string;
 };
 
-const bundledCsvPath = path.join(process.cwd(), "IPL AUCTION DATA SHEET.csv");
+const bundledCsvPathCandidates = [
+  path.join(process.cwd(), "ipl  PLAYER DETAILS.csv"),
+  path.join(process.cwd(), "IPL AUCTION DATA SHEET.csv"),
+];
 
 const overseasPlayers = new Set(
   [
@@ -180,13 +183,31 @@ function inferIplCaps(rating: number) {
   return 0;
 }
 
-export async function hasBundledPlayerCsv() {
-  try {
-    await fs.access(bundledCsvPath);
-    return true;
-  } catch {
-    return false;
+async function resolveBundledCsvPath() {
+  for (const csvPath of bundledCsvPathCandidates) {
+    try {
+      await fs.access(csvPath);
+      return csvPath;
+    } catch {
+      continue;
+    }
   }
+
+  return null;
+}
+
+export async function hasBundledPlayerCsv() {
+  return (await resolveBundledCsvPath()) !== null;
+}
+
+export async function getBundledPlayerCsvName() {
+  const bundledCsvPath = await resolveBundledCsvPath();
+
+  if (!bundledCsvPath) {
+    return null;
+  }
+
+  return path.basename(bundledCsvPath);
 }
 
 function parsePlayerRows(rows: RawPlayerRow[]) {
@@ -243,10 +264,37 @@ export function parsePlayerCsvText(csv: string) {
     throw new Error(parsed.errors[0]?.message ?? "Failed to parse player CSV.");
   }
 
-  return parsePlayerRows(parsed.data);
+  const parsedHeaderRows = parsePlayerRows(parsed.data);
+
+  if (parsedHeaderRows.length > 0) {
+    return parsedHeaderRows;
+  }
+
+  const fallbackParsed = Papa.parse<string[]>(csv, {
+    header: false,
+    skipEmptyLines: true,
+  });
+
+  if (fallbackParsed.errors.length > 0) {
+    throw new Error(fallbackParsed.errors[0]?.message ?? "Failed to parse player CSV.");
+  }
+
+  const fallbackRows: RawPlayerRow[] = fallbackParsed.data.map((row) => ({
+    "Player's Name": String(row[0] ?? ""),
+    Category: String(row[1] ?? ""),
+    Rating: String(row[2] ?? ""),
+  }));
+
+  return parsePlayerRows(fallbackRows);
 }
 
 export async function parseBundledPlayerCsv() {
+  const bundledCsvPath = await resolveBundledCsvPath();
+
+  if (!bundledCsvPath) {
+    throw new Error("No bundled player CSV found.");
+  }
+
   const csv = await fs.readFile(bundledCsvPath, "utf8");
   return parsePlayerCsvText(csv);
 }

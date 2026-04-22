@@ -614,7 +614,7 @@ export default function AdminAuctionPage() {
                   </form>
                 </div>
 
-                <div className="space-y-2 lg:space-y-3">
+                <div className="space-y-3 lg:space-y-4">
                   <div className="glass-panel rounded-xl p-3 lg:p-4 border border-white/5 bg-black/30">
                     <div className="text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
                       Increment scale
@@ -658,7 +658,7 @@ export default function AdminAuctionPage() {
                   </div>
 
                   {/* All-teams purse adjustment */}
-                  <form action={adjustAllPursesAction} className="glass-panel rounded-xl p-3 lg:p-4 border border-white/5 bg-black/30">
+                  <form action={adjustAllPursesAction} className="glass-panel mt-0.5 rounded-xl p-3 lg:p-4 border border-white/5 bg-black/30">
                     <div className="flex items-center gap-2 mb-2 lg:mb-3">
                       <Wallet className="w-3.5 h-3.5 text-[var(--text-soft)]" />
                       <div className="text-[9px] lg:text-[10px] font-bold uppercase tracking-wider text-[var(--text-soft)]">

@@ -11,7 +11,7 @@ import { SubmitButton } from "@/components/forms/submit-button";
 import { MetricCard } from "@/components/layout/metric-card";
 import { SectionCard } from "@/components/layout/section-card";
 import { getPlayersPageData } from "@/lib/auction-data";
-import { hasBundledPlayerCsv } from "@/lib/player-csv";
+import { getBundledPlayerCsvName } from "@/lib/player-csv";
 import { formatPrice, getRoleBadgeColor, getStatusColor, isLegendaryRating } from "@/lib/utils";
 import type { PlayerRole } from "@/types/app.types";
 
@@ -25,10 +25,11 @@ const roleOrder: PlayerRole[] = [
 ];
 
 export default async function AdminPlayersPage() {
-  const [{ players, summary, teamSummary }, bundledCsvExists] = await Promise.all([
+  const [{ players, summary, teamSummary }, bundledCsvName] = await Promise.all([
     getPlayersPageData(),
-    hasBundledPlayerCsv(),
+    getBundledPlayerCsvName(),
   ]);
+  const bundledCsvExists = bundledCsvName !== null;
 
   const teamById = new Map(teamSummary.map((team) => [team.id, team]));
   const roleSummary = roleOrder.map((role) => ({
@@ -175,7 +176,7 @@ export default async function AdminPlayersPage() {
                 Bundled source
               </div>
               <div className="mt-2 text-xl font-bold tracking-tight text-white mono-font">
-                IPL AUCTION DATA SHEET.csv
+                {bundledCsvName ?? "No bundled CSV found"}
               </div>
               <div className="mt-4 flex flex-wrap gap-3">
                 {roleSummary.map((item) => (

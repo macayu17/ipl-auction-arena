@@ -70,6 +70,24 @@ function normalizeNameKey(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
+function isQueueEligibleStatus(status: Player["status"]) {
+  return status === "pool" || status === "unsold";
+}
+
+function compareQueueOrder(
+  left: Pick<Player, "name" | "queue_order">,
+  right: Pick<Player, "name" | "queue_order">
+) {
+  const queueDiff = (left.queue_order ?? Number.MAX_SAFE_INTEGER) -
+    (right.queue_order ?? Number.MAX_SAFE_INTEGER);
+
+  if (queueDiff !== 0) {
+    return queueDiff;
+  }
+
+  return left.name.localeCompare(right.name);
+}
+
 function revalidateAuctionViews() {
   [
     "/admin/players",
@@ -110,38 +128,119 @@ async function getNextQueueOrder() {
 
 async function importPlayerRecords(importedPlayers: ImportedPlayerRecord[]) {
   const supabase = await getSupabase();
-  const existingPlayersResult = await supabase.from("players").select("name");
+  const existingPlayersResult = await supabase
+    .from("players")
+    .select("id, name, status, queue_order");
 
   if (existingPlayersResult.error) {
     throw existingPlayersResult.error;
   }
 
-  const existingNames = new Set(
-    ((existingPlayersResult.data ?? []) as Array<{ name: string }>).map((player) =>
-      normalizeNameKey(player.name)
-    )
-  );
-  let nextQueueOrder = await getNextQueueOrder();
+  const existingPlayers =
+    ((existingPlayersResult.data ?? []) as Array<
+      Pick<Player, "id" | "name" | "status" | "queue_order">
+    >);
+  const existingByName = new Map<
+    string,
+    Pick<Player, "id" | "name" | "status" | "queue_order">
+  >();
 
-  const playersToInsert = importedPlayers
-    .filter((player) => !existingNames.has(normalizeNameKey(player.name)))
-    .map((player) => {
-      const { source_category, ...insertablePlayer } = player;
-      const queueOrder = nextQueueOrder;
+  for (const player of existingPlayers) {
+    const key = normalizeNameKey(player.name);
+    const current = existingByName.get(key);
 
-      nextQueueOrder += 1;
+    if (
+      !current ||
+      (!isQueueEligibleStatus(current.status) && isQueueEligibleStatus(player.status))
+    ) {
+      existingByName.set(key, player);
+    }
+  }
+
+  const remainingQueuePlayers = existingPlayers
+    .filter((player) => isQueueEligibleStatus(player.status))
+    .sort(compareQueueOrder);
+
+  const consumedExistingIds = new Set<string>();
+  const orderedQueueEntries: Array<
+    | {
+      kind: "existing";
+      player: Pick<Player, "id" | "name" | "status" | "queue_order">;
+    }
+    | {
+      kind: "new";
+      player: ImportedPlayerRecord;
+    }
+  > = [];
+
+  for (const importedPlayer of importedPlayers) {
+    const key = normalizeNameKey(importedPlayer.name);
+    const existingPlayer = existingByName.get(key);
+
+    if (existingPlayer) {
+      if (
+        isQueueEligibleStatus(existingPlayer.status) &&
+        !consumedExistingIds.has(existingPlayer.id)
+      ) {
+        orderedQueueEntries.push({ kind: "existing", player: existingPlayer });
+        consumedExistingIds.add(existingPlayer.id);
+      }
+
+      continue;
+    }
+
+    orderedQueueEntries.push({ kind: "new", player: importedPlayer });
+  }
+
+  for (const player of remainingQueuePlayers) {
+    if (consumedExistingIds.has(player.id)) {
+      continue;
+    }
+
+    orderedQueueEntries.push({ kind: "existing", player });
+    consumedExistingIds.add(player.id);
+  }
+
+  const playersToInsert: PlayerInsert[] = [];
+  const queueOrderUpdates: Array<{ id: string; queue_order: number }> = [];
+
+  for (const [index, entry] of orderedQueueEntries.entries()) {
+    const queueOrder = index + 1;
+
+    if (entry.kind === "new") {
+      const { source_category, ...insertablePlayer } = entry.player;
+
       void source_category;
-      return {
+      playersToInsert.push({
         ...insertablePlayer,
         queue_order: queueOrder,
-      };
-    });
+      });
+      continue;
+    }
+
+    if ((entry.player.queue_order ?? null) !== queueOrder) {
+      queueOrderUpdates.push({ id: entry.player.id, queue_order: queueOrder });
+    }
+  }
 
   if (playersToInsert.length > 0) {
     const insertResult = await supabase.from("players").insert(playersToInsert);
 
     if (insertResult.error) {
       throw insertResult.error;
+    }
+  }
+
+  if (queueOrderUpdates.length > 0) {
+    for (const update of queueOrderUpdates) {
+      const updateResult = await supabase
+        .from("players")
+        .update({ queue_order: update.queue_order })
+        .eq("id", update.id);
+
+      if (updateResult.error) {
+        throw updateResult.error;
+      }
     }
   }
 
