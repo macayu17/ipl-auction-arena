@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 
+import { getEffectivePlayerRating, isMemePlayer } from "@/lib/meme-players";
 import { applyResolvedPlayerPhotoUrls } from "@/lib/player-images";
 import { countPlayersByRole, getSquadRuleStatus } from "@/lib/squad-rules";
 import { toLooseSupabaseClient } from "@/lib/supabase/loose-client";
@@ -49,7 +50,8 @@ function sortPlayersForQueue(players: Player[]) {
       return queueDiff;
     }
 
-    const ratingDiff = (right.rating ?? 0) - (left.rating ?? 0);
+    const ratingDiff =
+      getEffectivePlayerRating(right) - getEffectivePlayerRating(left);
 
     if (ratingDiff !== 0) {
       return ratingDiff;
@@ -67,9 +69,11 @@ function sortPlayersForQueue(players: Player[]) {
 
 function stripPlayerRating(player: Player): TeamVisiblePlayer {
   const { rating, ...safePlayer } = player;
+  const effectiveRating = isMemePlayer(player) ? 0 : (rating ?? 0);
+
   return {
     ...safePlayer,
-    isLegendary: isLegendaryRating(rating),
+    isLegendary: isLegendaryRating(effectiveRating),
   };
 }
 
@@ -83,15 +87,16 @@ function buildTeamSummary(
   return teams
     .map((team) => {
       const squad = players.filter((player) => player.sold_to === team.id);
-      const roleCounts = countPlayersByRole(squad);
+      const competitiveSquad = squad.filter((player) => !isMemePlayer(player));
+      const roleCounts = countPlayersByRole(competitiveSquad);
       const squadRuleStatus = getSquadRuleStatus(roleCounts);
 
       return {
         ...team,
-        players_acquired: squad.length,
+        players_acquired: competitiveSquad.length,
         purse_remaining: team.purse_total - team.purse_spent,
-        squad_rating_total: squad.reduce(
-          (sum, player) => sum + (player.rating ?? 0),
+        squad_rating_total: competitiveSquad.reduce(
+          (sum, player) => sum + getEffectivePlayerRating(player),
           0
         ),
         role_counts: roleCounts,
@@ -315,6 +320,7 @@ export const getTeamAuctionPageData = cache(async (userId: string) => {
 
   const mySquad = players
     .filter((player) => player.sold_to === myTeam?.id)
+    .filter((player) => !isMemePlayer(player))
     .map(stripPlayerRating);
   const mySquadRoleCounts = countPlayersByRole(mySquad);
   const mySquadRuleStatus = getSquadRuleStatus(mySquadRoleCounts);
@@ -339,6 +345,7 @@ export const getTeamSquadPageData = cache(async (userId: string) => {
     myTeam,
     squad: players
       .filter((player) => player.sold_to === myTeam?.id)
+      .filter((player) => !isMemePlayer(player))
       .sort((left, right) => {
         if (left.role !== right.role) {
           return left.role.localeCompare(right.role);

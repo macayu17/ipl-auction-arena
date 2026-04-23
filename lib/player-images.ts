@@ -6,6 +6,8 @@ import path from "node:path";
 import Papa from "papaparse";
 import { cache } from "react";
 
+import { isMemePlayer } from "@/lib/meme-players";
+
 type PlayerImageRow = {
   player_name?: string;
   image_filename?: string;
@@ -184,7 +186,11 @@ export async function applyResolvedPlayerPhotoUrls<T extends PlayerWithPhoto>(
   const { byKey, indexedKeys } = await getPlayerImageLookup();
 
   return players.map((player) => {
-    if (player.photo_url && player.photo_url.trim().length > 0) {
+    if (
+      !isMemePlayer(player) &&
+      player.photo_url &&
+      player.photo_url.trim().length > 0
+    ) {
       return player;
     }
 

@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { getUserRoleFromUser } from "@/lib/auth-roles";
 import { invalidateAllCaches } from "@/lib/auction-cache";
+import { getEffectivePlayerRating, isMemePlayer } from "@/lib/meme-players";
 import { publishAuctionEvent } from "@/lib/redis";
 import { canAddPlayerToSquad, countPlayersByRole } from "@/lib/squad-rules";
 import {
@@ -82,7 +83,8 @@ function compareQueuePriority(left: Player, right: Player) {
     return queueDiff;
   }
 
-  const ratingDiff = (right.rating ?? 0) - (left.rating ?? 0);
+  const ratingDiff =
+    getEffectivePlayerRating(right) - getEffectivePlayerRating(left);
 
   if (ratingDiff !== 0) {
     return ratingDiff;
@@ -101,7 +103,7 @@ function addPlayerToRound(round: RoundQueueState, player: Player, role: PlayerRo
   round.players.push(player);
   round.roleCounts[role] += 1;
 
-  if (isLegendaryRating(player.rating)) {
+  if (isLegendaryRating(getEffectivePlayerRating(player))) {
     round.legendaryCount += 1;
   }
 }
@@ -222,10 +224,10 @@ function buildTwoRoundQueue(
   for (const role of ROUND_ROLE_ORDER) {
     const rolePlayers = roleBuckets[role];
     const legendaryPlayers = rolePlayers.filter((player) =>
-      isLegendaryRating(player.rating)
+      isLegendaryRating(getEffectivePlayerRating(player))
     );
     const standardPlayers = rolePlayers.filter(
-      (player) => !isLegendaryRating(player.rating)
+      (player) => !isLegendaryRating(getEffectivePlayerRating(player))
     );
 
     for (const player of legendaryPlayers) {
@@ -294,7 +296,8 @@ function sortQueue(players: Player[]) {
       return queueDiff;
     }
 
-    const ratingDiff = (right.rating ?? 0) - (left.rating ?? 0);
+    const ratingDiff =
+      getEffectivePlayerRating(right) - getEffectivePlayerRating(left);
 
     if (ratingDiff !== 0) {
       return ratingDiff;
@@ -645,7 +648,7 @@ export async function balanceQueueIntoThreeRoundsAction() {
       .filter((player) => player.status === "unsold")
       .sort(compareQueuePriority);
     const unsoldLegendaryCount = unsoldPlayers.filter((player) =>
-      isLegendaryRating(player.rating)
+      isLegendaryRating(getEffectivePlayerRating(player))
     ).length;
     const unsoldRound = interleaveRoundByRole(unsoldPlayers);
 
@@ -762,43 +765,59 @@ export async function placeBidAction(formData: FormData) {
         ? Math.floor(parsedCustomIncrement)
         : null;
 
-    // Keep the RPC fast path for normal quick bids.
+    let serviceSupabase:
+      | Awaited<ReturnType<typeof createServiceClient>>
+      | null = null;
+    let supabase: LooseSupabaseClient | null = null;
+    let playerContext: Awaited<ReturnType<typeof getCurrentPlayerWithTeamContext>> | null =
+      null;
+
+    // Keep the RPC fast path for normal quick bids, except meme players.
     if (!customAmount && !customIncrement) {
-      const supabase = await createServiceClient();
-      const rpcClient = supabase as unknown as {
-        rpc: (
-          functionName: "place_auction_bid",
-          args: { p_team_id: string }
-        ) => Promise<{ data: AuctionBidRpcResponse | null; error: Error | null }>;
-      };
+      serviceSupabase = await createServiceClient();
+      supabase = toLooseSupabaseClient(serviceSupabase);
+      playerContext = await getCurrentPlayerWithTeamContext(supabase);
 
-      // Execute all 5 db operations in 1 ultra-fast RPC call
-      const result = await rpcClient.rpc("place_auction_bid", {
-        p_team_id: teamId,
-      });
+      if (playerContext.currentPlayer && !isMemePlayer(playerContext.currentPlayer)) {
+        const rpcClient = serviceSupabase as unknown as {
+          rpc: (
+            functionName: "place_auction_bid",
+            args: { p_team_id: string }
+          ) => Promise<{ data: AuctionBidRpcResponse | null; error: Error | null }>;
+        };
 
-      if (result.error) {
-        throw result.error;
-      }
-
-      const data = result.data;
-
-      if (data?.success && data.delta) {
-        await publishAuctionEvent({
-          type: "bid_placed",
-          source: "auction.placeBidAction",
-          delta: data.delta,
+        // Execute all 5 db operations in 1 ultra-fast RPC call.
+        const result = await rpcClient.rpc("place_auction_bid", {
+          p_team_id: teamId,
         });
-      }
 
-      return data ?? { success: false };
+        if (result.error) {
+          throw result.error;
+        }
+
+        const data = result.data;
+
+        if (data?.success && data.delta) {
+          await publishAuctionEvent({
+            type: "bid_placed",
+            source: "auction.placeBidAction",
+            delta: data.delta,
+          });
+        }
+
+        return data ?? { success: false };
+      }
     }
 
-    const supabase = toLooseSupabaseClient(await createServiceClient());
-    const [{ auctionState, currentPlayer }, team] = await Promise.all([
-      getCurrentPlayerWithTeamContext(supabase),
+    if (!supabase) {
+      supabase = toLooseSupabaseClient(await createServiceClient());
+    }
+
+    const [resolvedPlayerContext, team] = await Promise.all([
+      playerContext ?? getCurrentPlayerWithTeamContext(supabase),
       resolveTeamById(supabase, teamId),
     ]);
+    const { auctionState, currentPlayer } = resolvedPlayerContext;
 
     if (!currentPlayer || !team) {
       return { success: false, error: "No active player or team" };
@@ -825,7 +844,7 @@ export async function placeBidAction(formData: FormData) {
         : currentPlayer.base_price;
 
     const purseRemaining = team.purse_total - team.purse_spent;
-    if (purseRemaining < nextBidAmount) {
+    if (!isMemePlayer(currentPlayer) && purseRemaining < nextBidAmount) {
       return { success: false, error: "Insufficient purse" };
     }
 
@@ -1077,15 +1096,16 @@ export async function sellCurrentPlayerAction() {
       return;
     }
 
+    const memePlayerSale = isMemePlayer(currentPlayer);
     const purseRemaining = team.purse_total - team.purse_spent;
 
-    if (purseRemaining < auctionState.current_bid_amount) {
+    if (!memePlayerSale && purseRemaining < auctionState.current_bid_amount) {
       return;
     }
 
     const teamSquadResult = await supabase
       .from("players")
-      .select("role")
+      .select("role, name")
       .eq("sold_to", team.id)
       .eq("status", "sold");
 
@@ -1094,12 +1114,12 @@ export async function sellCurrentPlayerAction() {
     }
 
     const teamRoleCounts = countPlayersByRole(
-      (teamSquadResult.data as { role: PlayerRole }[] | null) ?? []
+      ((teamSquadResult.data as { role: PlayerRole; name: string }[] | null) ?? [])
+        .filter((player) => !isMemePlayer(player))
     );
-    const roleCheck = canAddPlayerToSquad(
-      teamRoleCounts,
-      currentPlayer.role as PlayerRole
-    );
+    const roleCheck = memePlayerSale
+      ? { allowed: true, reason: null }
+      : canAddPlayerToSquad(teamRoleCounts, currentPlayer.role as PlayerRole);
 
     if (!roleCheck.allowed) {
       console.warn(
@@ -1121,15 +1141,17 @@ export async function sellCurrentPlayerAction() {
       throw updatePlayerResult.error;
     }
 
-    const updateTeamResult = await supabase
-      .from("teams")
-      .update({
-        purse_spent: team.purse_spent + auctionState.current_bid_amount,
-      })
-      .eq("id", team.id);
+    if (!memePlayerSale) {
+      const updateTeamResult = await supabase
+        .from("teams")
+        .update({
+          purse_spent: team.purse_spent + auctionState.current_bid_amount,
+        })
+        .eq("id", team.id);
 
-    if (updateTeamResult.error) {
-      throw updateTeamResult.error;
+      if (updateTeamResult.error) {
+        throw updateTeamResult.error;
+      }
     }
 
     const updateAuctionStateResult = await supabase
@@ -1148,7 +1170,9 @@ export async function sellCurrentPlayerAction() {
     }
 
     const soldAmount = auctionState.current_bid_amount;
-    const nextPurseSpent = team.purse_spent + soldAmount;
+    const nextPurseSpent = memePlayerSale
+      ? team.purse_spent
+      : team.purse_spent + soldAmount;
 
     await publishAuctionEvent({
       type: "player_sold",
