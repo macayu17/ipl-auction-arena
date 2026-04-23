@@ -42,14 +42,17 @@ export function PlayerHeadshot({
       )}
     >
       {photoUrl ? (
-        <Image
-          src={photoUrl}
-          alt={`${name} headshot`}
-          fill
-          priority={priority}
-          sizes={sizes}
-          className="object-cover object-top"
-        />
+        <>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.1),transparent_55%),linear-gradient(180deg,rgba(15,23,42,0.58),rgba(2,6,23,0.82))]" />
+          <Image
+            src={photoUrl}
+            alt={`${name} headshot`}
+            fill
+            priority={priority}
+            sizes={sizes}
+            className="object-contain object-center p-1.5 sm:p-2"
+          />
+        </>
       ) : (
         <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.14),transparent_58%),linear-gradient(160deg,rgba(255,255,255,0.12),rgba(0,0,0,0.48))]">
           <span className="display-font text-2xl font-bold tracking-wide text-white/85">
