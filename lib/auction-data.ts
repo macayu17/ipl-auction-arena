@@ -36,6 +36,12 @@ const defaultAuctionState: AuctionState = {
 
 function sortPlayersForQueue(players: Player[]) {
   return [...players].sort((left, right) => {
+    const memeDiff = Number(isMemePlayer(left)) - Number(isMemePlayer(right));
+
+    if (memeDiff !== 0) {
+      return memeDiff;
+    }
+
     const unsoldDiff = Number(left.status === "unsold") - Number(right.status === "unsold");
 
     if (unsoldDiff !== 0) {

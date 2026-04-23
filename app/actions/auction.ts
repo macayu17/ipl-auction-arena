@@ -76,6 +76,12 @@ function createRoundQueueState(): RoundQueueState {
 }
 
 function compareQueuePriority(left: Player, right: Player) {
+  const memeDiff = Number(isMemePlayer(left)) - Number(isMemePlayer(right));
+
+  if (memeDiff !== 0) {
+    return memeDiff;
+  }
+
   const queueDiff = (left.queue_order ?? Number.MAX_SAFE_INTEGER) -
     (right.queue_order ?? Number.MAX_SAFE_INTEGER);
 
@@ -283,6 +289,12 @@ function parsePositiveInteger(
 
 function sortQueue(players: Player[]) {
   return [...players].sort((left, right) => {
+    const memeDiff = Number(isMemePlayer(left)) - Number(isMemePlayer(right));
+
+    if (memeDiff !== 0) {
+      return memeDiff;
+    }
+
     const unsoldDiff = Number(left.status === "unsold") - Number(right.status === "unsold");
 
     if (unsoldDiff !== 0) {
@@ -606,7 +618,41 @@ export async function reorderQueueAction(formData: FormData) {
 
     const supabase = toLooseSupabaseClient(await createServiceClient());
 
-    for (const [index, playerId] of parsed.data.orderedPlayerIds.entries()) {
+    const queuePlayersResult = await supabase
+      .from("players")
+      .select("id, name")
+      .in("id", parsed.data.orderedPlayerIds);
+
+    if (queuePlayersResult.error) {
+      throw queuePlayersResult.error;
+    }
+
+    const byId = new Map(
+      (((queuePlayersResult.data as { id: string; name: string }[] | null) ?? []).map(
+        (player) => [player.id, player]
+      ))
+    );
+
+    const nonMemeIds: string[] = [];
+    const memeIds: string[] = [];
+
+    for (const playerId of parsed.data.orderedPlayerIds) {
+      const player = byId.get(playerId);
+
+      if (!player) {
+        continue;
+      }
+
+      if (isMemePlayer(player)) {
+        memeIds.push(playerId);
+      } else {
+        nonMemeIds.push(playerId);
+      }
+    }
+
+    const normalizedOrderedIds = [...nonMemeIds, ...memeIds];
+
+    for (const [index, playerId] of normalizedOrderedIds.entries()) {
       const result = await supabase
         .from("players")
         .update({ queue_order: index + 1 })
@@ -643,9 +689,14 @@ export async function balanceQueueIntoThreeRoundsAction() {
     }
 
     const queuePlayers = (playersResult.data as Player[] | null) ?? [];
-    const poolPlayers = queuePlayers.filter((player) => player.status === "pool");
+    const poolPlayers = queuePlayers.filter(
+      (player) => player.status === "pool" && !isMemePlayer(player)
+    );
     const unsoldPlayers = queuePlayers
-      .filter((player) => player.status === "unsold")
+      .filter((player) => player.status === "unsold" && !isMemePlayer(player))
+      .sort(compareQueuePriority);
+    const memePlayers = queuePlayers
+      .filter((player) => isMemePlayer(player))
       .sort(compareQueuePriority);
     const unsoldLegendaryCount = unsoldPlayers.filter((player) =>
       isLegendaryRating(getEffectivePlayerRating(player))
@@ -655,6 +706,7 @@ export async function balanceQueueIntoThreeRoundsAction() {
     const balancedQueue = [
       ...buildTwoRoundQueue(poolPlayers, unsoldLegendaryCount),
       ...unsoldRound,
+      ...memePlayers,
     ];
 
     for (const [index, player] of balancedQueue.entries()) {

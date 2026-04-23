@@ -122,6 +122,24 @@ function normalizeNameKey(value) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
+function normalizeMemeNameKey(value) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+const memePlayerNameKeys = new Set([
+  "richardkettleborough",
+  "richardkettleboroughumpire",
+  "jayshah",
+  "jayshahscriptwriter",
+]);
+
+function isMemePlayerName(name) {
+  return memePlayerNameKeys.has(normalizeMemeNameKey(name ?? ""));
+}
+
 function normalizeRole(category) {
   const normalized = category.trim().toLowerCase().replace(/\s+/g, "");
 
@@ -235,6 +253,12 @@ function isQueueEligibleStatus(status) {
 }
 
 function compareQueueOrder(left, right) {
+  const memeDiff = Number(isMemePlayerName(left.name)) - Number(isMemePlayerName(right.name));
+
+  if (memeDiff !== 0) {
+    return memeDiff;
+  }
+
   const queueDiff = (left.queue_order ?? Number.MAX_SAFE_INTEGER) -
     (right.queue_order ?? Number.MAX_SAFE_INTEGER);
 
@@ -347,8 +371,12 @@ async function main() {
 
   const playersToInsert = [];
   const queueOrderUpdates = [];
+  const normalizedOrderedQueueEntries = [
+    ...orderedQueueEntries.filter((entry) => !isMemePlayerName(entry.player.name)),
+    ...orderedQueueEntries.filter((entry) => isMemePlayerName(entry.player.name)),
+  ];
 
-  for (const [index, entry] of orderedQueueEntries.entries()) {
+  for (const [index, entry] of normalizedOrderedQueueEntries.entries()) {
     const queueOrder = index + 1;
 
     if (entry.kind === "new") {

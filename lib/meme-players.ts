@@ -1,5 +1,7 @@
 const MEME_PLAYER_NAME_KEYS = new Set([
+  "richardkettleborough",
   "richardkettleboroughumpire",
+  "jayshah",
   "jayshahscriptwriter",
 ]);
 
