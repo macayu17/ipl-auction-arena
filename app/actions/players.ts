@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getSessionContext } from "@/lib/auth";
+import { isMemePlayer } from "@/lib/meme-players";
 import { publishAuctionEvent } from "@/lib/redis";
 import {
   hasBundledPlayerCsv,
@@ -18,6 +19,7 @@ import type {
   PlayerInsert,
   PlayerNationality,
   PlayerRole,
+  Team,
 } from "@/types/app.types";
 
 const playerFormSchema = z.object({
@@ -328,7 +330,92 @@ export async function updatePlayerAction(formData: FormData) {
       return;
     }
 
+    const rawSoldTo = String(formData.get("soldTo") ?? "").trim();
+    const nextSoldToFromForm = rawSoldTo.length > 0 ? rawSoldTo : null;
+
+    if (nextSoldToFromForm) {
+      const soldToValidation = z.string().uuid().safeParse(nextSoldToFromForm);
+      if (!soldToValidation.success) {
+        return;
+      }
+    }
+
     const supabase = await getSupabase();
+    const existingPlayerResult = await supabase
+      .from("players")
+      .select("id, name, status, sold_to, sold_price")
+      .eq("id", parsed.data.playerId)
+      .maybeSingle();
+
+    if (existingPlayerResult.error) {
+      throw existingPlayerResult.error;
+    }
+
+    const existingPlayer = (existingPlayerResult.data as Pick<
+      Player,
+      "id" | "name" | "status" | "sold_to" | "sold_price"
+    > | null);
+
+    if (!existingPlayer) {
+      return;
+    }
+
+    const nextSoldTo = existingPlayer.status === "sold"
+      ? nextSoldToFromForm ?? existingPlayer.sold_to
+      : null;
+    const shouldTransferSoldPlayer =
+      existingPlayer.status === "sold" &&
+      existingPlayer.sold_to !== nextSoldTo;
+    const transferAmount = existingPlayer.sold_price ?? 0;
+    const shouldAdjustPurseSpent =
+      shouldTransferSoldPlayer &&
+      transferAmount > 0 &&
+      !isMemePlayer(existingPlayer);
+
+    const affectedTeamIds = shouldTransferSoldPlayer
+      ? [...new Set([existingPlayer.sold_to, nextSoldTo].filter(
+        (teamId): teamId is string => Boolean(teamId)
+      ))]
+      : [];
+    let affectedTeamById = new Map<
+      string,
+      Pick<Team, "id" | "purse_total" | "purse_spent">
+    >();
+
+    if (affectedTeamIds.length > 0) {
+      const teamsResult = await supabase
+        .from("teams")
+        .select("id, purse_total, purse_spent")
+        .in("id", affectedTeamIds);
+
+      if (teamsResult.error) {
+        throw teamsResult.error;
+      }
+
+      const affectedTeams =
+        ((teamsResult.data as Pick<Team, "id" | "purse_total" | "purse_spent">[] | null) ??
+          []);
+      affectedTeamById = new Map(
+        affectedTeams.map((team) => [team.id, team])
+      );
+
+      if (nextSoldTo && !affectedTeamById.has(nextSoldTo)) {
+        return;
+      }
+    }
+
+    if (shouldAdjustPurseSpent && nextSoldTo) {
+      const targetTeam = affectedTeamById.get(nextSoldTo);
+      if (!targetTeam) {
+        return;
+      }
+
+      const projectedTargetSpend = targetTeam.purse_spent + transferAmount;
+      if (projectedTargetSpend > targetTeam.purse_total) {
+        return;
+      }
+    }
+
     const result = await supabase
       .from("players")
       .update({
@@ -341,11 +428,52 @@ export async function updatePlayerAction(formData: FormData) {
         bowling_style: parsed.data.bowlingStyle,
         ipl_caps: parsed.data.iplCaps,
         photo_url: parsed.data.photoUrl,
+        sold_to: nextSoldTo,
       })
       .eq("id", parsed.data.playerId);
 
     if (result.error) {
       throw result.error;
+    }
+
+    if (shouldAdjustPurseSpent) {
+      if (existingPlayer.sold_to && existingPlayer.sold_to !== nextSoldTo) {
+        const previousTeam = affectedTeamById.get(existingPlayer.sold_to);
+
+        if (!previousTeam) {
+          return;
+        }
+
+        const updatePreviousTeamResult = await supabase
+          .from("teams")
+          .update({
+            purse_spent: Math.max(previousTeam.purse_spent - transferAmount, 0),
+          })
+          .eq("id", previousTeam.id);
+
+        if (updatePreviousTeamResult.error) {
+          throw updatePreviousTeamResult.error;
+        }
+      }
+
+      if (nextSoldTo && existingPlayer.sold_to !== nextSoldTo) {
+        const nextTeam = affectedTeamById.get(nextSoldTo);
+
+        if (!nextTeam) {
+          return;
+        }
+
+        const updateNextTeamResult = await supabase
+          .from("teams")
+          .update({
+            purse_spent: nextTeam.purse_spent + transferAmount,
+          })
+          .eq("id", nextTeam.id);
+
+        if (updateNextTeamResult.error) {
+          throw updateNextTeamResult.error;
+        }
+      }
     }
 
     await publishAuctionEvent({

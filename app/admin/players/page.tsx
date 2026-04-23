@@ -299,6 +299,25 @@ export default async function AdminPlayersPage() {
                           <option value="Indian">Indian</option>
                           <option value="Overseas">Overseas</option>
                         </select>
+                        {player.status === "sold" ? (
+                          <div className="grid gap-2 lg:col-span-2">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-soft)]">
+                              Assigned team
+                            </span>
+                            <select
+                              name="soldTo"
+                              defaultValue={player.sold_to ?? ""}
+                              className="rounded-xl border border-white/10 bg-black/60 px-4 py-3 text-[14px] text-white outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]/50 transition-all font-medium"
+                            >
+                              <option value="" disabled>Select team</option>
+                              {teamSummary.map((team) => (
+                                <option key={team.id} value={team.id}>
+                                  {team.short_code} - {team.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ) : null}
                         <input
                           name="basePrice"
                           type="number"
