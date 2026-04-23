@@ -6,10 +6,10 @@ type SquadRoleLimits = {
 };
 
 export const SQUAD_ROLE_LIMITS: Record<PlayerRole, SquadRoleLimits> = {
-  Batsman: { min: 2, max: 3 },
-  "Wicket-Keeper": { min: 1, max: 1 },
+  Batsman: { min: 2, max: null },
+  "Wicket-Keeper": { min: 1, max: null },
   "All-Rounder": { min: 3, max: null },
-  Bowler: { min: 3, max: 4 },
+  Bowler: { min: 3, max: null },
 };
 
 const ROLE_LABELS: Record<PlayerRole, string> = {
@@ -75,7 +75,7 @@ function evaluateMinViolations(counts: SquadRoleCounts): string[] {
 function evaluateMaxViolations(counts: SquadRoleCounts): string[] {
   const maxViolations: string[] = [];
 
-  for (const role of ["Batsman", "Wicket-Keeper", "Bowler"] as const) {
+  for (const role of Object.keys(SQUAD_ROLE_LIMITS) as PlayerRole[]) {
     const limit = SQUAD_ROLE_LIMITS[role];
 
     if (limit.max !== null && counts[role] > limit.max) {
@@ -106,20 +106,9 @@ export function canAddPlayerToSquad(
   counts: SquadRoleCounts,
   role: PlayerRole
 ): { allowed: boolean; reason: string | null } {
-  if (role === "Batsman" && counts.Batsman >= (SQUAD_ROLE_LIMITS.Batsman.max ?? Number.MAX_SAFE_INTEGER)) {
-    return { allowed: false, reason: "Batsman max 3" };
-  }
-
-  if (
-    role === "Wicket-Keeper" &&
-    counts["Wicket-Keeper"] >=
-      (SQUAD_ROLE_LIMITS["Wicket-Keeper"].max ?? Number.MAX_SAFE_INTEGER)
-  ) {
-    return { allowed: false, reason: "WK max 1" };
-  }
-
-  if (role === "Bowler" && counts.Bowler >= (SQUAD_ROLE_LIMITS.Bowler.max ?? Number.MAX_SAFE_INTEGER)) {
-    return { allowed: false, reason: "Bowler max 4" };
+  const roleLimit = SQUAD_ROLE_LIMITS[role];
+  if (roleLimit.max !== null && counts[role] >= roleLimit.max) {
+    return { allowed: false, reason: `${role} max ${roleLimit.max}` };
   }
 
   return { allowed: true, reason: null };
@@ -127,7 +116,7 @@ export function canAddPlayerToSquad(
 
 export function formatRoleRequirement(role: PlayerRole): string {
   if (role === "Batsman") {
-    return "Min 2, max 3 (All-Rounders count toward minimum)";
+    return "Min 2 (All-Rounders count toward batting minimum)";
   }
 
   const limits = SQUAD_ROLE_LIMITS[role];

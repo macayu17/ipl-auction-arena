@@ -93,7 +93,7 @@ export default async function TeamSquadPage() {
 
       <SectionCard
         title="Squad composition"
-        description="Rules: Batsman 2-3 (All-Rounders count for batting minimum), Wicket-Keeper exactly 1, All-Rounder min 3, Bowler 3-4."
+        description="Rules: Minimums only - Batsman 2+ (All-Rounders count for batting minimum), Wicket-Keeper 1+, All-Rounder 3+, Bowler 3+."
       >
         <div
           className={`mb-4 rounded-lg border px-4 py-3 text-sm ${

@@ -32,7 +32,7 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const adminEmail = process.env.AUCTION_ADMIN_EMAIL.toLowerCase();
 const adminPassword = process.env.AUCTION_ADMIN_PASSWORD;
 const teamEmailDomain = process.env.TEAM_EMAIL_DOMAIN ?? "auction.local";
-const teamPasswordPrefix = process.env.TEAM_PASSWORD_PREFIX ?? "Captain";
+const teamDefaultPassword = process.env.TEAM_DEFAULT_PASSWORD ?? "team1234";
 
 const supabase = createClient(supabaseUrl, serviceRoleKey, {
   auth: {
@@ -46,7 +46,8 @@ function teamEmail(shortCode) {
 }
 
 function teamPassword(shortCode) {
-  return `${teamPasswordPrefix}-${shortCode}-2026!`;
+  const normalizedShortCode = shortCode.toUpperCase();
+  return process.env[`${normalizedShortCode}_TEAM_PASSWORD`] ?? teamDefaultPassword;
 }
 
 async function findUserByEmail(email) {
